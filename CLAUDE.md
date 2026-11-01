@@ -110,6 +110,19 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
 - NoirPad-web (browser) uses Alt+Shift+N/T/I instead of Ctrl+Shift+N/T/I (browser owns them):
   `WEB_DEFAULTS` in `shortcuts.js`; desktop keeps the Ctrl defaults.
 
+## Dokumentace knihoven (Context7)
+- Kód, který volá API knihovny třetí strany (nový i upravený), ověř přes Context7 MCP:
+  `resolve-library-id` -> `query-docs`. Nespoléhej na paměť.
+- Hlavně: FastAPI, Starlette, uvicorn, pydantic, cryptography, platformdirs, pywebview,
+  pythonnet, PyInstaller, Inno Setup, markdown-it, DOMPurify, highlight.js, Lucide, vitest,
+  jsdom, pytest.
+- Verze jsou připnuté (`requirements*.txt`, `package.json`, `static/vendor/VERSIONS.json`).
+  Hledej dokumentaci k té verzi (ID `/org/project/verze`, když ji Context7 nabízí). Novější API
+  nepoužívej, dokud se verze nezvedne.
+- Pravidla tohoto souboru mají přednost: žádné CDN, žádný bundler, `static/vendor/` jen přes
+  `npm run vendor`.
+- Na vlastní kód NoirPadu Context7 nepoužívej, čti ho přímo v repu.
+
 ## Conventions
 - i18n: every visible text via `NP.t(...)` or `data-i18n*` attributes; keys in
   `static/locales/en.json` and `cs.json` (identical key sets, both updated together).
