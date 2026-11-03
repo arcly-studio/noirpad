@@ -343,7 +343,8 @@ details[open] .faq-plus::after { transform: rotate(0deg); }
 .doc kbd { min-width: 26px; height: 26px; font-size: 12px; padding: 0 7px; }
 .doc .enc-table { margin: 16px 0 20px; }
 .doc .enc-table td { width: 50%; white-space: normal; color: var(--muted); vertical-align: top; }
-.doc .enc-table td:first-child { color: var(--accent); }
+/* Only the encrypted cell is green: with rowspan, td:first-child would also hit the "not encrypted" cells below. */
+.doc .enc-table td.enc-yes { color: var(--accent); }
 .doc .faq-list { max-width: none; }
 /* Contact actions on the Support page */
 .doc-actions { display: grid; gap: 12px; margin-top: 32px; }
