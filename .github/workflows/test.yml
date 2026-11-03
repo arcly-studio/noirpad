@@ -1,8 +1,11 @@
 name: Tests
 
 on:
+  # Changes to the website only (site/) don't need the Windows build and app tests.
   push:
+    paths-ignore: ["site/**"]
   pull_request:
+    paths-ignore: ["site/**"]
 
 permissions:
   contents: read

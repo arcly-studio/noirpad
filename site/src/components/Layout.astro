@@ -1,0 +1,150 @@
+---
+// Page shell (structure as Dirwise/site/src/components/Layout.astro): <head> with canonical, hreflang and
+// self-hosted fonts, navigation, content, footer with the "by Arcly Studio" link, the motion module.
+// Open Graph + Twitter card (static og-{en,cs}.png from scripts/og.mjs), JSON-LD (src/lib/jsonld.ts), icons and
+// the manifest (scripts/prepare.mjs, src/pages/site.webmanifest.ts). `path` = page path without the language
+// prefix ("" = home).
+import interLatin from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import interLatinExt from "@fontsource-variable/inter/files/inter-latin-ext-wght-normal.woff2?url";
+import monoLatin from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
+import monoLatinExt from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-ext-wght-normal.woff2?url";
+import orbitron from "@fontsource-variable/orbitron/files/orbitron-latin-wght-normal.woff2?url";
+import { texts, type Lang } from "../i18n/texts";
+import { jsonLd } from "../lib/jsonld";
+import { links, pageHref, studioLink, BASE, type PagePath } from "../lib/links";
+import Nav from "./Nav.astro";
+import "../styles/site.css";
+
+interface Props { lang: Lang; path: PagePath; title: string; description: string }
+const { lang, path, title, description } = Astro.props;
+const t = texts[lang];
+
+const abs = (l: Lang) => new URL(pageHref(l, path), Astro.site).href;
+const urls = { en: abs("en"), cs: abs("cs") };
+const asset = (p: string) => `${BASE}${p}`;
+const other: Lang = lang === "en" ? "cs" : "en";
+const ogImage = new URL(asset(`og-${lang}.png`), Astro.site).href;
+const home = { en: new URL(pageHref("en"), Astro.site).href, cs: new URL(pageHref("cs"), Astro.site).href };
+const ld = jsonLd({ lang, url: urls[lang], home, title, description, ogImage, isHome: path === "" });
+
+// unicode-range as in @fontsource (latin / latin-ext); the small Czech subsets (scripts/prepare.mjs) are
+// declared last, so for č, ř, ž … they win over the whole latin-ext file.
+const LATIN = "U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD";
+const LATIN_EXT = "U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF";
+const CS = "U+010C-010F,U+011A-011B,U+0147-0148,U+0158-0159,U+0160-0161,U+0164-0165,U+016E-016F,U+017D-017E";
+const face = (family: string, url: string, range: string) =>
+  `@font-face { font-family: "${family}"; font-style: normal; font-display: swap; font-weight: 100 900; src: url(${url}) format("woff2-variations"); unicode-range: ${range}; }`;
+const fontCss = [
+  face("Inter Variable", interLatinExt, LATIN_EXT),
+  face("Inter Variable", interLatin, LATIN),
+  face("Inter Variable", asset("fonts/inter-cs.woff2"), CS),
+  face("JetBrains Mono Variable", monoLatinExt, LATIN_EXT),
+  face("JetBrains Mono Variable", monoLatin, LATIN),
+  face("JetBrains Mono Variable", asset("fonts/mono-cs.woff2"), CS),
+  face("Orbitron Variable", orbitron, LATIN),
+].join("\n");
+---
+<!doctype html>
+<html lang={t.htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0e0e10" />
+    <link rel="canonical" href={urls[lang]} />
+    <link rel="alternate" hreflang="en" href={urls.en} />
+    <link rel="alternate" hreflang="cs" href={urls.cs} />
+    <link rel="alternate" hreflang="x-default" href={urls.en} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="NoirPad" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={urls[lang]} />
+    <meta property="og:locale" content={t.ogLocale} />
+    <meta property="og:locale:alternate" content={texts[other].ogLocale} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={t.ogAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={t.ogAlt} />
+    <link rel="icon" href={asset("favicon.ico")} sizes="32x32" />
+    <link rel="icon" href={asset("favicon.svg")} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={asset("apple-touch-icon.png")} />
+    <link rel="manifest" href={asset("site.webmanifest")} />
+    <script type="application/ld+json" set:html={ld} />
+    {/* Fonts of the first screen: the wordmark (Orbitron), headings/UI (JetBrains Mono), text (Inter). */}
+    <link rel="preload" href={orbitron} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={monoLatin} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
+    {lang === "cs" && <link rel="preload" href={asset("fonts/inter-cs.woff2")} as="font" type="font/woff2" crossorigin />}
+    <style set:html={fontCss} />
+    {/* Motion (src/scripts/motion.ts), as on the Dirwise site: without "reduce motion" the page is marked
+        "pending" – on desktop (≥ 768 px) CSS hides the initial states of revealed blocks (never the hero
+        text), the module then switches to "on". Fallback: if the module has not started 4 s after load,
+        the attribute is removed and everything is visible without motion; an import error removes it at once. */}
+    <script is:inline>
+      (function () {
+        try {
+          var r = matchMedia("(prefers-reduced-motion: reduce)");
+          if (r.matches) return;
+          var h = document.documentElement;
+          h.dataset.motion = "pending";
+          var clear = function () { if (h.dataset.motion === "pending") h.removeAttribute("data-motion"); };
+          addEventListener("load", function () {
+            setTimeout(function () { if (matchMedia("(min-width: 768px)").matches) clear(); }, 4000);
+          });
+          r.addEventListener("change", function () { if (r.matches) clear(); });
+        } catch (e) {}
+      })();
+    </script>
+    <slot name="head" />
+  </head>
+  <body>
+    <div class="scroll-progress" aria-hidden="true"></div>
+    <a class="skip" href="#main">{t.skip}</a>
+    <Nav lang={lang} path={path} />
+    <slot />
+    <footer class="foot">
+      <nav aria-label={t.footer.nav}>
+        <a href={links.repo}>{t.footer.github}</a>
+        <a href={links.changelog}>{t.footer.changelog}</a>
+        <a href={pageHref(lang, "support/")} aria-current={path === "support/" ? "page" : undefined}>{t.footer.support}</a>
+        <a href={pageHref(lang, "privacy/")} aria-current={path === "privacy/" ? "page" : undefined}>{t.footer.privacy}</a>
+      </nav>
+      {/* Link to the studio website: the small "A" of the Arcly logo in the site's colours, same window. */}
+      <p class="foot-by"><a href={studioLink(lang)}><svg viewBox="0 0 200 200" width="14" height="14" aria-hidden="true"><path d="M58 150 L100 56 L142 150" fill="none" stroke="currentColor" stroke-width="20" stroke-linejoin="miter" stroke-miterlimit="10" /><path d="M76 128 Q100 106 124 128" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" /></svg>{t.footer.by}</a></p>
+      <p>© 2026 Arcly Studio · <a href={links.license}>{t.footer.note}</a></p>
+    </footer>
+
+    <script>
+      // Motion module (GSAP + Lenis) only without "reduce motion": on desktop at once (the hero typing starts
+      // with the first paint), on mobile on the first interaction or 3 s after `load` at the latest – it does
+      // not compete with the first paint for network and CPU.
+      let booted = false;
+      const boot = () => {
+        if (booted) return;
+        booted = true;
+        import("../scripts/motion")
+          .then((m) => { try { m.init(); } catch { m.abort(); } })
+          .catch(() => document.documentElement.removeAttribute("data-motion"));
+      };
+      if (document.documentElement.dataset.motion === "pending") {
+        if (matchMedia("(min-width: 768px)").matches) boot();
+        else {
+          const later = () => setTimeout(boot, 3000);
+          if (document.readyState === "complete") later();
+          else addEventListener("load", later, { once: true });
+          for (const ev of ["scroll", "touchstart", "pointerdown", "keydown"]) addEventListener(ev, boot, { once: true, passive: true });
+          matchMedia("(min-width: 768px)").addEventListener("change", boot, { once: true });
+        }
+      }
+    </script>
+  </body>
+</html>

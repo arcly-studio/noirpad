@@ -1,0 +1,84 @@
+---
+// Privacy Policy (Microsoft Store policy 10.5.1 – the URL goes to Partner Center → Properties).
+// Every claim is checked against the app (sources in the comments); keep in sync with src/pages/cs/privacy.astro.
+// TODO before phase 6: check again against version 1.0.2 (Store edition, MSIX) – data folder, uninstall,
+// network, WebView2 – and only then add anything about the Store version (nothing is claimed about it yet).
+import DocPage from "../components/DocPage.astro";
+import { links, pageHref } from "../lib/links";
+---
+<DocPage lang="en" page="privacy" updated="2026-11-03">
+  <section aria-labelledby="short">
+    <h2 id="short">In short</h2>
+    <ul>
+      <li><strong>No account, no telemetry, no analytics, no ads.</strong> There is nothing to sign up for.</li>
+      <li><strong>NoirPad itself makes no network requests.</strong> It does not even check for updates.</li>
+      <li><strong>Your notes stay on your computer.</strong> Nothing is sent to us or to anyone else.</li>
+      <li><strong>This website</strong> uses no cookies, no analytics and loads nothing from other servers.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="app">
+    <h2 id="app"><span class="doc-part" aria-hidden="true">A</span> The NoirPad app</h2>
+
+    {/* README → Install ("Your data"); noirpad/storage.py (BACKUP_KEEP 7, BACKUP_MIN_INTERVAL 10 min);
+        routes/backup.py (pre-import safety copy); noirpad/logs.py; desktop.py (webview profile). */}
+    <h3>What is stored on your computer</h3>
+    <p>Everything NoirPad saves stays on your computer. The version from GitHub keeps it in one folder, <code>%LOCALAPPDATA%\NoirPad</code>:</p>
+    <ul>
+      <li><code>notes_data.json</code> – your notes, folders, tags and settings;</li>
+      <li><code>images\</code> – images you add to notes;</li>
+      <li><code>backups\</code> – automatic copies of your notes (the last 7, at most one per 10 minutes) and a safety copy made before you import a backup;</li>
+      <li><code>logs\</code> – start-up information, versions and errors. Logs never contain the text or names of your notes or your passwords, and your Windows user name in file paths is written as <code>~</code>;</li>
+      <li><code>webview\</code> – the window's own browser profile (for example, which folders you have expanded).</li>
+    </ul>
+    <p>None of this is sent anywhere. Backups and exports that you create yourself are saved where you choose.</p>
+
+    {/* noirpad/*.py without outgoing requests; CSP connect-src 'self'; desktop.py binds 127.0.0.1;
+        installer.iss (WebView2Missing prompt, InstallWebView2Silently for /VERYSILENT); desktop.py (webview2 message). */}
+    <h3>Network</h3>
+    <p><strong>NoirPad itself makes no network requests.</strong> Fonts, the Markdown renderer and the code highlighter are part of the app, and there is no update check. Inside, NoirPad runs a small server only for its own window, at the address <code>127.0.0.1</code> – your own computer, not reachable from other devices. Only links that you click open in your web browser.</p>
+    <p>The NoirPad window is drawn by Microsoft Edge WebView2, a Windows component that Microsoft provides and updates under Microsoft's own privacy statement. Windows 11 already has it. If it is missing (this can happen on Windows 10), the installer from GitHub asks whether to download it from Microsoft (a silent, unattended installation downloads it without asking), and NoirPad itself only offers to open Microsoft's download page.</p>
+
+    {/* README → Security & privacy; noirpad/crypto.py (Fernet, PBKDF2_ITERATIONS 480_000, salt per note);
+        routes/encryption.py (UNLOCK_IDLE_TTL 30 min, UNLOCK_MAX_TTL 12 h, lock / lock-all / exit forget keys);
+        noirpad/app_lock.py (scrypt hash only). */}
+    <h3>What a locked note protects</h3>
+    <p>You can lock any note with its own password. Locking encrypts the note's text with Fernet (AES-128-CBC with HMAC-SHA256); the key is derived from your password with PBKDF2-SHA256 (480,000 iterations and a random salt for each note).</p>
+    <table class="enc-table">
+      <thead><tr><th scope="col">Encrypted</th><th scope="col">Not encrypted</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="4">the text of a locked note</td><td>the note's name, tags and folder</td></tr>
+        <tr><td>images in the note (separate files in <code>images\</code>)</td></tr>
+        <tr><td>formatting, favorites and settings</td></tr>
+        <tr><td>notes you have not locked</td></tr>
+      </tbody>
+    </table>
+    <ul>
+      <li>Your password is never saved – not on disk, not in the log. While a note is unlocked, only the key derived from it is kept in memory. It is forgotten when you lock the note or close NoirPad, after 30 minutes without use, and after 12 hours at the latest.</li>
+      <li><strong>A forgotten note password cannot be recovered.</strong> There is no reset and no back door – not even for us.</li>
+      <li>The optional app lock asks for a password when NoirPad starts. It stores only a hash of that password (scrypt) and does <strong>not</strong> encrypt your notes.</li>
+    </ul>
+
+    {/* installer.iss: [UninstallDelete] {app}; CurUninstallStepChanged asks DeleteData, MB_DEFBUTTON2 (= No). */}
+    <h3>Uninstalling</h3>
+    <p>Uninstalling the version from GitHub removes the program folder and then asks whether to delete your notes, backups and settings too. The default answer is <em>No</em> – your data stays in <code>%LOCALAPPDATA%\NoirPad</code> until you delete it.</p>
+  </section>
+
+  <section aria-labelledby="site">
+    <h2 id="site"><span class="doc-part" aria-hidden="true">B</span> This website</h2>
+    {/* The site: static Astro build, self-hosted fonts and images, no cookies/storage, no external scripts. */}
+    <p>This website is a set of static pages. It uses no cookies, no analytics and no trackers, and it loads nothing from other servers – fonts and images come from the site itself.</p>
+    <p>The website is hosted on GitHub Pages. Like any web server, GitHub may process technical data such as your IP address to deliver the pages and keep it in its server logs. This is covered by the <a href={links.githubPrivacy}>GitHub General Privacy Statement</a>. Links to GitHub on this site (source code, releases, issues) lead to GitHub's own pages.</p>
+  </section>
+
+  <section aria-labelledby="contact">
+    <h2 id="contact">Who we are and how to reach us</h2>
+    <p>NoirPad and this website are made by <strong>Arcly Studio</strong>, which is responsible for this policy. Questions about privacy: <a href={`mailto:${links.email}`}>{links.email}</a>. If you write to us, we use your e-mail address and message only to reply to you.</p>
+    <p>Please report security vulnerabilities privately – see the <a href={links.security}>security policy</a>. More ways to get help are on the <a href={pageHref("en", "support/")}>Support</a> page.</p>
+  </section>
+
+  <section aria-labelledby="changes">
+    <h2 id="changes">Changes</h2>
+    <p>If NoirPad or this website starts handling data differently, we will update this page and the date at the top.</p>
+  </section>
+</DocPage>
