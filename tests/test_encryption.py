@@ -164,6 +164,24 @@ def test_legacy_desktop_envelope_decrypts(client, np_backend):
     assert unlock(client, nid).json()["content"] == "ze staré appky"
 
 
+# Written by NoirPad 1.0.1 with cryptography 46.0.7. Never regenerate this
+# literal: it proves that notes locked by an older release still open.
+ENVELOPE_FROM_1_0_1 = (
+    '{"encrypted": true, "data": "ATmZ+vnqeMdKgIjkJ/UWZyVnQUFBQUFCcTYzVE1IbE9CdkwzSkFEREY4U0wtYVRi'
+    'dm1iRDFiUVJyZnhUSVB6M1NxSGhlVGlwVVJPVDI4VlR0THRkQXdNSFEwU3FsNE1NeUtnRmF1UVJDRC15X1N6OGhSVVdk'
+    'UlowYnVtTTUwUVkyQ1ljWF9DRGhZYU9LTnJreGhkd3Z0SDNCZk0yRQ=="}'
+)
+
+
+def test_envelope_from_1_0_1_still_unlocks(client, np_backend):
+    nid = new_note(client, content="placeholder")
+    np_backend._update_data(lambda d: d["notes"].__setitem__(nid, ENVELOPE_FROM_1_0_1))
+    r = unlock(client, nid, "fixture-password")
+    assert r.status_code == 200, r.text
+    assert r.json()["content"] == "Poznámka zamčená verzí 1.0.1 ✓"
+    assert unlock(client, nid, "wrong-password").status_code != 200
+
+
 def test_legacy_v2_note_is_upgraded_on_save(client, np_backend):
     import base64
     import hashlib
