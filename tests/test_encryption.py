@@ -179,7 +179,7 @@ def test_envelope_from_1_0_1_still_unlocks(client, np_backend):
     r = unlock(client, nid, "fixture-password")
     assert r.status_code == 200, r.text
     assert r.json()["content"] == "Poznámka zamčená verzí 1.0.1 ✓"
-    assert unlock(client, nid, "wrong-password").status_code != 200
+    assert unlock(client, nid, "wrong-password").status_code == 400
 
 
 def test_legacy_v2_note_is_upgraded_on_save(client, np_backend):
