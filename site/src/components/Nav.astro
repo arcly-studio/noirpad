@@ -1,9 +1,11 @@
 ---
 // Floating navigation pill (as on the Dirwise site). Anchors are plain on the home page, home URL + anchor
 // on the other pages; the language switch keeps the current page.
+// Below 760 px the section links move into the mobile menu (src/scripts/menu.ts – family pattern, same as the studio).
 import { Picture } from "astro:assets";
 import logo from "../../../docs/brand/noirpad-1024.png";
 import { texts, type Lang } from "../i18n/texts";
+import { icon } from "../lib/icons";
 import { links, pageHref, type PagePath } from "../lib/links";
 
 interface Props { lang: Lang; path: PagePath }
@@ -11,6 +13,11 @@ const { lang, path } = Astro.props;
 const t = texts[lang];
 const home = pageHref(lang);
 const anchor = (id: string) => (path === "" ? `#${id}` : `${home}#${id}`);
+const sections = [
+  { id: "features", label: t.nav.features },
+  { id: "install", label: t.nav.install },
+  { id: "faq", label: t.nav.faq },
+];
 const github = `<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>`;
 ---
 <header class="nav-wrap">
@@ -20,16 +27,30 @@ const github = `<svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="tru
       <span class="brand">NOIRPAD</span>
     </a>
     <div class="nav-links">
-      <a href={anchor("features")}>{t.nav.features}</a>
-      <a href={anchor("install")}>{t.nav.install}</a>
-      <a href={anchor("faq")}>{t.nav.faq}</a>
+      {sections.map((s) => <a href={anchor(s.id)}>{s.label}</a>)}
     </div>
     <div class="nav-end">
-      <a href={links.repo} class="nav-icon" aria-label={t.nav.github} set:html={github} />
+      <a href={links.repo} class="nav-icon" aria-label={t.nav.github} title="GitHub" set:html={github} />
       <div class="lang" role="group" aria-label={t.langSwitch}>
         <a href={pageHref("en", path)} hreflang="en" lang="en" aria-current={lang === "en" ? "page" : undefined}>EN</a>
         <a href={pageHref("cs", path)} hreflang="cs" lang="cs" aria-current={lang === "cs" ? "page" : undefined}>CS</a>
       </div>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label={t.nav.menu} title={t.nav.menu} hidden>
+        <span class="i-open" set:html={icon("Menu", 20)} />
+        <span class="i-close" set:html={icon("X", 20)} />
+      </button>
+    </div>
+    {/* Inside <nav> so the menu links belong to the same navigation landmark; positioned under the pill. */}
+    <div class="nav-menu" id="nav-menu" hidden>
+      <ul>
+        {sections.map((s) => <li><a href={anchor(s.id)}>{s.label}</a></li>)}
+        <li><a href={links.repo}><Fragment set:html={github} />GitHub</a></li>
+      </ul>
     </div>
   </nav>
 </header>
+
+<script>
+  import { setupMenu } from "../scripts/menu";
+  setupMenu();
+</script>

@@ -12,6 +12,7 @@ import orbitron from "@fontsource-variable/orbitron/files/orbitron-latin-wght-no
 import { texts, type Lang } from "../i18n/texts";
 import { jsonLd } from "../lib/jsonld";
 import { links, pageHref, studioLink, BASE, type PagePath } from "../lib/links";
+import { socials, NETWORKS, socialIcon } from "../lib/socials";
 import Nav from "./Nav.astro";
 import "../styles/site.css";
 
@@ -107,7 +108,6 @@ const fontCss = [
     <slot name="head" />
   </head>
   <body>
-    <div class="scroll-progress" aria-hidden="true"></div>
     <a class="skip" href="#main">{t.skip}</a>
     <Nav lang={lang} path={path} />
     <slot />
@@ -118,9 +118,15 @@ const fontCss = [
         <a href={pageHref(lang, "support/")} aria-current={path === "support/" ? "page" : undefined}>{t.footer.support}</a>
         <a href={pageHref(lang, "privacy/")} aria-current={path === "privacy/" ? "page" : undefined}>{t.footer.privacy}</a>
       </nav>
+      {/* NoirPad on social networks (src/lib/socials.ts) – plain links with local icons, same window. */}
+      <ul class="foot-socials" aria-label={t.footer.socials}>
+        {socials.map((s) => (
+          <li><a href={s.url} rel="noopener" aria-label={`NoirPad – ${NETWORKS[s.network].name} ${s.handle}`} title={`${NETWORKS[s.network].name} ${s.handle}`} set:html={socialIcon(s.network, 16)} /></li>
+        ))}
+      </ul>
       {/* Link to the studio website: the small "A" of the Arcly logo in the site's colours, same window. */}
       <p class="foot-by"><a href={studioLink(lang)}><svg viewBox="0 0 200 200" width="14" height="14" aria-hidden="true"><path d="M58 150 L100 56 L142 150" fill="none" stroke="currentColor" stroke-width="20" stroke-linejoin="miter" stroke-miterlimit="10" /><path d="M76 128 Q100 106 124 128" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" /></svg>{t.footer.by}</a></p>
-      <p>© 2026 Arcly Studio · <a href={links.license}>{t.footer.note}</a></p>
+      <p>© {new Date().getFullYear()} Arcly Studio · <a href={links.license}>{t.footer.note}</a></p>
     </footer>
 
     <script>

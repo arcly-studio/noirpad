@@ -40,12 +40,13 @@ const MINI: { key: FeatureKey; ico: Parameters<typeof icon>[0] }[] = [
   { key: "backup", ico: "Archive" },
 ];
 const cardSizes = (c: ShotCard) => {
-  const w = c.wide ? 720 : 360;
-  // Wide cards span two of three columns only from 1020 px; between 760 and 1019 px every card is half the width.
+  const w = c.wide ? 1060 : 520;
+  // Content is 90vw wide (5vw gutters), at most 1600 px. Wide cards span two of three columns only from 1020 px;
+  // between 760 and 1019 px every card is half the width.
   // Below 1020 px the shot box is 4:3, so object-fit: cover shows the 16:10 image 1.2× wider than the box;
-  // box = viewport − 32 px page padding − 46 px card padding/border (one column), or half of it (two columns).
+  // box = content width − 46 px card padding/border (one column), or half of the content (two columns).
   const z = (1.2 * c.zoom).toFixed(2);
-  return `(min-width: 1120px) ${Math.round(w * c.zoom)}px, (min-width: 1020px) ${Math.round((c.wide ? 66 : 33) * c.zoom)}vw, (min-width: 760px) calc((50vw - 70px) * ${z}), calc((100vw - 78px) * ${z})`;
+  return `(min-width: 1780px) ${Math.round(w * c.zoom)}px, (min-width: 1020px) ${Math.round((c.wide ? 60 : 30) * c.zoom)}vw, (min-width: 760px) calc((45vw - 46px) * ${z}), calc((90vw - 46px) * ${z})`;
 };
 // Crop of each card screenshot as a class (no inline styles – html-validate no-inline-style).
 const shotCss = SHOTS.map((c) => `.shot-${c.key}{object-position:${c.focus};transform-origin:${c.focus};transform:scale(${c.zoom})}`).join("");
@@ -73,13 +74,16 @@ const POINT_ICONS = ["HardDrive", "UserX", "WifiOff"] as const;
         {store
           ? <a class="store-badge" href={store}><img src={asset(`media/store-badge-${lang}.svg`)} width="190" height="52" alt={t.hero.storeAlt} /></a>
           : <span class="store-soon">{t.hero.storeSoon}</span>}
-        <a class="hero-gh" href={links.repo}>{t.hero.github}<Fragment set:html={icon("ArrowRight", 15)} /></a>
+        {/* Secondary action: the release on GitHub. The source code link stays in the footer and the navigation,
+            the full SmartScreen instructions in the Install section – the line below points there. */}
+        <a class="btn-secondary" href={links.latest}>{t.install.latest}<Fragment set:html={icon("ArrowRight", 15)} /></a>
       </div>
+      <p class="hero-note">{t.hero.smartscreen.before}<a href="#install">{t.hero.smartscreen.link}</a>.</p>
       <p class="hero-meta">{t.hero.meta.join(" · ")}</p>
     </div>
     <div class="hero-shot">
       <div class="shot-frame">
-        <Picture src={lang === "cs" ? heroCs : heroEn} widths={[480, 720, 960, 1280]} sizes="(min-width: 1120px) 1040px, calc(100vw - 32px)"
+        <Picture src={lang === "cs" ? heroCs : heroEn} widths={[480, 720, 960, 1280]} sizes="(min-width: 1440px) 1280px, 90vw"
           formats={["avif", "webp"]} fallbackFormat="png" quality={80} alt={t.hero.shotAlt} loading="eager" fetchpriority="high" decoding="async" />
         <div class="scanlines" aria-hidden="true"></div>
       </div>
@@ -186,7 +190,7 @@ const POINT_ICONS = ["HardDrive", "UserX", "WifiOff"] as const;
           {store
             ? <a class="store-badge" href={store}><img src={asset(`media/store-badge-${lang}.svg`)} width="190" height="52" alt={t.hero.storeAlt} loading="lazy" /></a>
             : <span class="store-soon">{t.hero.storeSoon}</span>}
-          <p class="install-latest"><a href={links.latest}>{t.install.latest}<Fragment set:html={icon("ArrowRight", 15)} /></a></p>
+          <a class="btn-secondary" href={links.latest}>{t.install.latest}<Fragment set:html={icon("ArrowRight", 15)} /></a>
           <p class="small">{t.install.smartscreen}</p>
         </div>
         <div class="install-req">

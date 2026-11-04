@@ -4,7 +4,10 @@
 // on an error or with "reduce motion" everything is visible. Initial hidden states are held by CSS only under
 // `html[data-motion="pending"]` (site.css); here they become GSAP inline styles and the attribute turns "on".
 // The hero text is never hidden: the typed line is clipped, not removed, and starts from the full text in HTML.
-// Rules: only transform, opacity and clip; each block appears once (except scrub effects); 0.6–0.9 s ease-out.
+// Rules (design language of the Arcly family): only transform, opacity and clip; each block appears once (except
+// scrub effects); entrances 0.6 s with a strong ease-out (power4.out = cubic-bezier(.23,1,.32,1)), offset 24 px (cards
+// 32 px), scale from 0.97, stagger 0.06 s; scroll-linked effects follow Lenis directly (scrub: true – one smoothing,
+// not two). Text pages are not animated – reading comes first. The navigation stays put.
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
@@ -18,21 +21,19 @@ import Lenis from "lenis";
 gsap.registerPlugin(ScrollTrigger);
 
 const html = document.documentElement;
-const EASE = "power3.out";
+/** Strong ease-out of the family design language: power4.out ≈ cubic-bezier(.23,1,.32,1). */
+const EASE = "power4.out";
 /** From 768 px full motion (hero typing, parallax, Lenis); below it only a gentle reveal of sections. */
 const DESKTOP = "(min-width: 768px)";
 
 const $ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
 const $$ = <T extends Element = HTMLElement>(sel: string, root: ParentNode = document) => Array.from(root.querySelectorAll<T>(sel));
 
-/** Blocks revealed on scroll: `data-reveal` on the home page, children of `.doc` on text pages (not the
- *  heading and lead – they are visible from the first paint), the footer. */
-const REVEAL = "[data-reveal], .doc > :not(h1, .lead), .foot";
+/** Blocks revealed on scroll: `data-reveal` on the home page and its footer; text pages (.doc) stay still. */
+const REVEAL = "[data-reveal], main:not(.doc) ~ .foot";
 
 let mm: gsap.MatchMedia | null = null;
 let introDone = false;
-/** Until this time (performance.now) the navigation is not hidden – smooth anchor jump, hash on load. */
-let navHoldUntil = 0;
 let lenis: Lenis | null = null;
 
 /** Undo everything (GSAP inline styles, Lenis) and show the content without motion – on any error. */
@@ -50,7 +51,6 @@ export function init() {
   // The fallback in Layout.astro already removed the attribute (slow network) or "reduce motion" applies.
   if (html.dataset.motion !== "pending" || html.dataset.motionInit) return;
   html.dataset.motionInit = "1";
-  if (location.hash) navHoldUntil = performance.now() + 1500;
 
   try {
     mm = gsap.matchMedia();
@@ -73,7 +73,7 @@ export function init() {
           // wider window) must not hide it again (the fix from Dirwise phase 5).
           for (const el of pending) if (!unseen(el)) el.dataset.revealed = "1";
           const revealTargets = pending.filter((el) => !el.dataset.revealed);
-          if (revealTargets.length) gsap.set(revealTargets, { opacity: 0, y: (_: number, el: Element) => revealY(el), scale: (_: number, el: Element) => (isCard(el) ? 0.96 : 1) });
+          if (revealTargets.length) gsap.set(revealTargets, { opacity: 0, y: (_: number, el: Element) => revealY(el), scale: (_: number, el: Element) => (isCard(el) ? 0.97 : 1) });
           // The typing intro only on the first view at the top – not after scrolling or with an anchor in the URL.
           const intro = desktop && !introDone && scrollY < 50 && !targetOf(location.hash);
           introDone = true;
@@ -82,15 +82,15 @@ export function init() {
           if (desktop) {
             if (fine) lenis = setupLenis();
             if (intro) typeHero();
-            heroBackdrop(intro);
-            shotTilt();
+            // With Lenis the scroll is already smoothed – follow it directly; without it (touch) a light lag.
+            const scrub = lenis ? true : 0.3;
+            heroBackdrop(intro, scrub);
+            shotTilt(scrub);
             cardsParallax();
-            videoScale();
+            videoScale(scrub);
           }
           reveals(revealTargets, signal);
           keyCaps(unseen);
-          progressBar();
-          hideOnScroll(signal);
           anchors(signal);
           ro = refreshOnResize();
         } catch (err) {
@@ -157,8 +157,7 @@ function anchors(signal: AbortSignal) {
       if (url.hash !== location.hash) history.pushState(null, "", url.hash);
       if (!el.hasAttribute("tabindex")) el.tabIndex = -1;
       el.focus({ preventScroll: true });
-      navHoldUntil = performance.now() + 1200;
-      lenis.scrollTo(el, { duration: 1 });
+      lenis.scrollTo(el, { duration: 0.8 });
     },
     { signal },
   );
@@ -182,39 +181,39 @@ function typeHero() {
 }
 
 /** The green glow behind the hero lights up on load and dims and sinks slower than the content on scroll. */
-function heroBackdrop(intro: boolean) {
+function heroBackdrop(intro: boolean, scrub: true | number) {
   // Two elements, as on the Dirwise site (sky + glow): the intro animates the inner glow, the scrub the
   // wrapper – the two tweens never fight over the same opacity.
   const wrap = $(".hero-glow-wrap");
   const glow = $(".hero-glow");
   if (!wrap || !glow) return;
   if (intro) gsap.fromTo(glow, { opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1, duration: 0.9, ease: EASE, clearProps: "opacity,transform" });
-  gsap.to(wrap, { y: 140, opacity: 0.35, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub: 0.5 } });
+  gsap.to(wrap, { y: 140, opacity: 0.35, ease: "none", scrollTrigger: { trigger: ".hero", start: "top top", end: "bottom top", scrub } });
 }
 
 /** The big screenshot: a slight 3D tilt that straightens and grows while scrolling (scrub). It is visible
- *  from the first paint (no opacity), so it never delays the largest paint. */
-function shotTilt() {
+ *  from the first paint (no opacity), so it never delays the largest paint. The perspective is set only here
+ *  (not also in CSS – applied twice it widened the frame past the window on medium screens). */
+function shotTilt(scrub: true | number) {
   const shot = $(".hero-shot");
   const frame = $(".shot-frame");
   if (!shot || !frame) return;
   gsap.fromTo(
     frame,
     { rotateX: 12, scale: 0.94, transformPerspective: 1600, transformOrigin: "50% 0%" },
-    { rotateX: 0, scale: 1, transformPerspective: 1600, ease: "none", scrollTrigger: { trigger: shot, start: 0, end: "center center", scrub: 0.5 } },
+    { rotateX: 0, scale: 1, transformPerspective: 1600, ease: "none", scrollTrigger: { trigger: shot, start: 0, end: "center center", scrub } },
   );
 }
 
 /* ---------- Sections ---------- */
 
 const isCard = (el: Element) => el.classList.contains("card");
-/** Cards move up 50 px, other blocks 32 px, the footer only fades (a shift would lengthen a short page – CLS). */
-const revealY = (el: Element) => (isCard(el) ? 50 : el.classList.contains("foot") ? 0 : 32);
+/** Cards move up 32 px, other blocks 24 px, the footer only fades (a shift would lengthen a short page – CLS). */
+const revealY = (el: Element) => (isCard(el) ? 32 : el.classList.contains("foot") ? 0 : 24);
 
-const show = (els: HTMLElement[], stagger = 0.08) => {
+const show = (els: HTMLElement[], stagger = 0.06) => {
   for (const el of els) el.dataset.revealed = "1";
-  const cards = els.some(isCard);
-  gsap.to(els, { opacity: 1, y: 0, scale: 1, duration: cards ? 0.8 : 0.7, ease: EASE, stagger: cards ? 0.1 : stagger, overwrite: "auto", clearProps: "opacity,transform" });
+  gsap.to(els, { opacity: 1, y: 0, scale: 1, duration: 0.6, ease: EASE, stagger, overwrite: "auto", clearProps: "opacity,transform" });
 };
 
 /** Reveal on scroll – once, in batches with a stagger. A block focused by keyboard before the scroll
@@ -242,20 +241,21 @@ function reveals(targets: HTMLElement[], signal: AbortSignal) {
   );
 }
 
-/** Key caps in the shortcuts section "pop" like pressed keys – once, together with their card. */
+/** Key caps in the shortcuts section settle like pressed keys – once, together with their card; a small
+ *  overshoot from 0.8, never from far smaller (design language: nothing appears from nothing). */
 function keyCaps(unseen: (el: Element) => boolean) {
   const cards = $$(".keys li").filter((li) => !li.dataset.keysDone && !li.dataset.revealed && unseen(li));
   for (const li of cards) {
     const caps = $$("kbd", li);
     if (!caps.length) continue;
-    gsap.set(caps, { scale: 0.55, y: -10 });
+    gsap.set(caps, { scale: 0.8, y: -6 });
     ScrollTrigger.create({
       trigger: li,
       start: "top 90%",
       once: true,
       onEnter: () => {
         li.dataset.keysDone = "1";
-        gsap.to(caps, { scale: 1, y: 0, duration: 0.65, ease: "back.out(3)", stagger: 0.08, delay: 0.15, clearProps: "transform" });
+        gsap.to(caps, { scale: 1, y: 0, duration: 0.4, ease: "back.out(1.7)", stagger: 0.06, delay: 0.1, clearProps: "transform" });
       },
     });
   }
@@ -272,49 +272,16 @@ function cardsParallax() {
 }
 
 /** Demo video: the frame grows from 0.85 to full size as it enters (scrub). */
-function videoScale() {
+function videoScale(scrub: true | number) {
   const frame = $(".video .frame");
   if (!frame) return;
-  gsap.fromTo(frame, { scale: 0.85 }, { scale: 1, ease: "none", scrollTrigger: { trigger: frame, start: "top bottom", end: "top 25%", scrub: 0.5 } });
+  gsap.fromTo(frame, { scale: 0.85 }, { scale: 1, ease: "none", scrollTrigger: { trigger: frame, start: "top bottom", end: "top 25%", scrub } });
 }
 
 /* ---------- Details ---------- */
 
-/** Scroll progress bar at the top (scaleX, scrub). */
-function progressBar() {
-  const bar = $(".scroll-progress");
-  if (!bar) return;
-  gsap.fromTo(bar, { scaleX: 0 }, { scaleX: 1, ease: "none", scrollTrigger: { start: 0, end: "max", scrub: 0.3 } });
-}
-
-/** The navigation hides when scrolling down and returns when scrolling up or on keyboard focus inside. */
-function hideOnScroll(signal: AbortSignal) {
-  const nav = $(".nav-wrap");
-  if (!nav) return;
-  let hidden = false;
-  const reveal = () => {
-    if (!hidden) return;
-    hidden = false;
-    gsap.to(nav, { yPercent: 0, duration: 0.4, ease: "power2.out", overwrite: true });
-  };
-  const hide = () => {
-    if (hidden || nav.contains(document.activeElement) || performance.now() < navHoldUntil) return;
-    hidden = true;
-    gsap.to(nav, { yPercent: -140, duration: 0.4, ease: "power2.out", overwrite: true });
-  };
-  ScrollTrigger.create({
-    start: 0,
-    end: "max",
-    onUpdate: (self) => {
-      if (self.scroll() < 120 || self.direction !== 1) reveal();
-      else hide();
-    },
-  });
-  nav.addEventListener("focusin", reveal, { signal });
-}
-
 /** The page height changes without a window resize (FAQ <details>, the video poster) – refresh the
- *  ScrollTriggers (end "max" of the progress bar, trigger positions). */
+ *  ScrollTriggers (trigger positions). */
 let refreshTimer = 0;
 function refreshOnResize() {
   if (!("ResizeObserver" in window)) return null;

@@ -19,13 +19,13 @@ export const texts = {
     ogAlt: "NoirPad – Markdown notes you can lock with a password. For Windows, no account, no cloud, no telemetry.",
     skip: "Skip to content",
     langSwitch: "Language",
-    nav: { home: "NoirPad – home", features: "Features", install: "Install", faq: "FAQ", github: "NoirPad on GitHub" },
+    nav: { home: "NoirPad – home", features: "Features", install: "Install", faq: "FAQ", github: "NoirPad on GitHub", menu: "Menu" },
     hero: {
       tagline: "Markdown notes you can lock with a password.",
-      sub: "Notes stay in a folder on your PC. No account, no cloud, no telemetry – and any note can be locked with its own password.",
+      sub: "Notes stay in a folder on your PC. No account, no cloud, no telemetry.",
       storeSoon: "Coming soon to Microsoft Store",
+      smartscreen: { before: "Windows may show a SmartScreen warning – see ", link: "Installation" },
       storeAlt: "Get it from Microsoft",
-      github: "Source code on GitHub",
       meta: ["Windows 10/11", "x64", "Free", "MIT license"],
       // Decorative typing line (aria-hidden): a real command bar command (static/js/command-bar.js) and the title of
       // the dialog it opens, word for word (static/locales/en.json → encryption.lockTitle, static/js/encryption.js).
@@ -177,6 +177,7 @@ export const texts = {
       support: "Support",
       note: "NoirPad is free software under the MIT license.",
       by: "by Arcly Studio",
+      socials: "NoirPad on social networks",
     },
   },
   cs: {
@@ -188,13 +189,13 @@ export const texts = {
     ogAlt: "NoirPad – poznámky v Markdownu, které můžete zamknout heslem. Pro Windows, bez účtu, cloudu a telemetrie.",
     skip: "Přeskočit na obsah",
     langSwitch: "Jazyk",
-    nav: { home: "NoirPad – úvod", features: "Funkce", install: "Instalace", faq: "Otázky", github: "NoirPad na GitHubu" },
+    nav: { home: "NoirPad – úvod", features: "Funkce", install: "Instalace", faq: "Otázky", github: "NoirPad na GitHubu", menu: "Nabídka" },
     hero: {
       tagline: "Poznámky v Markdownu, které můžete zamknout heslem.",
-      sub: "Poznámky zůstávají ve složce v počítači. Bez účtu, bez cloudu, bez telemetrie – a každou poznámku můžete zamknout vlastním heslem.",
+      sub: "Poznámky zůstávají ve složce v počítači. Bez účtu, bez cloudu, bez telemetrie.",
       storeSoon: "Brzy v Microsoft Store",
+      smartscreen: { before: "Windows může zobrazit upozornění SmartScreen – viz ", link: "Instalace" },
       storeAlt: "Získat od Microsoftu",
-      github: "Zdrojový kód na GitHubu",
       meta: ["Windows 10/11", "x64", "Zdarma", "Licence MIT"],
       typed: [":encrypt", "Zamknout poznámku heslem"],
       shotAlt: "NoirPad s formátovanou poznámkou: velký nadpis, obrázek a krátký seznam věcí na cestu; vlevo složky a štítky",
@@ -339,6 +340,7 @@ export const texts = {
       support: "Podpora",
       note: "NoirPad je svobodný software pod licencí MIT.",
       by: "od Arcly Studio",
+      socials: "NoirPad na sociálních sítích",
     },
   },
 } as const;

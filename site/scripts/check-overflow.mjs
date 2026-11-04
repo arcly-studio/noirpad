@@ -1,5 +1,5 @@
 // No horizontal scrolling on phones: every built page (dist/, served under the base /noirpad/) is opened at
-// 390 px in mobile emulation and the document must not be wider than the window. Uses the installed Chrome
+// 320 and 390 px in mobile emulation and the document must not be wider than the window. Uses the installed Chrome
 // (playwright-core, channel "chrome"). Usage: npm run check:overflow (after the build)
 import fs from "fs";
 import http from "http";
@@ -9,7 +9,7 @@ import { chromium } from "playwright-core";
 
 const dist = fileURLToPath(new URL("../dist/", import.meta.url));
 const BASE = (process.env.BASE_PATH || "/noirpad").replace(/\/$/, "") + "/";
-const WIDTH = 390;
+const WIDTHS = [320, 390];
 const TYPES = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".svg": "image/svg+xml", ".png": "image/png",
   ".jpg": "image/jpeg", ".webp": "image/webp", ".avif": "image/avif", ".woff2": "font/woff2", ".ico": "image/x-icon", ".mp4": "video/mp4",
   ".webm": "video/webm", ".json": "application/json", ".webmanifest": "application/manifest+json", ".xml": "application/xml" };
@@ -36,7 +36,7 @@ const origin = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch({ channel: "chrome" });
 let errors = 0;
 try {
-  for (const url of urls.sort()) {
+  for (const url of urls.sort()) for (const WIDTH of WIDTHS) {
     const ctx = await browser.newContext({ viewport: { width: WIDTH, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
     const page = await ctx.newPage();
     await page.goto(origin + url, { waitUntil: "load" });
@@ -49,4 +49,4 @@ try {
   server.close();
 }
 if (errors) process.exit(1);
-console.log(`check-overflow: ${urls.length} pages at ${WIDTH} px without horizontal scrolling`);
+console.log(`check-overflow: ${urls.length} pages at ${WIDTHS.join(" and ")} px without horizontal scrolling`);
