@@ -24,7 +24,7 @@ export const texts = {
       tagline: "Markdown notes you can lock with a password.",
       sub: "Notes stay in a folder on your PC. No account, no cloud, no telemetry.",
       storeSoon: "Coming soon to Microsoft Store",
-      smartscreen: { before: "Windows may show a SmartScreen warning – see ", link: "Installation" },
+      smartscreen: { before: "Windows may show a SmartScreen warning – see ", link: "how to install" },
       storeAlt: "Get it from Microsoft",
       meta: ["Windows 10/11", "x64", "Free", "MIT license"],
       // Decorative typing line (aria-hidden): a real command bar command (static/js/command-bar.js) and the title of
