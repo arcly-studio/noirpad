@@ -5,7 +5,7 @@ Read by the API (/api/version, FastAPI), the About box and the start page
 (build.ps1 passes /DAppVersion and /DAppURL) and the release workflow.
 """
 
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 # Project page — one constant if the repository is ever renamed.
 PROJECT_URL = "https://github.com/arcly-studio/NoirPad"

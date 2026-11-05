@@ -2,6 +2,16 @@
 
 All notable changes to NoirPad. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.0.2] – Unreleased
+
+Security update of the bundled libraries. No new features; your notes and settings stay as they are.
+
+### Security
+- Updated DOMPurify to 3.4.17 and markdown-it to 15.0.3. Among other fixes, a specially crafted
+  note can no longer slow down Markdown rendering.
+- Updated starlette to 1.3.1, python-multipart to 0.0.31, anyio to 4.14.2, idna to 3.15,
+  cryptography to 50.0.0 and setuptools to 84.1.0.
+
 ## [1.0.1] – 2026-10-27
 
 Fixes from a second full review: nothing you type should be lost, and the app is faster, safer and
@@ -253,5 +263,6 @@ First public release.
   `NoirPad.exe` name Arcly Studio as publisher, and the start page and About link to the project
   page ("by Arcly Studio").
 
+[1.0.2]: https://github.com/arcly-studio/NoirPad/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/arcly-studio/NoirPad/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/arcly-studio/NoirPad/releases/tag/v1.0.0
