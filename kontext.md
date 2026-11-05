@@ -29,14 +29,15 @@
 
 | Verze | Datum | Stav |
 |---|---|---|
-| 1.0.0 | 2026-10-20 | vydáno (GitHub „Latest“), první veřejné vydání |
-| 1.0.1 | 2026-10-27 | tag `v1.0.1` je pushnutý (`d5e57fa`), `release.yml` z něj udělal **draft** release, který čeká na ruční publikování |
-| 1.0.2 | plán | **Store edice** (MSIX pro Microsoft Store), fáze S1, zadání v `..\NOIRPAD-STORE-EDICE.md` |
+| 1.0.0 | 2026-10-20 | vydáno, první veřejné vydání |
+| 1.0.1 | 2026-10-27 | vydáno |
+| 1.0.2 | 2026-11-05 | vydáno (GitHub „Latest“), **hotfix**: jen aktualizace závislostí (nález N3 z auditu) |
+| 1.1.0 | plán | **Store edice** (MSIX pro Microsoft Store), fáze N1.1–N1.14 v `ROADMAP.md`, větev `release/1.1.0`, worktree `..\noirpad-110\`, zadání v `..\Noirpad\MD\NOIRPAD-STORE-EDICE.md` |
 
 - **1.0.1** obsahuje opravy z „Kontroly 2“ a nové logo M1 „Skleněné listy“. Podrobně je to
   v CHANGELOGu.
 - **winget:** manifest `ArclyStudio.NoirPad` je mimo repo (`..\arcly-studio\winget\`). Pro 1.0.0
-  je otevřený PR `microsoft/winget-pkgs#456673`.
+  je otevřený PR `microsoft/winget-pkgs#456673`. Manifest 1.0.2 se odešle až po jeho sloučení.
 - **ID nálezů v kódu a testech** (např. `R6`, `K2`, `U1`, `G7`, `D13`) odkazují na revizní
   dokumenty, ne na issue na GitHubu:
   - `G*` = redesign „G – Noir čistý“ (1.0.0),
@@ -671,7 +672,7 @@ Našel je průzkum 27. 10. 2026. Jsou ověřené v kódu, ne v běžící aplika
 | `NOIRPAD-VYDANI-1-0-1.md` | zadání vydání 1.0.1 (kroky, kontroly, winget) |
 | `NOIRPAD-RELEASE-NOTES-1.0.1.md` | text release notes 1.0.1 |
 | `NOIRPAD-LOGO-M1.md`, `noirpad-logo-m1\` | zadání a podklady nového loga |
-| `NOIRPAD-STORE-EDICE.md` | další fáze: MSIX pro Microsoft Store (1.0.2) |
+| `Noirpad\MD\NOIRPAD-STORE-EDICE.md` | další fáze: MSIX pro Microsoft Store (1.1.0) |
 | `arcly-studio\winget\` | winget manifesty `ArclyStudio.NoirPad` |
 
 ## 17. Rychlé příkazy
