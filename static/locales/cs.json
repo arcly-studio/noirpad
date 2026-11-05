@@ -145,7 +145,7 @@
       "many": "Zvolte heslo dlouhé alespoň {n} znaku.",
       "other": "Zvolte heslo dlouhé alespoň {n} znaků."
     },
-    "lockWarning": "Zapomenuté heslo = tuto poznámku už nikdy neotevřete. Obnovit ji nelze.\nŠifruje se pouze text poznámky a jeho formátování. Její název, štítky a obrázky zůstávají na disku nešifrované.\nNoirPad smaže čitelný text i ze svých automatických kopií. Windows nebo disk si ale můžou starší verzi souboru ještě nějakou dobu držet.",
+    "lockWarning": "Zapomenuté heslo = tuto poznámku už nikdy neotevřete. Obnovit ji nelze.\nŠifruje se jen text poznámky a jeho formátování včetně odkazů. Název, štítky a obrázky se nešifrují.\nNoirPad smaže čitelný text i ze svých automatických kopií. Windows nebo disk si ale můžou starší verzi souboru ještě nějakou dobu držet.",
     "imagesNotEncrypted": "Tahle poznámka obsahuje obrázky. Obrázky se nešifrují – otevře je každý, kdo má přístup k vašemu účtu ve Windows.",
     "lock": "Zamknout",
     "unlock": "Odemknout",

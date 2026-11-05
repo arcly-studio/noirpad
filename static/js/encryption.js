@@ -18,16 +18,29 @@ window.NP = window.NP || {};
 
     function editor() { return NP.editor; }
 
-    /* Does the open note show one of its stored images (N1.4)? The saved text
-       is <<IMG:name>> in the rich editor, /images/<uuid>.ext in Markdown or
-       as a pasted link. */
-    function noteHasImages() {
-        var ed = editor();
-        if (!ed) return false;
-        var md = NP.markdown && NP.markdown.isActive && NP.markdown.isActive();
-        var text = md ? NP.markdown.getRawText() : (ed.el ? ed._htmlToTextWithImages().text : "");
-        return /<<IMG:|\/images\/[0-9a-f]{8}-/i.test(text);
+    /* The stored images a note's text refers to (N1.4), as {name: true}:
+       <<IMG:name> in the rich editor, /images/name in Markdown or as a link. */
+    function imageNames(text) {
+        var re = /(?:<<IMG:|\/images\/)([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(?:png|jpe?g|gif|webp))/gi;
+        var names = {};
+        var m;
+        while ((m = re.exec(String(text || "")))) names[m[1].toLowerCase()] = true;
+        return names;
     }
+
+    function openNoteText() {
+        var ed = editor();
+        if (!ed) return "";
+        var md = NP.markdown && NP.markdown.isActive && NP.markdown.isActive();
+        return md ? NP.markdown.getRawText() : (ed.el ? ed._htmlToTextWithImages().text : "");
+    }
+
+    function noteHasImages() {
+        return Object.keys(imageNames(openNoteText())).length > 0;
+    }
+
+    var knownImages = {};     // locked note id -> images it had when it was opened
+    var imagesNoticed = {};   // locked note id -> this session already showed the notice
 
     NP.encryption = {
         /* STATE A → B: lock a plain note. It stays open (unlocked). */
@@ -64,6 +77,7 @@ window.NP = window.NP || {};
                     if (ed && ed._currentNoteId === noteId) {
                         ed._currentNoteEncrypted = true;
                         ed._unlockToken = res && res.unlock_token;
+                        NP.encryption.noteOpened(noteId, openNoteText());
                     }
                     return NP.state.init();
                 }).then(function () {
@@ -78,8 +92,25 @@ window.NP = window.NP || {};
         noteImageAdded: function () {
             var ed = editor();
             if (ed && ed._currentNoteEncrypted && NP.toast) {
+                imagesNoticed[ed._currentNoteId] = true;
                 NP.toast(NP.t("encryption.imagesNotEncrypted"), { timeout: 12000 });
             }
+        },
+
+        /* A locked note was just opened or locked: what it refers to is known. */
+        noteOpened: function (noteId, text) {
+            knownImages[noteId] = imageNames(text);
+        },
+
+        /* A locked note was saved. A link to a stored image typed by hand
+           (Markdown) gets the same notice, once per note and session. */
+        noteSaved: function (noteId, text) {
+            var known = knownImages[noteId];
+            if (!known || imagesNoticed[noteId] || !NP.toast) return;
+            var isNew = Object.keys(imageNames(text)).some(function (name) { return !known[name]; });
+            if (!isNew) return;
+            imagesNoticed[noteId] = true;
+            NP.toast(NP.t("encryption.imagesNotEncrypted"), { timeout: 12000 });
         },
 
         /* ":decrypt" command — remove encryption for good. */

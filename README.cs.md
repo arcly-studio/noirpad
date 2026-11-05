@@ -161,10 +161,12 @@ zůstanou, pokud nezvolíte, že se mají smazat taky.
 hesla přes PBKDF2-SHA256 se 480 000 iteracemi a náhodnou solí pro každou poznámku. Heslo musí mít
 aspoň 4 znaky; pod 8 znaků NoirPad upozorní, že krátké heslo jde snadno prolomit.
 
+Šifruje se jen text poznámky a jeho formátování včetně odkazů. Název, štítky a obrázky se nešifrují.
+
 | Šifrované | Nešifrované |
 |---|---|
 | text poznámky | **název** poznámky, **štítky** a **složka** |
-| jeho formátování a cíle odkazů | **obrázky** v poznámce (samostatné soubory v `images\`) |
+| jeho formátování včetně odkazů | **obrázky** v poznámce (samostatné soubory v `images\`) |
 | | oblíbené, nastavení, informace, zda je poznámka v Markdownu |
 
 **Poznámky zamčené před verzí 1.1.0:** jejich formátování a cíle odkazů zůstávají v datovém souboru

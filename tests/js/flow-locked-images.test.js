@@ -8,9 +8,14 @@ const IMAGE = "12345678-1234-4123-8123-123456789abc.png";
 const ENVELOPE = JSON.stringify({ encrypted: true, data: "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" });
 const NOTICE = "encryption.imagesNotEncrypted";
 
-async function app(content, unlocked = content, scripts = []) {
+const MD = ["vendor/markdown-it/markdown-it.min.js", "vendor/markdown-it-task-lists/markdown-it-task-lists.min.js",
+    "vendor/dompurify/purify.min.js", "vendor/highlight/highlight.min.js", "js/syntax-highlight.js",
+    "js/md-source.js", "js/markdown.js"];
+const OTHER_IMAGE = "abcdef12-1234-4123-8123-123456789abc.png";
+
+async function app(content, unlocked = content, scripts = [], modes = {}) {
     const a = startApp({
-        tree: TREE, notes: { A: content },
+        tree: TREE, notes: { A: content }, modes,
         scripts: ["js/encryption.js", "js/images.js", ...scripts],
     });
     const seen = { warning: null };
@@ -33,6 +38,60 @@ const noModalBoxes = (a) => {
     expect(a.NP.dialog.alert).not.toHaveBeenCalled();
     expect(a.NP.dialog.confirm).not.toHaveBeenCalled();
 };
+
+describe("a stored image linked by hand in a locked Markdown note", () => {
+    const lockedMd = (unlocked) => app(ENVELOPE, unlocked, MD, { A: "markdown" });
+    const typeAndSave = async (a, text) => {
+        a.win.document.getElementById("editor-md").value = text;
+        expect(await a.NP.editor.save(true)).toBe(true);
+        await flush();
+    };
+
+    it("the first save with the new link says so, once per note and session", async () => {
+        const { a } = await lockedMd("jen text");
+        expect(a.NP.markdown.isActive()).toBe(true);
+        await typeAndSave(a, `text ![](/images/${IMAGE})`);
+        expect(noticesIn(a)).toBe(1);
+        await typeAndSave(a, `text ![](/images/${IMAGE}) a ![](/images/${OTHER_IMAGE})`);
+        expect(noticesIn(a)).toBe(1);
+        noModalBoxes(a);
+    });
+
+    it("a link the note already had is not new", async () => {
+        const { a } = await lockedMd(`text ![](/images/${IMAGE})`);
+        await typeAndSave(a, `víc textu ![](/images/${IMAGE})`);
+        expect(noticesIn(a)).toBe(0);
+    });
+
+    it("a half-typed link says nothing yet", async () => {
+        const { a } = await lockedMd("jen text");
+        await typeAndSave(a, "text ![](/images/12345678-12");
+        expect(noticesIn(a)).toBe(0);
+    });
+
+    it("a save that failed says nothing, the next one does", async () => {
+        const { a } = await lockedMd("jen text");
+        a.NP.api.saveEncrypted.mockImplementationOnce(() => Promise.reject(Object.assign(new Error("Disk full"), { status: 507 })));
+        a.win.document.getElementById("editor-md").value = `text ![](/images/${IMAGE})`;
+        expect(await a.NP.editor.save(true)).toBe(false);
+        expect(noticesIn(a)).toBe(0);
+        await typeAndSave(a, `text 2 ![](/images/${IMAGE})`);
+        expect(noticesIn(a)).toBe(1);
+    });
+
+    it("a plain Markdown note: no notice", async () => {
+        const { a } = await app("jen text", "jen text", MD, { A: "markdown" });
+        await typeAndSave(a, `text ![](/images/${IMAGE})`);
+        expect(noticesIn(a)).toBe(0);
+    });
+
+    it("an uploaded image is not announced twice by its own save", async () => {
+        const { a } = await lockedMd("jen text");
+        await a.NP.images.upload(new a.win.Blob(["x"]));
+        await flush();
+        expect(noticesIn(a)).toBe(1);
+    });
+});
 
 describe("locking a note with images", () => {
     it("the password dialog says images are not encrypted", async () => {

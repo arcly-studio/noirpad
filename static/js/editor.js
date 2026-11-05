@@ -326,6 +326,7 @@ window.NP = window.NP || {};
 
                         var decContent = decData.content || "";
                         var decFormats = decData.formats || [];
+                        if (NP.encryption.noteOpened) NP.encryption.noteOpened(id, decContent);
 
                         NP.editor.el.contentEditable = "true";
                         NP.editor.el.style.opacity = "1";
@@ -948,7 +949,8 @@ window.NP = window.NP || {};
             }
 
             var savePromise;
-            if (NP.editor._currentNoteEncrypted) {
+            var savedLocked = !!NP.editor._currentNoteEncrypted;
+            if (savedLocked) {
                 var token = NP.editor._unlockToken;
                 if (!token) return Promise.resolve(true);  /* locked: nothing editable */
                 /* Re-encrypt on the server with the remembered key. A 401
@@ -978,6 +980,9 @@ window.NP = window.NP || {};
             return savePromise.then(function (res) {
                 if (res && res.rev && NP.editor._currentNoteId === id) NP.editor._rev = res.rev;
                 NP.editor._lastSavedKey = key;
+                if (savedLocked && NP.editor._currentNoteId === id && NP.encryption && NP.encryption.noteSaved) {
+                    NP.encryption.noteSaved(id, text);
+                }
                 /* Typing during the request keeps it "not saved". */
                 if (NP.editor._currentNoteId === id) NP.editor._setSaveStatus(
                     NP.editor._saveState === "dirty" && !NP.editor._sameAsSaved(key) ? "dirty" : null);

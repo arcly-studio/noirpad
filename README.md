@@ -157,10 +157,13 @@ stay unless you choose to delete them too.
 password via PBKDF2-SHA256 with 480 000 iterations and a random salt per note. A password needs at
 least 4 characters; below 8 NoirPad reminds you that short passwords are easy to crack.
 
+Only the note text and its formatting, including links, are encrypted. The title, tags and images
+are not.
+
 | Encrypted | Not encrypted |
 |---|---|
 | the note's text | the note's **name**, **tags** and **folder** |
-| its formatting and link targets | **images** in the note (separate files in `images\`) |
+| its formatting, including links | **images** in the note (separate files in `images\`) |
 | | favorites, settings, whether the note is Markdown |
 
 **Notes locked before version 1.1.0:** their formatting and link targets stay readable in the data

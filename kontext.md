@@ -332,7 +332,8 @@ Aplikace nemá CORS, inline skripty ani CDN.
   špatné heslo by ji jinak přepsalo nesmyslem. Člověk ji nejdřív otevře a zkontroluje text.
 - Formáty staré poznámky se do obálky převedou při prvním odemčení heslem (N2, stejné pojistky,
   `_rewrite_envelope`). Obrázky šifrované nejsou: říká to dialog zamčení a upozornění po vložení
-  obrázku do zamčené poznámky (`NP.encryption.noteImageAdded`).
+  obrázku do zamčené poznámky (`NP.encryption.noteImageAdded`). Ručně napsaný odkaz na uložený
+  obrázek ohlásí první uložení, jednou za poznámku a relaci (`NP.encryption.noteSaved`).
 
 **Zámek aplikace:** ukládá se jen hash scrypt (N=2^15, r=8, p=1). Data **nešifruje**. Zapomenuté
 heslo: zavřít NoirPad a smazat `"app_lock"` z `notes_data.json`.
