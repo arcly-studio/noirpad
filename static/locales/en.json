@@ -133,7 +133,7 @@
       "one": "Choose a password of at least {n} character.",
       "other": "Choose a password of at least {n} characters."
     },
-    "lockWarning": "Forgotten password = this note can never be opened again. There is no recovery.\nOnly the note text is encrypted. Its title, tags and images stay unencrypted on disk.\nNoirPad also cleans its automatic copies, but an SSD or Windows shadow copies can still keep the old text.",
+    "lockWarning": "Forgotten password = this note can never be opened again. There is no recovery.\nOnly the note text is encrypted. Its title, tags and images stay unencrypted on disk.\nNoirPad also removes the readable text from its own automatic copies. Windows or the disk may still keep an older version of the file for a while.",
     "lock": "Lock",
     "unlock": "Unlock",
     "encryptFailed": "Encryption failed: {error}",

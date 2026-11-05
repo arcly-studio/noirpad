@@ -166,11 +166,11 @@ least 4 characters; below 8 NoirPad reminds you that short passwords are easy to
 - **A forgotten note password cannot be recovered.** There is no reset and no back door.
 - The password is sent once to NoirPad's own local server to unlock; only the derived key is kept
   in memory while the note is open. It is never written to disk or to the log.
-- **Automatic copies are cleaned too.** When you lock a note or delete it for good, NoirPad removes
-  its readable text from the snapshots and the other automatic copies, in the background and again
-  at every start. Not covered: a damaged file it cannot read (gone after 30 days), images inside
-  pre-import copies (also gone after 30 days), backups you saved yourself, and whatever an SSD or
-  Windows shadow copies still hold.
+- **Automatic copies are cleaned too.** When you lock a note or delete it for good, NoirPad also
+  removes its readable text from its own automatic copies, in the background and again at every
+  start. Not covered: a damaged file it cannot read (gone after 30 days), images inside pre-import
+  copies (also gone after 30 days) and backups you saved yourself. Windows or the disk may still
+  keep an older version of the file for a while.
 - **The app lock is not encryption.** It keeps people out of NoirPad, but `notes_data.json` stays
   readable to anyone with access to your Windows account. Only locked notes are encrypted.
   Forgot the app-lock password? Close NoirPad, delete the `"app_lock": { … }` entry from
