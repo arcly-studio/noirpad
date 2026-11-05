@@ -53,6 +53,7 @@
     "app_locked": "NoirPad je zamčený.",
     "too_many_attempts": "Příliš mnoho pokusů. Zkuste to za minutu.",
     "wrong_password": "Špatné heslo.",
+    "legacy_note_unlock_first": "Tato starší poznámka sama heslo neověří. Otevřete ji heslem, zkontrolujte text a teprve potom odeberte zámek.",
     "password_required": "Zadejte heslo.",
     "password_too_short": "Heslo je příliš krátké (minimální délka: {min}).",
     "password_too_long": "Heslo je příliš dlouhé.",
@@ -144,7 +145,7 @@
       "many": "Zvolte heslo dlouhé alespoň {n} znaku.",
       "other": "Zvolte heslo dlouhé alespoň {n} znaků."
     },
-    "lockWarning": "Zapomenuté heslo = tuto poznámku už nikdy neotevřete. Obnovit ji nelze.\nŠifruje se pouze text poznámky. Její název, štítky a obrázky zůstávají na disku nešifrované.",
+    "lockWarning": "Zapomenuté heslo = tuto poznámku už nikdy neotevřete. Obnovit ji nelze.\nŠifruje se pouze text poznámky. Její název, štítky a obrázky zůstávají na disku nešifrované.\nNoirPad vyčistí i své automatické kopie, ale na SSD nebo ve stínových kopiích Windows může starý text zůstat.",
     "lock": "Zamknout",
     "unlock": "Odemknout",
     "encryptFailed": "Šifrování se nezdařilo: {error}",

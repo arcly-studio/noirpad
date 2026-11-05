@@ -146,6 +146,12 @@ instalátor jeho stažení od Microsoftu.
 vaše uživatelské jméno Windows se zapisuje jako `~`).
 Kdyby se datový soubor poškodil, NoirPad ho nechá stranou a obnoví nejnovější dobrou zálohu.
 
+Dva druhy automatických kopií mají limit stáří: bezpečnostní kopie před importem zálohy
+(`backups\pre-import-*.zip`) a odložený poškozený datový soubor (`notes_data.corrupt-*.json`) se
+smažou po 30 dnech a poškozené soubory zůstávají nejvýš 3. Dokud v NoirPadu není žádná poznámka,
+tyto limity čekají, protože taková kopie může být to jediné, co zbylo. Automatické zálohy limit
+stáří nemají: právě ta nejnovější dobrá vrací poznámky zpět.
+
 **Odinstalace** v Nastavení Windows → Aplikace. Programová složka se odstraní celá; poznámky
 zůstanou, pokud nezvolíte, že se mají smazat taky.
 
@@ -164,6 +170,11 @@ aspoň 4 znaky; pod 8 znaků NoirPad upozorní, že krátké heslo jde snadno pr
 - **Zapomenuté heslo k poznámce nejde obnovit.** Neexistuje reset ani zadní vrátka.
 - Heslo se při odemčení jednou pošle místnímu serveru NoirPadu; po dobu otevření poznámky zůstává
   v paměti jen odvozený klíč. Na disk ani do logu se nikdy nezapisuje.
+- **Automatické kopie se čistí taky.** Když poznámku zamknete nebo trvale smažete, NoirPad odstraní
+  její čitelný text z automatických záloh a ostatních automatických kopií, na pozadí a znovu při
+  každém startu. Netýká se to poškozeného souboru, který nejde přečíst (zmizí po 30 dnech), obrázků
+  v kopiích před importem (taky po 30 dnech), záloh uložených vámi a toho, co ještě drží SSD nebo
+  stínové kopie Windows.
 - **Zámek aplikace není šifrování.** Brání otevření NoirPadu, ale `notes_data.json` zůstává
   čitelný pro každého s přístupem k vašemu účtu ve Windows. Šifrované jsou jen zamčené poznámky.
   Zapomněli jste heslo k zámku aplikace? Zavřete NoirPad, smažte z `notes_data.json` položku

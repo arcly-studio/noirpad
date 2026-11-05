@@ -4,12 +4,15 @@ D2: the password is sent only to lock/unlock; saves use a short-lived
 unlock token and the derived key lives only in server memory.
 """
 
+import base64
+import hashlib
 import json
 import time
 
 import pytest
 
-from conftest import new_note
+from conftest import encryption_routes, new_note
+from noirpad import crypto, scrub
 
 PW = "correct horse"
 
@@ -182,25 +185,185 @@ def test_envelope_from_1_0_1_still_unlocks(client, np_backend):
     assert unlock(client, nid, "wrong-password").status_code == 400
 
 
-def test_legacy_v2_note_is_upgraded_on_save(client, np_backend):
-    import base64
-    import hashlib
-    import os
+def legacy_envelope(text, password=PW, salt=bytes(range(16))):
+    """A legacy version-2 (XOR) envelope, as the old desktop app wrote it."""
+    key = hashlib.pbkdf2_hmac("sha256", password.encode(), salt, 100000)
+    raw = text.encode() if isinstance(text, str) else text
+    payload = bytes(b ^ key[i % len(key)] for i, b in enumerate(raw))
+    return json.dumps({"encrypted": True,
+                       "data": base64.b64encode(b"\x02" + salt + payload).decode()})
 
+
+def legacy_note(client, np_backend, text, password=PW):
     nid = new_note(client, content="placeholder")
-    salt = os.urandom(16)
-    key = hashlib.pbkdf2_hmac("sha256", PW.encode(), salt, 100000)
-    payload = bytes(b ^ key[i % len(key)] for i, b in enumerate("stará".encode()))
-    env = json.dumps({"encrypted": True,
-                      "data": base64.b64encode(b"\x02" + salt + payload).decode()})
-    np_backend._update_data(lambda d: d["notes"].__setitem__(nid, env))
+    envelope = legacy_envelope(text, password)
+    np_backend._update_data(lambda d: d["notes"].__setitem__(nid, envelope))
+    return nid, envelope
+
+
+def version_of(raw):
+    return base64.b64decode(json.loads(raw)["data"])[0]
+
+
+LONG_LEGACY = "Stará poznámka z tkinter verze ✓"
+
+
+# N4: a legacy note moves to version 1 once its password has opened it.
+def test_n4_unlock_upgrades_a_legacy_note(client, np_backend):
+    nid, _ = legacy_note(client, np_backend, LONG_LEGACY)
+    body = unlock(client, nid).json()
+    assert body["content"] == LONG_LEGACY
+    assert version_of(stored(np_backend, nid)) == 1
+    assert unlock(client, nid).json()["content"] == LONG_LEGACY
+    assert unlock(client, nid, "wrong-password").status_code == 400
+
+
+def test_n4_unlocked_token_still_saves_after_the_upgrade(client, np_backend):
+    nid, _ = legacy_note(client, np_backend, LONG_LEGACY)
+    token = unlock(client, nid).json()["unlock_token"]
+    r = client.post("/api/save-encrypted",
+                    json={"id": nid, "unlock_token": token, "content": "nová", "formats": []})
+    assert r.status_code == 200
+    assert unlock(client, nid).json()["content"] == "nová"
+
+
+def test_n4_only_the_password_upgrades_never_a_failed_try(client, np_backend):
+    nid, envelope = legacy_note(client, np_backend, LONG_LEGACY)
+    wrong = "wrong-password"
+    assert unlock(client, nid, wrong).status_code in (200, 400)
+    assert stored(np_backend, nid) == envelope
+    client.get(f"/api/note/{nid}")
+    client.get("/api/data")
+    assert stored(np_backend, nid) == envelope
+
+
+def test_n4_failed_write_keeps_the_original_and_the_note_opens(client, np_backend, monkeypatch):
+    nid, envelope = legacy_note(client, np_backend, LONG_LEGACY)
+
+    def no_disk(path, data):
+        raise OSError(28, "No space left on device")
+
+    monkeypatch.setattr(np_backend, "_atomic_write_json", no_disk)
+    r = unlock(client, nid)
+    assert r.status_code == 200 and r.json()["content"] == LONG_LEGACY
+    monkeypatch.undo()
+    assert stored(np_backend, nid) == envelope
+
+
+def test_n4_new_envelope_that_does_not_open_is_not_written(client, np_backend, monkeypatch):
+    nid, envelope = legacy_note(client, np_backend, LONG_LEGACY)
+    monkeypatch.setattr(encryption_routes, "decrypt_with_key", lambda *a: "something else")
+    r = unlock(client, nid)
+    assert r.status_code == 200 and r.json()["content"] == LONG_LEGACY
+    assert stored(np_backend, nid) == envelope
+
+
+def test_n4_note_changed_meanwhile_is_not_overwritten(client, np_backend, monkeypatch):
+    nid, envelope = legacy_note(client, np_backend, LONG_LEGACY)
+    salt = bytes(range(16))
+    key = crypto.derive_key(PW, salt)
+    np_backend._update_data(lambda d: d["notes"].__setitem__(nid, "novější obsah"))
+    assert encryption_routes._upgrade_legacy_note(nid, envelope, LONG_LEGACY, key, salt) is False
+    assert stored(np_backend, nid) == "novější obsah"
+
+
+# Bytes a wrong password can produce: valid UTF-8, so only a person can tell.
+@pytest.mark.parametrize("text", ["krátká", "a" * 15, "text\x01s řídicím znakem a dost dlouhý", "\x7f" * 20])
+def test_n4_uncertain_text_waits_for_the_first_save(client, np_backend, text):
+    nid, envelope = legacy_note(client, np_backend, text)
+    body = unlock(client, nid).json()
+    assert body["content"] == text
+    assert stored(np_backend, nid) == envelope
+    client.post("/api/save-encrypted", json={"id": nid, "unlock_token": body["unlock_token"],
+                                             "content": "uložená", "formats": []})
+    assert version_of(stored(np_backend, nid)) == 1
+
+
+def test_n4_old_image_marker_counts_as_ordinary_text(client, np_backend):
+    text = "Poznámka s obrázkem \x00IMG:a.png\x00 a textem"
+    nid, _ = legacy_note(client, np_backend, text)
+    assert unlock(client, nid).json()["content"] == text
+    assert version_of(stored(np_backend, nid)) == 1
+
+
+def test_n4_upgrade_cleans_the_weak_format_from_copies(client, np_backend):
+    nid, envelope = legacy_note(client, np_backend, LONG_LEGACY)
+    snap = np_backend.backups_dir() / "notes_data-20260101-000000-000000.json"
+    snap.parent.mkdir(exist_ok=True)
+    snap.write_bytes(np_backend.DATA_FILE.read_bytes())
+    unlock(client, nid)
+    scrub.sweep()
+    in_copy = json.loads(snap.read_text(encoding="utf-8"))["notes"][nid]
+    assert in_copy == stored(np_backend, nid) and in_copy != envelope
+
+
+# Removing the lock through the token used to fail: the key it holds is the
+# new version-1 one, the note on disk still legacy.
+def test_removing_the_lock_of_a_legacy_note_with_a_token(client, np_backend):
+    nid, _ = legacy_note(client, np_backend, "krátká")
+    token = unlock(client, nid).json()["unlock_token"]
+    assert version_of(stored(np_backend, nid)) == 2
+    r = client.post("/api/decrypt", json={"id": nid, "unlock_token": token})
+    assert r.status_code == 200, r.text
+    assert stored(np_backend, nid) == "krátká"
+
+
+def test_removing_the_lock_of_an_upgraded_note_with_its_token(client, np_backend):
+    nid, _ = legacy_note(client, np_backend, LONG_LEGACY)
+    token = unlock(client, nid).json()["unlock_token"]
+    r = client.post("/api/decrypt", json={"id": nid, "unlock_token": token})
+    assert r.status_code == 200, r.text
+    assert stored(np_backend, nid) == LONG_LEGACY
+
+
+def _password_giving_valid_utf8(envelope):
+    """A wrong password whose XOR output happens to be valid UTF-8."""
+    for i in range(20000):
+        guess = f"guess-{i}"
+        try:
+            crypto.decrypt_content(envelope, guess)
+            return guess
+        except ValueError:
+            continue
+    raise AssertionError("no such password found")
+
+
+# A wrong password used to replace a legacy note with nonsense for good.
+def test_wrong_password_cannot_replace_a_legacy_note_with_nonsense(client, np_backend):
+    nid, envelope = legacy_note(client, np_backend, "ab")
+    wrong = _password_giving_valid_utf8(envelope)
+    assert crypto.decrypt_content(envelope, wrong) != "ab"     # the XOR does not notice
+    r = client.post("/api/decrypt", json={"id": nid, "password": wrong})
+    assert r.status_code == 400
+    assert r.json()["detail"]["code"] == "legacy_note_unlock_first"
+    assert stored(np_backend, nid) == envelope
+
+
+def test_removing_the_lock_with_the_password_still_works_when_certain(client, np_backend):
+    nid, _ = legacy_note(client, np_backend, LONG_LEGACY)
+    r = client.post("/api/decrypt", json={"id": nid, "password": PW})
+    assert r.status_code == 200, r.text
+    assert stored(np_backend, nid) == LONG_LEGACY
+
+
+def test_short_legacy_note_is_removed_through_unlock_first(client, np_backend):
+    nid, envelope = legacy_note(client, np_backend, "ab")
+    r = client.post("/api/decrypt", json={"id": nid, "password": PW})
+    assert r.json()["detail"]["code"] == "legacy_note_unlock_first"
+    assert stored(np_backend, nid) == envelope
+    token = unlock(client, nid).json()["unlock_token"]
+    assert client.post("/api/decrypt", json={"id": nid, "unlock_token": token}).status_code == 200
+    assert stored(np_backend, nid) == "ab"
+
+
+def test_legacy_v2_note_is_upgraded_on_save(client, np_backend):
+    nid, _ = legacy_note(client, np_backend, "stará")
 
     body = unlock(client, nid).json()
     assert body["content"] == "stará"
     client.post("/api/save-encrypted", json={"id": nid, "unlock_token": body["unlock_token"],
                                               "content": "nová", "formats": []})
-    version = base64.b64decode(json.loads(stored(np_backend, nid))["data"])[0]
-    assert version == 1
+    assert version_of(stored(np_backend, nid)) == 1
     assert unlock(client, nid).json()["content"] == "nová"
 
 

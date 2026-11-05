@@ -25,9 +25,11 @@ os.environ.pop("NOIRPAD_PASSWORD", None)
 sys.path.insert(0, str(ROOT))
 
 import noirpad.app  # noqa: E402  (after NOIRPAD_DATA_DIR is set)
-from noirpad import config, crypto, runtime, server_auth, storage  # noqa: E402
+from noirpad import config, crypto, runtime, scrub, server_auth, storage  # noqa: E402
 from noirpad.routes import backup as backup_routes  # noqa: E402
 from noirpad.routes import encryption as encryption_routes  # noqa: E402
+
+scrub.BACKGROUND = False   # tests call scrub.sweep() themselves; see test_scrub.py
 
 
 class _Backend:

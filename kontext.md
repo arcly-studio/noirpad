@@ -23,7 +23,8 @@
   (veřejný). Licence MIT. Držitel copyrightu v `LICENSE` je záměrně původní vlastník repa a test
   hlídá, že jeho jméno není nikde jinde (viz §14).
 - Předchůdce je tkinter verze v repu `NoirPad-legacy`, která zůstává beze změny. Šifrovací obálka
-  je s ní kompatibilní: legacy formát „version 2“ (XOR) umí NoirPad jen dešifrovat.
+  je s ní kompatibilní: legacy formát „version 2“ (XOR) NoirPad jen dešifruje a po odemčení heslem
+  přešifruje na version 1 (N4, `routes/encryption.py`, pojistky viz sekce 8).
 
 ## 2. Stav a historie
 
@@ -79,6 +80,7 @@ noirpad-app/
 │  ├─ runtime.py           stav procesu v paměti (RUNTIME): režim, tokeny, odemčené klíče
 │  ├─ runtime_imports.py   UVICORN_OPTIONS + moduly importované za běhu (pro PyInstaller a smoke test)
 │  ├─ storage.py           notes_data.json: zámek, atomický zápis, snapshoty, obnova, migrace, zámek instance
+│  ├─ scrub.py             čištění automatických kopií od zamčených a smazaných poznámek, limity stáří (N1)
 │  ├─ models.py            Pydantic těla požadavků
 │  ├─ tree.py              čisté funkce nad stromem (hledání, koš, obnova)
 │  ├─ server_auth.py       kontrola Host / CSRF / tokenu / hesla, CSP a hlavičky, rate limit
@@ -157,8 +159,8 @@ testy, ruční zkoušky a smoke test.
 | `notes_data.json` | všechny poznámky, strom, koš a nastavení (jeden JSON, **ne SQLite**) |
 | `notes_data.json.tmp` | dočasný soubor atomického zápisu (po chybě se smaže) |
 | `backups/notes_data-<stamp>.json` | automatické snapshoty: nejvýš 1 za 10 min, drží se posledních 7 |
-| `backups/pre-import-<stamp>.zip` | bezpečnostní kopie před importem zálohy (posledních 7) |
-| `notes_data.corrupt-<stamp>.json` | poškozený datový soubor odložený stranou |
+| `backups/pre-import-<stamp>.zip` | bezpečnostní kopie před importem zálohy (posledních 7, nejvýš 30 dní) |
+| `notes_data.corrupt-<stamp>.json` | poškozený datový soubor odložený stranou (nejvýš 3, nejvýš 30 dní od odložení) |
 | `notes_data.pre-single-profile-*.json` | snapshot ze staré migrace víc uživatelů (bez hesel a tokenů) |
 | `images/<uuid4>.<png\|jpg\|gif\|webp>` | obrázky z poznámek |
 | `images/.trash/` | obrázky bez odkazu (po 24 h sem, po 30 dnech se smažou) |
@@ -203,6 +205,8 @@ Výchozí hodnoty jsou v `storage.DEFAULT_DATA`.
   složka, formáty a obrázky šifrované **nejsou**.
 - **`rev`:** `sha256(obsah + "\0" + json(formáty))[:16]`. Počítá se, neukládá. Uložení posílá
   `base_rev` a nesoulad vrátí `409 note_changed_elsewhere` (dvě okna webové verze).
+- **`scrub_pending`:** id trvale smazaných poznámek, dokud je čištění kopií nezpracuje. Soukromý
+  klíč jako `app_lock`: nejde do prohlížeče ani do zálohy.
 
 ### Zápis a odolnost
 
@@ -215,6 +219,13 @@ Výchozí hodnoty jsou v `storage.DEFAULT_DATA`.
 - Poškozený JSON se odloží stranou a obnoví se nejnovější dobrý snapshot. UI pak jednou ukáže
   `data_notice` (`data_restored` / `data_reset`). BOM nevadí a rozbitá struktura se opraví
   v paměti (R10).
+- Čištění kopií (`scrub.py`, N1): jeden idempotentní průchod porovná snapshoty, `pre-import` zipy,
+  `corrupt`, `pre-single-profile` a `.bak` s aktuálními daty. Zamčená poznámka dostane místo
+  čitelného textu aktuální obálku, trvale smazaná zmizí. Běží na vlastním vlákně a se svým zámkem,
+  mimo `file_lock`: 5 s po startu serveru a hned po zamčení, přešifrování nebo trvalém smazání.
+  Zavírání čeká nejvýš 2 s. Poznámka chybějící v aktuálních datech se z kopií **nemaže** (vypadal by
+  tak i vyprázdněný soubor nebo import). Limity stáří se neuplatní, dokud v datech není žádná
+  poznámka. Nová automatická kopie se musí přidat do `scrub._copies`.
 - `update_data_tracked` vrací ETag před zápisem a po něm. Hlavička `X-NoirPad-ETag-Before`
   dovolí klientovi po vlastním uložení nestahovat data znovu (R9).
 
@@ -308,6 +319,11 @@ Aplikace nemá CORS, inline skripty ani CDN.
   v `RUNTIME.unlocked`, zapomene se po 30 min nečinnosti, nejpozději po 12 h, a také při lock,
   lock-all a ukončení.
 - Zapomenuté heslo nejde obnovit.
+- Legacy obálka version 2 (XOR, bez kontroly integrity) se po odemčení heslem přepíše na version 1
+  (N4), jen když je text aspoň 16 bajtů bez řídicích znaků, nová obálka se před zápisem ověří
+  a v souboru je pořád původní obálka. Jinak se povýší až prvním uložením.
+- Trvalé odebrání zámku jen heslem u nejisté legacy poznámky vrátí `legacy_note_unlock_first`:
+  špatné heslo by ji jinak přepsalo nesmyslem. Člověk ji nejdřív otevře a zkontroluje text.
 
 **Zámek aplikace:** ukládá se jen hash scrypt (N=2^15, r=8, p=1). Data **nešifruje**. Zapomenuté
 heslo: zavřít NoirPad a smazat `"app_lock"` z `notes_data.json`.
@@ -544,6 +560,7 @@ npx vitest run                          # 31 souborů v tests/js (~270 testů)
 | `test_security.py` | hlavičky a CSP, Host, CSRF, token, `test_r8_*` (handlery neblokují event loop, rate limit) |
 | `test_desktop.py` | start a zavírání `desktop.py`, smoke test, mutex, installer.iss |
 | `test_storage.py` | atomický zápis, obnova, snapshoty, zámek instance, plný disk, BOM |
+| `test_scrub.py` | čištění kopií (N1): zamčené a smazané poznámky, limity stáří, start a ukládání nečekají |
 | `i18n.test.js` | shodné klíče en/cs, žádný natvrdo zapsaný text v JS ani HTML, každý použitý klíč existuje |
 | `test_i18n_api.py` | každý chybový kód backendu má klíč v locale |
 

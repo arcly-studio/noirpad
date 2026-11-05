@@ -80,12 +80,28 @@ def set_data_dir(path: Path) -> None:
     IMAGES_DIR.mkdir(exist_ok=True)
     IMAGES_DIR_R = IMAGES_DIR.resolve()
     RUNTIME.data_notice = None
+    _remove_interrupted_writes()
     _migrate_legacy_data_if_needed(DATA_DIR)
     _migrate_to_single_profile()
     _scrub_profile_snapshots()
     _migrate_noir_effects()
     RUNTIME.app_lock = read_data().get("app_lock") or None
     RUNTIME.app_lock_tokens.clear()
+
+
+def _remove_interrupted_writes() -> None:
+    """N1: temp files left by a crash hold whole copies of the data. A write
+    replaces its target only when complete, so with notes_data.json in place
+    they are never needed. Without it, one may be all that is left: keep it.
+    Runs before anything else writes, under the instance lock (R11)."""
+    if not DATA_FILE.exists():
+        return
+    backups = DATA_DIR / "backups"
+    for leftover in [*DATA_DIR.glob("notes_data*.tmp"), *backups.glob("*.tmp"), *backups.glob("*.part")]:
+        try:
+            leftover.unlink()
+        except OSError as exc:
+            log.warning("Could not remove %s: errno %s", leftover.name, exc.errno)
 
 
 def _migrate_legacy_data_if_needed(target_dir: Path) -> None:
@@ -269,6 +285,10 @@ def _recover_corrupt_data(reason: Exception) -> dict[str, Any]:
     corrupt = DATA_DIR / f"notes_data.corrupt-{stamp()}.json"
     os.replace(DATA_FILE, corrupt)
     log.error("notes_data.json is corrupt (%s); moved to %s", reason, corrupt.name)
+    try:
+        os.utime(corrupt)   # the age limit (scrub.py) counts from today, not from its last save
+    except OSError as exc:
+        log.warning("Could not date %s: errno %s", corrupt.name, exc.errno)
 
     candidates = sorted(backups_dir().glob("notes_data-*.json"), reverse=True)
     if DATA_BAK.exists():           # single .bak written by older versions
@@ -306,7 +326,7 @@ def write_data_unlocked(data: dict[str, Any]) -> None:
 
 
 # Kept in notes_data.json but never sent to the browser or put in a backup.
-PRIVATE_KEYS = ("app_lock",)
+PRIVATE_KEYS = ("app_lock", "scrub_pending")
 
 
 def public_view(data: dict[str, Any]) -> dict[str, Any]:

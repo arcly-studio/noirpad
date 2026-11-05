@@ -142,6 +142,12 @@ installer offers to download it from Microsoft.
 7, at most one per 10 minutes) and `logs\` (start-up and errors, never note content; your Windows user name is written as `~`). If the data
 file is ever damaged, NoirPad keeps it aside and restores the newest good snapshot.
 
+Two kinds of automatic copy have an age limit: the safety copy made before a backup import
+(`backups\pre-import-*.zip`) and a damaged data file kept aside (`notes_data.corrupt-*.json`) are
+deleted after 30 days, and at most 3 damaged files are kept. While NoirPad holds no notes at all,
+these limits wait, because such a copy may be all that is left. Snapshots have no age limit: the
+newest good one is what brings your notes back.
+
 **Uninstall** from Windows Settings → Apps. The program folder is removed completely; your notes
 stay unless you choose to delete them too.
 
@@ -160,6 +166,11 @@ least 4 characters; below 8 NoirPad reminds you that short passwords are easy to
 - **A forgotten note password cannot be recovered.** There is no reset and no back door.
 - The password is sent once to NoirPad's own local server to unlock; only the derived key is kept
   in memory while the note is open. It is never written to disk or to the log.
+- **Automatic copies are cleaned too.** When you lock a note or delete it for good, NoirPad removes
+  its readable text from the snapshots and the other automatic copies, in the background and again
+  at every start. Not covered: a damaged file it cannot read (gone after 30 days), images inside
+  pre-import copies (also gone after 30 days), backups you saved yourself, and whatever an SSD or
+  Windows shadow copies still hold.
 - **The app lock is not encryption.** It keeps people out of NoirPad, but `notes_data.json` stays
   readable to anyone with access to your Windows account. Only locked notes are encrypted.
   Forgot the app-lock password? Close NoirPad, delete the `"app_lock": { … }` entry from

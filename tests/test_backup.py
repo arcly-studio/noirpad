@@ -3,6 +3,7 @@
 import io
 import json
 import zipfile
+from pathlib import Path
 
 import pytest
 
@@ -30,6 +31,49 @@ def backup_with(tree, notes, images=None):
     for name, data in (images or {}).items():
         files["images/" + name] = data
     return make_zip(files)
+
+
+FIXTURE_1_0_2 = Path(__file__).parent / "fixtures" / "backup-1.0.2.zip"
+PASSWORD_1_0_2 = "fixture-password"
+
+
+def _ids_by_name(tree):
+    return {item["name"]: item["id"] for item in tree}
+
+
+def test_backup_from_1_0_2_restores_completely(client, np_backend):
+    """Written by the code of the 1.0.2 release. Never regenerate this file:
+    it proves that a backup from an older release can still be restored."""
+    assert import_zip(client, FIXTURE_1_0_2.read_bytes()).status_code == 200
+    data = client.get("/api/data").json()
+    ids = _ids_by_name(data["tree"])
+    assert set(ids) == {"Plain", "Markdown", "Locked v1", "Locked legacy"}
+
+    plain = client.get(f"/api/note/{ids['Plain']}").json()["content"]
+    assert plain.startswith("Plain note 1.0.2 <<IMG:")
+    image = plain.split("<<IMG:")[1].split(">>")[0]
+    assert client.get(f"/images/{image}").status_code == 200
+    assert client.get(f"/api/note/{ids['Markdown']}").json()["mode"] == "markdown"
+    assert [i["name"] for i in client.get("/api/trash").json()["tree"]] == ["In trash"]
+
+    for name, text in (("Locked v1", "Locked v1 from 1.0.2 ✓"),
+                       ("Locked legacy", "Legacy XOR note from 1.0.2 ✓")):
+        r = client.post("/api/unlock", json={"id": ids[name], "password": PASSWORD_1_0_2})
+        assert r.status_code == 200, r.text
+        assert r.json()["content"] == text
+        assert client.post("/api/unlock", json={"id": ids[name],
+                                                "password": "wrong-password"}).status_code == 400
+
+
+def test_backup_from_1_0_2_survives_another_roundtrip(client, np_backend):
+    import_zip(client, FIXTURE_1_0_2.read_bytes())
+    ids = _ids_by_name(client.get("/api/data").json()["tree"])
+    client.post("/api/unlock", json={"id": ids["Locked legacy"], "password": PASSWORD_1_0_2})
+    assert import_zip(client, download(client)).status_code == 200
+    for name, text in (("Locked v1", "Locked v1 from 1.0.2 ✓"),
+                       ("Locked legacy", "Legacy XOR note from 1.0.2 ✓")):
+        r = client.post("/api/unlock", json={"id": ids[name], "password": PASSWORD_1_0_2})
+        assert r.json()["content"] == text
 
 
 def test_backup_roundtrip(client, np_backend, tmp_path):

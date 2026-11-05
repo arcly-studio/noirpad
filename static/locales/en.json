@@ -45,6 +45,7 @@
     "app_locked": "NoirPad is locked.",
     "too_many_attempts": "Too many attempts. Try again in a minute.",
     "wrong_password": "Wrong password.",
+    "legacy_note_unlock_first": "This older note can't confirm the password on its own. Open it with the password, check the text, and then remove the lock.",
     "password_required": "Enter the password.",
     "password_too_short": "The password is too short (minimum length: {min}).",
     "password_too_long": "The password is too long.",
@@ -132,7 +133,7 @@
       "one": "Choose a password of at least {n} character.",
       "other": "Choose a password of at least {n} characters."
     },
-    "lockWarning": "Forgotten password = this note can never be opened again. There is no recovery.\nOnly the note text is encrypted. Its title, tags and images stay unencrypted on disk.",
+    "lockWarning": "Forgotten password = this note can never be opened again. There is no recovery.\nOnly the note text is encrypted. Its title, tags and images stay unencrypted on disk.\nNoirPad also cleans its automatic copies, but an SSD or Windows shadow copies can still keep the old text.",
     "lock": "Lock",
     "unlock": "Unlock",
     "encryptFailed": "Encryption failed: {error}",

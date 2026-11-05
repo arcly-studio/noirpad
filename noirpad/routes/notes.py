@@ -6,6 +6,7 @@ import json
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
+from .. import scrub
 from ..crypto import is_encrypted_content
 from ..errors import ApiError
 from ..images import delete_images, extract_image_names, referenced_images
@@ -174,6 +175,8 @@ def _purge(data: dict, trash: dict, note_ids, purged_ids=None) -> None:
     data["favorites"] = [f for f in data.get("favorites", []) if f not in gone]
     trash["favorites"] = [f for f in trash.get("favorites", []) if f not in gone]
     delete_images(candidates - referenced_images(data))
+    if gone:    # written with the deletion, so an interrupted cleanup is repeated (N1)
+        data["scrub_pending"] = sorted(set(data.get("scrub_pending") or []) | gone)
 
 
 @router.get("/api/trash")
@@ -207,6 +210,7 @@ def trash_empty():
         trash["tree"] = []
 
     update_data(_mut)
+    scrub.request_sweep()
     return {"ok": True}
 
 
@@ -223,4 +227,5 @@ def trash_delete_item(req: IdReq):
         _purge(data, trash, collect_note_ids(item), collect_all_ids(item))
 
     update_data(_mut)
+    scrub.request_sweep()
     return {"ok": True}
