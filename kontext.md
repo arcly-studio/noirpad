@@ -33,11 +33,11 @@
 | 1.0.0 | 2026-10-20 | vydáno, první veřejné vydání |
 | 1.0.1 | 2026-10-27 | vydáno |
 | 1.0.2 | 2026-11-05 | vydáno (GitHub „Latest“), **hotfix**: jen aktualizace závislostí (nález N3 z auditu) |
-| 1.1.0 | plán | **Store edice** (MSIX pro Microsoft Store), fáze N1.1–N1.14 v `ROADMAP.md`, větev `release/1.1.0`, worktree `..\noirpad-110\`, zadání v `..\Noirpad\MD\NOIRPAD-STORE-EDICE.md` |
+| 1.1.0 | plán | **Store edice** (MSIX pro Microsoft Store), fáze N1.1–N1.14 v `ROADMAP.md`, větev `release/1.1.0`, worktree `..\2-store-1.1.0\`, zadání v `..\6-dokumenty\NOIRPAD-STORE-EDICE.md` |
 
 - **1.0.1** obsahuje opravy z „Kontroly 2“ a nové logo M1 „Skleněné listy“. Podrobně je to
   v CHANGELOGu.
-- **winget:** manifest `ArclyStudio.NoirPad` je mimo repo (`..\arcly-studio\winget\`). Pro 1.0.0
+- **winget:** manifest `ArclyStudio.NoirPad` je mimo repo (`..\..\arcly-studio\winget\`). Pro 1.0.0
   je otevřený PR `microsoft/winget-pkgs#456673`. Manifest 1.0.2 se odešle až po jeho sloučení.
 - **ID nálezů v kódu a testech** (např. `R6`, `K2`, `U1`, `G7`, `D13`) odkazují na revizní
   dokumenty, ne na issue na GitHubu:
@@ -70,7 +70,7 @@ souborů. Aplikace sama žádný JS build nemá.
 ## 4. Struktura repozitáře
 
 ```
-noirpad-app/
+1-aplikace/                (worktree 1.1.0: 2-store-1.1.0/)
 ├─ desktop.py              desktop shell: zámek instance, uvicorn ve vlákně, okno pywebview, zavírání
 ├─ NoirPad-web.py          spouštěč webové verze (volá noirpad.web.main)
 ├─ noirpad/                backend (FastAPI)
@@ -680,17 +680,27 @@ Našel je průzkum 27. 10. 2026. Jsou ověřené v kódu, ne v běžící aplika
    - dočasná složka z importu v `conftest.py` se neuklízí,
    - `BUILD.md` neuvádí `take_screenshots.py --only`.
 
-## 16. Podklady mimo repozitář (`C:\vibe coding picoviny\`)
+## 16. Podklady mimo repozitář (`C:\vibe coding picoviny\Noirpad\`)
+
+| Složka | Obsah |
+|---|---|
+| `1-aplikace\` | hlavní repo (větev `main`) |
+| `2-store-1.1.0\` | worktree, větev `release/1.1.0` |
+| `3-web\` | worktree, web (větev `feat/site`) |
+| `4-hotfix-1.0.2\` | worktree, větev `hotfix/1.0.2` |
+| `5-logo\` | podklady loga |
+| `6-dokumenty\` | zadání a kontroly |
+| `7-socialni-site\` | sociální sítě |
 
 | Soubor | Obsah |
 |---|---|
-| `KONTROLA-NOIRPAD-2.md` | nálezy Kontroly 2 (ID E/T/R/U/S/I…), základ verze 1.0.1 |
-| `NOIRPAD-TEST-1.0.1.md` | ruční testovací checklist 1.0.1 (prošel) |
-| `NOIRPAD-VYDANI-1-0-1.md` | zadání vydání 1.0.1 (kroky, kontroly, winget) |
-| `NOIRPAD-RELEASE-NOTES-1.0.1.md` | text release notes 1.0.1 |
-| `NOIRPAD-LOGO-M1.md`, `noirpad-logo-m1\` | zadání a podklady nového loga |
-| `Noirpad\MD\NOIRPAD-STORE-EDICE.md` | další fáze: MSIX pro Microsoft Store (1.1.0) |
-| `arcly-studio\winget\` | winget manifesty `ArclyStudio.NoirPad` |
+| `6-dokumenty\KONTROLA-NOIRPAD-2.md` | nálezy Kontroly 2 (ID E/T/R/U/S/I…), základ verze 1.0.1 |
+| `6-dokumenty\NOIRPAD-TEST-1.0.1.md` | ruční testovací checklist 1.0.1 (prošel) |
+| `6-dokumenty\NOIRPAD-VYDANI-1-0-1.md` | zadání vydání 1.0.1 (kroky, kontroly, winget) |
+| `6-dokumenty\NOIRPAD-RELEASE-NOTES-1.0.1.md` | text release notes 1.0.1 |
+| `6-dokumenty\NOIRPAD-LOGO-M1.md`, `5-logo\` | zadání a podklady nového loga |
+| `6-dokumenty\NOIRPAD-STORE-EDICE.md` | další fáze: MSIX pro Microsoft Store (1.1.0) |
+| `C:\vibe coding picoviny\arcly-studio\winget\` | winget manifesty `ArclyStudio.NoirPad` |
 
 ## 17. Rychlé příkazy
 

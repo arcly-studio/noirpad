@@ -8,8 +8,8 @@ Hotfix, jen aktualizace závislostí (N3).
 
 ## 1.1.0: Store edice
 
-MSIX balíček pro Microsoft Store a zbytek vlny 1 z auditu. Větev `release/1.1.0`, worktree `..\noirpad-110\`.
-Zadání: `..\Noirpad\MD\NOIRPAD-STORE-EDICE.md`. Audit: `..\arcly-studio\security\AUDIT-2026-11.md`.
+MSIX balíček pro Microsoft Store a zbytek vlny 1 z auditu. Větev `release/1.1.0`, worktree `..\2-store-1.1.0\`.
+Zadání: `..\6-dokumenty\NOIRPAD-STORE-EDICE.md`. Audit: `..\..\arcly-studio\security\AUDIT-2026-11.md`.
 
 | Fáze | Co se dělá |
 |---|---|
