@@ -160,8 +160,12 @@ least 4 characters; below 8 NoirPad reminds you that short passwords are easy to
 | Encrypted | Not encrypted |
 |---|---|
 | the note's text | the note's **name**, **tags** and **folder** |
-| | **images** in the note (separate files in `images\`) |
-| | formatting data, favorites, settings |
+| its formatting and link targets | **images** in the note (separate files in `images\`) |
+| | favorites, settings, whether the note is Markdown |
+
+**Notes locked before version 1.1.0:** their formatting and link targets stay readable in the data
+file until you first open the note with its password. NoirPad cannot encrypt them without it, so a
+note you never open again keeps them readable, in its automatic copies too.
 
 - **A forgotten note password cannot be recovered.** There is no reset and no back door.
 - The password is sent once to NoirPad's own local server to unlock; only the derived key is kept

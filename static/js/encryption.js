@@ -18,6 +18,17 @@ window.NP = window.NP || {};
 
     function editor() { return NP.editor; }
 
+    /* Does the open note show one of its stored images (N1.4)? The saved text
+       is <<IMG:name>> in the rich editor, /images/<uuid>.ext in Markdown or
+       as a pasted link. */
+    function noteHasImages() {
+        var ed = editor();
+        if (!ed) return false;
+        var md = NP.markdown && NP.markdown.isActive && NP.markdown.isActive();
+        var text = md ? NP.markdown.getRawText() : (ed.el ? ed._htmlToTextWithImages().text : "");
+        return /<<IMG:|\/images\/[0-9a-f]{8}-/i.test(text);
+    }
+
     NP.encryption = {
         /* STATE A → B: lock a plain note. It stays open (unlocked). */
         encrypt: function () {
@@ -34,7 +45,8 @@ window.NP = window.NP || {};
             return NP.passwordDialog.ask({
                 title: NP.t("encryption.lockTitle"),
                 message: NP.t("encryption.lockMessage", { n: MIN_PASSWORD }),
-                warning: NP.t("encryption.lockWarning"),
+                warning: NP.t("encryption.lockWarning") +
+                    (noteHasImages() ? "\n" + NP.t("encryption.imagesNotEncrypted") : ""),
                 confirm: true,
                 minLength: MIN_PASSWORD,
                 weakBelow: GOOD_PASSWORD,
@@ -60,6 +72,14 @@ window.NP = window.NP || {};
             }).catch(function (err) {
                 NP.dialog.alert(NP.t("encryption.encryptFailed", { error: err && err.message ? err.message : err }));
             });
+        },
+
+        /* An image just went into a locked note: its file stays unencrypted. */
+        noteImageAdded: function () {
+            var ed = editor();
+            if (ed && ed._currentNoteEncrypted && NP.toast) {
+                NP.toast(NP.t("encryption.imagesNotEncrypted"), { timeout: 12000 });
+            }
         },
 
         /* ":decrypt" command — remove encryption for good. */

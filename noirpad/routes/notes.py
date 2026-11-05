@@ -27,6 +27,14 @@ def note_rev(content: str, formats) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
 
 
+def _open_formats(store: dict, note_id: str, content: str) -> list:
+    """The formats anyone may see without a password: none for a locked note,
+    even when an older version left them readable in the file (N2)."""
+    if is_encrypted_content(content):
+        return []
+    return (store.get("note_formats") or {}).get(note_id, [])
+
+
 @router.get("/api/note/{note_id}")
 def get_note(note_id: str):
     """A note's content; a note in the trash comes back with trashed: true,
@@ -37,7 +45,7 @@ def get_note(note_id: str):
     content = (store.get("notes") or {}).get(note_id)
     if content is None or not note_exists(data, note_id):
         raise ApiError(404, "note_not_found")
-    formats = (store.get("note_formats") or {}).get(note_id, [])
+    formats = _open_formats(store, note_id, content)
     return {
         "content": content,
         "formats": formats,
@@ -70,7 +78,7 @@ def put_note(note_id: str, body: NoteBody):
             raise ApiError(409, "note_is_encrypted")
         # R6: another window saved this note since this one loaded it —
         # never overwrite that silently (the page asks the user).
-        stored_rev = note_rev(current, data.get("note_formats", {}).get(note_id, []))
+        stored_rev = note_rev(current, _open_formats(data, note_id, current))
         if (body.base_rev is not None and stored_rev != body.base_rev
                 and stored_rev != note_rev(body.content, body.formats)):
             raise ApiError(409, "note_changed_elsewhere")

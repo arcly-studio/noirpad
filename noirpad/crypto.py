@@ -3,11 +3,16 @@
 Envelope (same as the old desktop app): {"encrypted": true, "data":
 base64(version(1) + salt(16) + payload)}. Version 1 = Fernet with a
 PBKDF2-SHA256 key; version 2 = legacy XOR, decrypt-only.
+
+N2: a version-1 envelope may also hold "formats": a Fernet token (same key) of
+{"sha256": hash of the note's text, "formats": [...]}. Older versions ignore
+the field and still open the text. The hash ties the formats to that text.
 """
 
 import base64
 import hashlib
 import json
+import logging
 import os
 import re
 import unicodedata
@@ -16,6 +21,8 @@ from typing import Optional
 from cryptography.fernet import Fernet, InvalidToken  # noqa: F401  (re-exported)
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+log = logging.getLogger("noirpad")
 
 PBKDF2_ITERATIONS = 480_000
 MIN_NOTE_PASSWORD = 4          # shorter than 8: the UI warns, see encryption.js
@@ -31,10 +38,41 @@ def derive_key(password: str, salt: bytes) -> bytes:
     return base64.urlsafe_b64encode(kdf.derive(password.encode()))
 
 
-def encrypt_with_key(content: str, key: bytes, salt: bytes) -> str:
+def _text_hash(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def encrypt_with_key(content: str, key: bytes, salt: bytes, formats: Optional[list] = None) -> str:
     """Version-1 envelope from an already derived key (no KDF cost)."""
     combined = b"\x01" + salt + Fernet(key).encrypt(content.encode("utf-8"))
-    return json.dumps({"encrypted": True, "data": base64.b64encode(combined).decode("ascii")})
+    envelope = {"encrypted": True, "data": base64.b64encode(combined).decode("ascii")}
+    if formats:
+        sealed = json.dumps({"sha256": _text_hash(content), "formats": formats}, ensure_ascii=False)
+        envelope["formats"] = Fernet(key).encrypt(sealed.encode("utf-8")).decode("ascii")
+    return json.dumps(envelope)
+
+
+def envelope_formats(stored: str, text: str, key: bytes) -> Optional[list]:
+    """The formats sealed in a version-1 envelope for this *text*. None = the
+    envelope has none (they may still be in note_formats). Formats that cannot
+    be opened or belong to another text are ignored: the note opens without
+    them, and the log gets a code, never content."""
+    obj = json.loads(stored)
+    if "formats" not in obj:
+        return None
+    try:
+        sealed = json.loads(Fernet(key).decrypt(obj["formats"]))
+        formats = sealed["formats"]
+        if not isinstance(formats, list):
+            raise ValueError("not a list")
+        expected = sealed["sha256"]
+    except (InvalidToken, TypeError, ValueError, KeyError):
+        log.warning("Note formats ignored: formats_unreadable")
+        return []
+    if expected != _text_hash(text):
+        log.warning("Note formats ignored: formats_mismatch")
+        return []
+    return formats
 
 
 def _parse_envelope(stored: str) -> tuple[int, bytes, bytes]:

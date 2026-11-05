@@ -3,7 +3,8 @@
 The copies are the snapshots, the pre-import zips, the set-aside damaged data
 files and the leftovers of old versions. One idempotent pass compares them
 with the current data: a note that is locked now gets its envelope instead of
-readable text, a note deleted for good is removed. Ids of deleted notes wait
+readable text and loses its readable formats (N2), a note deleted for good is
+removed. Ids of deleted notes wait
 in the private data key `scrub_pending` until every copy has been handled, so
 a failed or interrupted pass is repeated at the next start.
 
@@ -114,12 +115,24 @@ def _forget_notes(holder: Any, ids: set[str]) -> bool:
     return changed
 
 
-def clean_copy(copy: dict[str, Any], locked: dict[str, str], deleted: set[str]) -> bool:
+def _forget_formats(holder: Any, ids: set[str]) -> bool:
+    mapping = holder.get("note_formats") if isinstance(holder, dict) else None
+    if not isinstance(mapping, dict) or not ids & mapping.keys():
+        return False
+    for note_id in ids & mapping.keys():
+        del mapping[note_id]
+    return True
+
+
+def clean_copy(copy: dict[str, Any], locked: dict[str, str], deleted: set[str],
+               sealed: set[str] = frozenset()) -> bool:
     """Clean a parsed copy in place. True = it changed and must be rewritten."""
     trash = copy.get("trash")
     changed = _lock_notes(copy.get("notes"), locked)
     if isinstance(trash, dict):
         changed |= _lock_notes(trash.get("notes"), locked)
+    changed |= _forget_formats(copy, sealed)
+    changed |= _forget_formats(trash, sealed)
     if deleted:
         changed |= _forget_notes(copy, deleted)
         changed |= _forget_notes(trash, deleted)
@@ -135,16 +148,18 @@ def _parse(raw: bytes) -> Optional[dict[str, Any]]:
     return data if isinstance(data, dict) else None
 
 
-def _clean_json_file(path: Path, locked: dict[str, str], deleted: set[str]) -> None:
+def _clean_json_file(path: Path, locked: dict[str, str], deleted: set[str],
+                     sealed: set[str] = frozenset()) -> None:
     stat = path.stat()
     data = _parse(path.read_bytes())
-    if data is None or not clean_copy(data, locked, deleted):
+    if data is None or not clean_copy(data, locked, deleted, sealed):
         return
     storage._atomic_write_json(path, data)
     os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns))   # its age means something
 
 
-def _clean_zip_file(path: Path, locked: dict[str, str], deleted: set[str]) -> None:
+def _clean_zip_file(path: Path, locked: dict[str, str], deleted: set[str],
+                    sealed: set[str] = frozenset()) -> None:
     stat = path.stat()
     tmp = path.with_name(path.name + ".part")
     try:
@@ -153,7 +168,7 @@ def _clean_zip_file(path: Path, locked: dict[str, str], deleted: set[str]) -> No
                 data = _parse(source.read("notes_data.json"))
             except KeyError:
                 return
-            if data is None or not clean_copy(data, locked, deleted):
+            if data is None or not clean_copy(data, locked, deleted, sealed):
                 return
             with open(tmp, "wb") as raw, zipfile.ZipFile(raw, "w", zipfile.ZIP_DEFLATED) as target:
                 for info in source.infolist():
@@ -187,16 +202,21 @@ def _copies() -> tuple[list[Path], list[Path]]:
     return json_files, sorted(backups.glob("pre-import-*.zip"))
 
 
-def _plan(data: dict[str, Any]) -> tuple[dict[str, str], set[str]]:
-    """(id -> envelope of every locked note, ids of notes deleted for good)."""
+def _plan(data: dict[str, Any]) -> tuple[dict[str, str], set[str], set[str]]:
+    """(id -> envelope of every locked note, ids of notes deleted for good, ids
+    of locked notes without readable formats in the current data). A note whose
+    formats are still readable there waits: it has not been unlocked yet."""
     trash = data.get("trash") or {}
     live = {**(trash.get("notes") or {}), **(data.get("notes") or {})}
     locked = {note_id: text for note_id, text in live.items() if is_encrypted_content(text)}
+    readable = {**(trash.get("note_formats") or {}), **(data.get("note_formats") or {})}
+    sealed = {note_id for note_id in locked if not readable.get(note_id)}
     known: set = set(live)
     for root in (data.get("tree") or [], trash.get("tree") or []):
         known.update(_tree_ids(root))
     # An id that is back (a backup was imported) is not deleted any more.
-    return locked, {i for i in data.get("scrub_pending") or [] if isinstance(i, str)} - known
+    deleted = {i for i in data.get("scrub_pending") or [] if isinstance(i, str)} - known
+    return locked, deleted, sealed
 
 
 def _tree_ids(items: list) -> set[str]:
@@ -229,12 +249,12 @@ def sweep() -> bool:
     """One pass over all copies. False = some copy could not be handled."""
     with _pass_lock:
         data = storage.read_data()
-        locked, deleted = _plan(data)
+        locked, deleted, sealed = _plan(data)
         json_files, zip_files = _copies()
         complete = True
         for path, clean in [(p, _clean_json_file) for p in json_files] + [(p, _clean_zip_file) for p in zip_files]:
             try:
-                clean(path, locked, deleted)
+                clean(path, locked, deleted, sealed)
             except FileNotFoundError:
                 pass      # just rotated away
             except zipfile.BadZipFile:

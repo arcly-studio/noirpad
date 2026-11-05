@@ -20,9 +20,9 @@ Zadání: `..\6-dokumenty\NOIRPAD-STORE-EDICE.md`. Audit: `..\..\arcly-studio\se
 | **N1.5** | N11, N12, N14, N15: rozbalovací seznamy z klávesnice, vysoký kontrast, zoom, `aria-label`, Actions, Dependabot, `.gitignore`, `SECURITY.md`. |
 | **N1.6** | Popisné názvy motivů v UI místo cizích názvů (návrh EN/CS schvaluje uživatel), interní id a uložené hodnoty zůstávají. Efekt „falling-code rain“ / „déšť padajícího kódu“, příkaz `:rain`, `:matrix` jen jako skrytý alias.<br>**Chyba:** efekt deště padajícího kódu není vidět, protože plátno `#matrix-canvas` zakrývá neprůhledný `#editor-wrapper` (v poznámce i na startovní stránce). Oprava + test, který bez opravy selže. |
 | **N1.7** | URL repa malými písmeny, N8 (licence třetích stran), N9 („Copyright (c) 2026 Arcly Studio“, první commit je z 2026-05-18; úprava `CLAUDE.md` a `test_version.py`), N10 (kontakt v O aplikaci). |
-| **N1.8** | N5 a N7 v repu: `PRIVACY.md` a pravdivé texty o šifrování. |
+| **N1.8** | N5 a N7 v repu: `PRIVACY.md` a pravdivé texty o šifrování, včetně toho, že obrázky šifrované nejsou (N1.4). |
 | **N1.9** | Balení: přepínač edice, složka dat, manifest, ikony, `build-msix.ps1` (viz níže). |
-| **N1.10** | Verze 1.1.0 a CHANGELOG, včetně `cryptography` 50.0.2 z N1.2. Do CHANGELOGu dále: při prvním startu 1.1.0 se smažou `corrupt-*` a `pre-import` zipy starší než 30 dní (jen pokud jsou v datech poznámky); u starého formátu v2 může špatné heslo otevřít krátkou poznámku jako nesmysl, před odebráním zámku zkontroluj text; obrázky trvale smazané poznámky zůstávají v `pre-import` zipech do vypršení limitu. |
+| **N1.10** | Verze 1.1.0 a CHANGELOG, včetně `cryptography` 50.0.2 z N1.2. Do CHANGELOGu dále: při prvním startu 1.1.0 se smažou `corrupt-*` a `pre-import` zipy starší než 30 dní (jen pokud jsou v datech poznámky); u starého formátu v2 může špatné heslo otevřít krátkou poznámku jako nesmysl, před odebráním zámku zkontroluj text; obrázky trvale smazané poznámky zůstávají v `pre-import` zipech do vypršení limitu; formátování a odkazy zamčených poznámek se nově šifrují, převod při prvním odemčení. |
 | **N1.11** | Instalace, odinstalace, upgrade a WACK na druhém lokálním účtu Windows. Testovací certifikát s adminem až po výslovném „ano“ uživatele v tu chvíli. Bez Windows 10 VM. Podle výsledku dopřesnit Privacy. |
 | **N1.12** | Listing EN/CS a `store/questionnaire.md`: podklady k šifrování (jaké, z jaké knihovny, veřejně dostupný kód) bez právních závěrů. Otázku na ECCN ověří uživatel v Partner Center. |
 | **N1.13** | Screenshoty pro Store EN/CS s demo daty, až po přejmenování motivů. |
@@ -45,7 +45,7 @@ Data ve Store edici jsou v `%USERPROFILE%\NoirPad`. Jednorázový import z GitHu
 
 ### N1.11: ruční checklist
 
-- [ ] Zamknout poznámku se značkovým textem, zavřít aplikaci, prohledat celou datovou složku včetně `webview/` a obsahu zipů v `backups/`: text se nesmí najít.
+- [ ] Zamknout poznámku se značkovým textem, zavřít aplikaci, prohledat celou datovou složku včetně `webview/` a obsahu zipů v `backups/`: text se nesmí najít. Totéž pro značkovou URL odkazu v té poznámce.
 
 ### Podmínky před odesláním do Storu
 

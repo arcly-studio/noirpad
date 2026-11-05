@@ -308,6 +308,13 @@ window.NP = window.NP || {};
         return box.innerHTML;
     }
 
+    /* Pasted content may bring a NoirPad image along (another note's). */
+    function insertPasted(frag) {
+        var hasImage = !!frag.querySelector("img");
+        insertFragment(frag);
+        if (hasImage && NP.encryption) NP.encryption.noteImageAdded();
+    }
+
     /* Replace the editor selection with *frag*. execCommand keeps the
        browser's undo (Ctrl+Z); jsdom and old engines take the Range path. */
     function insertFragment(frag) {
@@ -411,7 +418,7 @@ window.NP = window.NP || {};
                 frag = plainFragment(data.text);
             }
             if (!editorRange()) restoreRange(saved);
-            insertFragment(frag);
+            insertPasted(frag);
         }).catch(fail);
     }
 
@@ -460,7 +467,7 @@ window.NP = window.NP || {};
                 if (!text) return;
                 frag = plainFragment(text);
             }
-            insertFragment(frag);
+            insertPasted(frag);
         },
 
         /* Colours, background, font and size off the selection; bold,

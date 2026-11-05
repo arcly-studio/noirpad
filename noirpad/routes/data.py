@@ -4,8 +4,18 @@ from fastapi import APIRouter, Request, Response
 from fastapi.responses import JSONResponse
 
 from .. import storage
+from ..crypto import is_encrypted_content
 
 router = APIRouter()
+
+
+def _without_locked_formats(holder: dict) -> dict:
+    """N2: readable formats an older version left beside a locked note stay
+    in the file until its next unlock, but do not go out without a password."""
+    notes = holder.get("notes") or {}
+    formats = holder.get("note_formats") or {}
+    return {**holder, "note_formats": {note_id: value for note_id, value in formats.items()
+                                       if not is_encrypted_content(notes.get(note_id, ""))}}
 
 
 @router.get("/api/data")
@@ -15,7 +25,9 @@ def get_data(request: Request):
     if known and known == storage.data_etag():
         return Response(status_code=304, headers={"ETag": known})
     data, etag = storage.read_data_with_etag()
-    return JSONResponse(storage.public_view(data), headers={"ETag": etag})
+    view = _without_locked_formats(storage.public_view(data))
+    view["trash"] = _without_locked_formats(view.get("trash") or {})
+    return JSONResponse(view, headers={"ETag": etag})
 
 
 def _folder_size(folder) -> int:

@@ -460,10 +460,10 @@ def test_a_pass_in_progress_does_not_block_saving(client, np_backend, monkeypatc
     entered, release = threading.Event(), threading.Event()
     real = scrub._clean_json_file
 
-    def stuck(path, locked, deleted):
+    def stuck(path, *plan):
         entered.set()
         release.wait(30)
-        real(path, locked, deleted)
+        real(path, *plan)
 
     monkeypatch.setattr(scrub, "_clean_json_file", stuck)
     worker = threading.Thread(target=scrub.sweep)

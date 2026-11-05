@@ -201,8 +201,13 @@ Výchozí hodnoty jsou v `storage.DEFAULT_DATA`.
   - Legacy formát `\x00IMG:name\x00` se stále čte.
 - **Markdown:** obsah je surový Markdown a obrázky se píšou jako `![](/images/<name>)`.
 - **Zamčená poznámka:** obsah je obálka
-  `{"encrypted": true, "data": base64(verze(1) + sůl(16) + Fernet token)}`. Název, štítky,
-  složka, formáty a obrázky šifrované **nejsou**.
+  `{"encrypted": true, "data": base64(verze(1) + sůl(16) + Fernet token), "formats": Fernet token}`.
+  Pole `formats` (N2, jen když nějaké formáty jsou) nese `{"sha256": hash textu, "formats": [...]}`
+  se stejným klíčem. Hash formáty váže k textu: když nesedí nebo token nejde otevřít, formáty se
+  ignorují, text se vrátí a do logu jde jen `formats_mismatch` / `formats_unreadable`. Starší verze
+  pole ignorují. Název, štítky, složka a obrázky šifrované **nejsou**.
+- **Poznámka zamčená před 1.1.0:** má formáty čitelně v `note_formats`, dokud ji někdo neodemkne
+  heslem. `/api/note` a `/api/data` je u zamčené poznámky neposílají nikdy.
 - **`rev`:** `sha256(obsah + "\0" + json(formáty))[:16]`. Počítá se, neukládá. Uložení posílá
   `base_rev` a nesoulad vrátí `409 note_changed_elsewhere` (dvě okna webové verze).
 - **`scrub_pending`:** id trvale smazaných poznámek, dokud je čištění kopií nezpracuje. Soukromý
@@ -221,7 +226,8 @@ Výchozí hodnoty jsou v `storage.DEFAULT_DATA`.
   v paměti (R10).
 - Čištění kopií (`scrub.py`, N1): jeden idempotentní průchod porovná snapshoty, `pre-import` zipy,
   `corrupt`, `pre-single-profile` a `.bak` s aktuálními daty. Zamčená poznámka dostane místo
-  čitelného textu aktuální obálku, trvale smazaná zmizí. Běží na vlastním vlákně a se svým zámkem,
+  čitelného textu aktuální obálku a ztratí čitelné formáty, pokud už je nemá ani v aktuálních
+  datech, trvale smazaná zmizí. Běží na vlastním vlákně a se svým zámkem,
   mimo `file_lock`: 5 s po startu serveru a hned po zamčení, přešifrování nebo trvalém smazání.
   Zavírání čeká nejvýš 2 s. Poznámka chybějící v aktuálních datech se z kopií **nemaže** (vypadal by
   tak i vyprázdněný soubor nebo import). Limity stáří se neuplatní, dokud v datech není žádná
@@ -324,6 +330,9 @@ Aplikace nemá CORS, inline skripty ani CDN.
   a v souboru je pořád původní obálka. Jinak se povýší až prvním uložením.
 - Trvalé odebrání zámku jen heslem u nejisté legacy poznámky vrátí `legacy_note_unlock_first`:
   špatné heslo by ji jinak přepsalo nesmyslem. Člověk ji nejdřív otevře a zkontroluje text.
+- Formáty staré poznámky se do obálky převedou při prvním odemčení heslem (N2, stejné pojistky,
+  `_rewrite_envelope`). Obrázky šifrované nejsou: říká to dialog zamčení a upozornění po vložení
+  obrázku do zamčené poznámky (`NP.encryption.noteImageAdded`).
 
 **Zámek aplikace:** ukládá se jen hash scrypt (N=2^15, r=8, p=1). Data **nešifruje**. Zapomenuté
 heslo: zavřít NoirPad a smazat `"app_lock"` z `notes_data.json`.
@@ -561,6 +570,7 @@ npx vitest run                          # 31 souborů v tests/js (~270 testů)
 | `test_desktop.py` | start a zavírání `desktop.py`, smoke test, mutex, installer.iss |
 | `test_storage.py` | atomický zápis, obnova, snapshoty, zámek instance, plný disk, BOM |
 | `test_scrub.py` | čištění kopií (N1): zamčené a smazané poznámky, limity stáří, start a ukládání nečekají |
+| `test_note_formats.py` | šifrované formáty a odkazy (N2): převod, vazba na text, API bez hesla, kopie |
 | `i18n.test.js` | shodné klíče en/cs, žádný natvrdo zapsaný text v JS ani HTML, každý použitý klíč existuje |
 | `test_i18n_api.py` | každý chybový kód backendu má klíč v locale |
 

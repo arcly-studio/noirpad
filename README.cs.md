@@ -164,8 +164,12 @@ aspoň 4 znaky; pod 8 znaků NoirPad upozorní, že krátké heslo jde snadno pr
 | Šifrované | Nešifrované |
 |---|---|
 | text poznámky | **název** poznámky, **štítky** a **složka** |
-| | **obrázky** v poznámce (samostatné soubory v `images\`) |
-| | údaje o formátování, oblíbené, nastavení |
+| jeho formátování a cíle odkazů | **obrázky** v poznámce (samostatné soubory v `images\`) |
+| | oblíbené, nastavení, informace, zda je poznámka v Markdownu |
+
+**Poznámky zamčené před verzí 1.1.0:** jejich formátování a cíle odkazů zůstávají v datovém souboru
+čitelné, dokud poznámku poprvé neotevřete heslem. Bez něj je NoirPad zašifrovat neumí, takže
+poznámka, kterou už neotevřete, je má čitelné dál, i ve svých automatických kopiích.
 
 - **Zapomenuté heslo k poznámce nejde obnovit.** Neexistuje reset ani zadní vrátka.
 - Heslo se při odemčení jednou pošle místnímu serveru NoirPadu; po dobu otevření poznámky zůstává

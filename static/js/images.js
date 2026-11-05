@@ -118,6 +118,7 @@ window.NP = window.NP || {};
                 } else {
                     NP.images._insertImage(url, filename);
                 }
+                if (NP.encryption) NP.encryption.noteImageAdded();
 
                 /* Persist immediately — autosave is 30s and the user
                    may switch notes or refresh before then. */
@@ -242,6 +243,7 @@ window.NP = window.NP || {};
                 } else {
                     NP.images._insertLink(url);
                 }
+                if (NP.encryption) NP.encryption.noteImageAdded();
                 if (NP.editor && NP.editor.save) NP.editor.save(true);
             }).catch(function (err) {
                 console.error("Image upload failed:", err);

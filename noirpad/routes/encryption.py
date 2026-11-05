@@ -16,8 +16,8 @@ from typing import Optional
 from fastapi import APIRouter
 
 from .. import scrub
-from ..crypto import (MAX_NOTE_PASSWORD, MIN_NOTE_PASSWORD, InvalidToken, decrypt_content,
-                      decrypt_with_key, derive_key, encrypt_with_key, envelope_version,
+from ..crypto import (MAX_NOTE_PASSWORD, MIN_NOTE_PASSWORD, InvalidToken, decrypt_with_key,
+                      derive_key, encrypt_with_key, envelope_formats, envelope_version,
                       is_encrypted_content, legacy_key, legacy_text_is_certain, unlock_content)
 from ..errors import ApiError
 from ..server_auth import guarded_attempt
@@ -94,7 +94,8 @@ def encrypt_note(req: PasswordReq):
             raise ApiError(400, "note_already_encrypted")
         # Image names from the PLAINTEXT, so the trash cleanup still finds them.
         data.setdefault("note_images", {})[req.id] = extract_image_names(content)
-        data["notes"][req.id] = encrypt_with_key(content, key, salt)
+        formats = data.get("note_formats", {}).pop(req.id, [])
+        data["notes"][req.id] = encrypt_with_key(content, key, salt, formats)
 
     update_data(_mut)
     scrub.request_sweep()      # after the write: the snapshot it made still holds the text
@@ -109,33 +110,46 @@ def _guess():
 
 
 class _NoteChanged(Exception):
-    """The note is no longer the envelope the upgrade started from."""
+    """The note is no longer what the rewrite started from."""
 
 
-def _upgrade_legacy_note(note_id: str, stored: str, text: str, key: bytes, salt: bytes) -> bool:
-    """N4: replace a legacy XOR envelope with version 1 right after the
-    password opened it. On any problem the original stays as it is and the
-    note still opens; its next save upgrades it. A text that cannot be told
-    from a wrong password's output waits for that save too."""
-    if not legacy_text_is_certain(text):
-        return False
+def _rewrite_envelope(note_id: str, stored: str, text: str, formats: list, plain: list,
+                      key: bytes, salt: bytes) -> bool:
+    """Right after the password opened a note: a version-1 envelope holding
+    its text and *formats* replaces *stored*, and the readable formats *plain*
+    leave note_formats. The new envelope is verified first and written only
+    over exactly what was opened. On any problem everything stays as it is and
+    the note still opens; its next save does this."""
     try:
-        upgraded = encrypt_with_key(text, key, salt)
-        if decrypt_with_key(upgraded, key) != text:
+        rewritten = encrypt_with_key(text, key, salt, formats)
+        if (decrypt_with_key(rewritten, key) != text
+                or (envelope_formats(rewritten, text, key) or []) != formats):
             raise ValueError("the new envelope does not open")
 
         def _mut(data: dict) -> None:
-            if data.get("notes", {}).get(note_id) != stored:
+            if (data.get("notes", {}).get(note_id) != stored
+                    or (data.get("note_formats", {}).get(note_id) or []) != plain):
                 raise _NoteChanged()
             data.setdefault("note_images", {})[note_id] = extract_image_names(text)
-            data["notes"][note_id] = upgraded
+            data.get("note_formats", {}).pop(note_id, None)
+            data["notes"][note_id] = rewritten
 
         update_data(_mut)
     except Exception as exc:  # the note must open no matter what
-        log.warning("Could not upgrade a legacy note: %s", type(exc).__name__)
+        log.warning("Could not rewrite a locked note: %s", type(exc).__name__)
         return False
     scrub.request_sweep()
     return True
+
+
+def _upgrade_legacy_note(note_id: str, stored: str, text: str, key: bytes, salt: bytes,
+                         formats: Optional[list] = None) -> bool:
+    """N4: a legacy XOR envelope moves to version 1 once its password opened
+    it. A text that cannot be told from a wrong password's output waits for
+    the next save."""
+    if not legacy_text_is_certain(text):
+        return False
+    return _rewrite_envelope(note_id, stored, text, formats or [], formats or [], key, salt)
 
 
 @router.post("/api/unlock")
@@ -151,12 +165,19 @@ def unlock_note(req: PasswordReq):
             text, key, salt = unlock_content(stored, req.password)
         except (InvalidToken, ValueError):
             raise ApiError(400, "wrong_password")
+    version = envelope_version(stored)
+    plain = data.get("note_formats", {}).get(req.id) or []
+    sealed = envelope_formats(stored, text, key) if version == 1 else None
+    formats = plain if sealed is None else sealed
     xor_key = None
-    if envelope_version(stored) == 2 and not _upgrade_legacy_note(req.id, stored, text, key, salt):
-        xor_key = legacy_key(stored, req.password)
+    if version == 2:
+        if not _upgrade_legacy_note(req.id, stored, text, key, salt, plain):
+            xor_key = legacy_key(stored, req.password)
+    elif plain:     # N2: locked by an older version, its formats still readable
+        _rewrite_envelope(req.id, stored, text, formats, plain, key, salt)
     return {
         "content": text,
-        "formats": data.get("note_formats", {}).get(req.id, []),
+        "formats": formats,
         "mode": data.get("note_modes", {}).get(req.id, "rich-text"),
         "unlock_token": _remember_key(req.id, key, salt, xor_key),
     }
@@ -170,11 +191,9 @@ def save_encrypted(req: SaveEncryptedReq):
     def _mut(data: dict) -> None:
         _stored_note(data, req.id)
         data.setdefault("note_images", {})[req.id] = extract_image_names(req.content)
-        data["notes"][req.id] = encrypt_with_key(req.content, entry["key"], entry["salt"])
-        if req.formats:
-            data.setdefault("note_formats", {})[req.id] = req.formats
-        else:   # cleared formatting must stay cleared (D16)
-            data.get("note_formats", {}).pop(req.id, None)
+        # Cleared formatting stays cleared (D16): no formats, no field.
+        data["notes"][req.id] = encrypt_with_key(req.content, entry["key"], entry["salt"], req.formats)
+        data.get("note_formats", {}).pop(req.id, None)
         set_mode(data, req.id, req.mode)
 
     update_data(_mut)
@@ -186,14 +205,14 @@ def save_encrypted(req: SaveEncryptedReq):
     return {"ok": True}
 
 
-def _text_for_removal(stored: str, password: str) -> str:
-    """The text a permanent removal may write, from the password alone. Only
-    a legacy text that is certain: without an integrity check, a wrong
-    password would otherwise replace the note with nonsense for good."""
-    text = decrypt_content(stored, password)
+def _open_for_removal(stored: str, password: str) -> tuple[str, bytes]:
+    """The text a permanent removal may write and its key, from the password
+    alone. Only a legacy text that is certain: without an integrity check, a
+    wrong password would otherwise replace the note with nonsense for good."""
+    text, key, _salt = unlock_content(stored, password)
     if envelope_version(stored) == 2 and not legacy_text_is_certain(text):
         raise ApiError(400, "legacy_note_unlock_first")
-    return text
+    return text, key
 
 
 @router.post("/api/decrypt")
@@ -207,17 +226,22 @@ def decrypt_note(req: DecryptReq):
     if key is None and stored_before is not None:
         with _guess():
             try:
-                _text_for_removal(stored_before, req.password)   # KDF outside the lock
+                _open_for_removal(stored_before, req.password)   # KDF outside the lock
             except (InvalidToken, ValueError):
                 raise ApiError(400, "wrong_password")
 
     def _mut(data: dict) -> None:
         stored = _stored_note(data, req.id)
         try:
-            text = (decrypt_with_key(stored, key, entry["xor_key"]) if key is not None
-                    else _text_for_removal(stored, req.password))
+            if key is not None:
+                text, note_key = decrypt_with_key(stored, key, entry["xor_key"]), key
+            else:
+                text, note_key = _open_for_removal(stored, req.password)
         except (InvalidToken, ValueError):
             raise ApiError(400, "wrong_password")
+        formats = envelope_formats(stored, text, note_key) if envelope_version(stored) == 1 else None
+        if formats:     # a plain note keeps its formats in the open
+            data.setdefault("note_formats", {})[req.id] = formats
         data["notes"][req.id] = text
         data.setdefault("note_images", {})[req.id] = extract_image_names(text)
 
