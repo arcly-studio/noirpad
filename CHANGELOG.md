@@ -2,7 +2,7 @@
 
 All notable changes to NoirPad. Versions follow [Semantic Versioning](https://semver.org/).
 
-## [1.0.2] – Unreleased
+## [1.0.2] – 2026-11-05
 
 Security update of the bundled libraries. No new features; your notes and settings stay as they are.
 
