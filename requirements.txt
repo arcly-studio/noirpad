@@ -23,7 +23,7 @@ typing_extensions==4.15.0
 typing-inspection==0.4.2
 
 # Per-note encryption
-cryptography==50.0.0
+cryptography==50.0.2
 cffi==2.0.0
 pycparser==3.0
 

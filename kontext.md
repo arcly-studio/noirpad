@@ -52,8 +52,8 @@
 | Vrstva | Co | Verze (připnuté) |
 |---|---|---|
 | Jazyk backendu | Python | **3.14** (`.python-version`), jiné verze nejsou testované |
-| Web server | FastAPI + Starlette + uvicorn (pevně h11, bez WebSocketů) | fastapi 0.136.0, starlette 1.0.0, uvicorn 0.45.0, pydantic 2.13.3 |
-| Šifrování | `cryptography` (Fernet, PBKDF2) + `hashlib.scrypt` (zámek aplikace) | cryptography 46.0.7 |
+| Web server | FastAPI + Starlette + uvicorn (pevně h11, bez WebSocketů) | fastapi 0.136.0, starlette 1.3.1, uvicorn 0.45.0, pydantic 2.13.3 |
+| Šifrování | `cryptography` (Fernet, PBKDF2) + `hashlib.scrypt` (zámek aplikace) | cryptography 50.0.2 |
 | Datová složka | platformdirs | 4.9.6 |
 | Desktop okno | pywebview → WebView2 přes pythonnet | pywebview 6.2.1, pythonnet 3.1.0 |
 | Frontend | čistý JavaScript (IIFE na `window.NP`), **bez bundleru a bez modulů** | – |
