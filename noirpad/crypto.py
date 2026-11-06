@@ -133,6 +133,20 @@ def envelope_version(stored: str) -> Optional[int]:
     return _parse_envelope(stored)[0] if is_encrypted_content(stored) else None
 
 
+def envelope_time(stored: str) -> Optional[float]:
+    """When a version-1 envelope was written, without the password: a Fernet
+    token starts with 0x80 and its creation time in the clear. None for
+    anything else (a legacy envelope has no time)."""
+    try:
+        version, _salt, payload = _parse_envelope(stored)
+        raw = base64.urlsafe_b64decode(payload)
+    except (ValueError, TypeError, KeyError):
+        return None
+    if version != 1 or len(raw) < 9 or raw[0] != 0x80:
+        return None
+    return float(int.from_bytes(raw[1:9], "big"))
+
+
 def legacy_text_is_certain(text: str) -> bool:
     """Can a decrypted legacy version-2 text be trusted without a person
     looking at it? XOR has no integrity check, so a wrong password can give

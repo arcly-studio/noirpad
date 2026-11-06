@@ -263,6 +263,19 @@ def test_an_uncertain_legacy_note_keeps_its_formats_until_the_first_save(client,
     assert unlock(client, nid).json()["formats"] == FMT
 
 
+def test_an_unverified_legacy_save_leaves_the_formats_in_the_copies(client, np_backend):
+    """They belong to the original note, which those copies may be the way back to."""
+    nid = new_note(client)
+    set_note(np_backend, nid, legacy_envelope("krátká"), FMT)
+    scrub.sweep()
+    snap = snapshot(np_backend)
+    body = unlock(client, nid).json()
+    client.post("/api/save-encrypted", json={"id": nid, "unlock_token": body["unlock_token"],
+                                             "content": "krátká", "formats": FMT})
+    assert scrub.sweep() is True
+    assert URL in snap.read_text(encoding="utf-8")
+
+
 # ---- formats tied to their text ----------------------------------------------
 
 

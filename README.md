@@ -168,7 +168,8 @@ are not.
 
 **Notes locked before version 1.1.0:** their formatting and link targets stay readable in the data
 file until you first open the note with its password. NoirPad cannot encrypt them without it, so a
-note you never open again keeps them readable, in its automatic copies too.
+note you never open again keeps them readable, in its automatic copies and in any backup you
+download too.
 
 - **A forgotten note password cannot be recovered.** There is no reset and no back door.
 - The password is sent once to NoirPad's own local server to unlock; only the derived key is kept
@@ -176,7 +177,8 @@ note you never open again keeps them readable, in its automatic copies too.
 - **Automatic copies are cleaned too.** When you lock a note or delete it for good, NoirPad also
   removes its readable text from its own automatic copies, in the background and again at every
   start. Not covered: a damaged file it cannot read (gone after 30 days), images inside pre-import
-  copies (also gone after 30 days) and backups you saved yourself. Windows or the disk may still
+  copies (also gone after 30 days), a copy written after the lock, because its text is the newer one
+  (rotated out, or gone after 30 days), and backups you saved yourself. Windows or the disk may still
   keep an older version of the file for a while.
 - **The app lock is not encryption.** It keeps people out of NoirPad, but `notes_data.json` stays
   readable to anyone with access to your Windows account. Only locked notes are encrypted.

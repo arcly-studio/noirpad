@@ -96,6 +96,7 @@ def encrypt_note(req: PasswordReq):
         data.setdefault("note_images", {})[req.id] = extract_image_names(content)
         formats = data.get("note_formats", {}).pop(req.id, [])
         data["notes"][req.id] = encrypt_with_key(content, key, salt, formats)
+        scrub.mark_locked(data, req.id)
 
     update_data(_mut)
     scrub.request_sweep()      # after the write: the snapshot it made still holds the text
@@ -133,6 +134,7 @@ def _rewrite_envelope(note_id: str, stored: str, text: str, formats: list, plain
             data.setdefault("note_images", {})[note_id] = extract_image_names(text)
             data.get("note_formats", {}).pop(note_id, None)
             data["notes"][note_id] = rewritten
+            scrub.mark_locked(data, note_id)
 
         update_data(_mut)
     except Exception as exc:  # the note must open no matter what
@@ -188,17 +190,23 @@ def save_encrypted(req: SaveEncryptedReq):
     """Autosave of an unlocked note: re-encrypt with the remembered key."""
     entry = _key_for(req.unlock_token, req.id)
 
-    def _mut(data: dict) -> None:
+    def _mut(data: dict) -> bool:
         _stored_note(data, req.id)
         data.setdefault("note_images", {})[req.id] = extract_image_names(req.content)
         # Cleared formatting stays cleared (D16): no formats, no field.
         data["notes"][req.id] = encrypt_with_key(req.content, entry["key"], entry["salt"], req.formats)
-        data.get("note_formats", {}).pop(req.id, None)
+        readable = data.get("note_formats", {}).pop(req.id, None)
         set_mode(data, req.id, req.mode)
+        # A legacy text nobody could verify changes no copy: with a wrong
+        # password they may be the only way back to the note.
+        if readable and entry["xor_key"] is None:
+            scrub.mark_locked(data, req.id)
+            return True
+        return False
 
-    update_data(_mut)
-    if entry["xor_key"] is not None:      # this save upgraded a legacy note
-        entry["xor_key"] = None
+    copies_to_clean = update_data(_mut)
+    entry["xor_key"] = None               # the note is version 1 by now
+    if copies_to_clean:
         scrub.request_sweep()
     if req.lock_after:
         RUNTIME.unlocked.pop(req.unlock_token, None)

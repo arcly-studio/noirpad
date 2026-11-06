@@ -171,7 +171,8 @@ aspoň 4 znaky; pod 8 znaků NoirPad upozorní, že krátké heslo jde snadno pr
 
 **Poznámky zamčené před verzí 1.1.0:** jejich formátování a cíle odkazů zůstávají v datovém souboru
 čitelné, dokud poznámku poprvé neotevřete heslem. Bez něj je NoirPad zašifrovat neumí, takže
-poznámka, kterou už neotevřete, je má čitelné dál, i ve svých automatických kopiích.
+poznámka, kterou už neotevřete, je má čitelné dál, i ve svých automatických kopiích a ve stažených
+zálohách.
 
 - **Zapomenuté heslo k poznámce nejde obnovit.** Neexistuje reset ani zadní vrátka.
 - Heslo se při odemčení jednou pošle místnímu serveru NoirPadu; po dobu otevření poznámky zůstává
@@ -179,8 +180,9 @@ poznámka, kterou už neotevřete, je má čitelné dál, i ve svých automatick
 - **Automatické kopie se čistí taky.** Když poznámku zamknete nebo trvale smažete, NoirPad smaže
   její čitelný text i ze svých automatických kopií, na pozadí a znovu při každém startu. Netýká se
   to poškozeného souboru, který nejde přečíst (zmizí po 30 dnech), obrázků v kopiích před importem
-  (taky po 30 dnech) a záloh uložených vámi. Windows nebo disk si ale můžou starší verzi souboru
-  ještě nějakou dobu držet.
+  (taky po 30 dnech), kopie vzniklé až po zamčení, protože její text je ten novější (vytlačí ji
+  rotace, nebo zmizí po 30 dnech), a záloh uložených vámi. Windows nebo disk si ale můžou starší
+  verzi souboru ještě nějakou dobu držet.
 - **Zámek aplikace není šifrování.** Brání otevření NoirPadu, ale `notes_data.json` zůstává
   čitelný pro každého s přístupem k vašemu účtu ve Windows. Šifrované jsou jen zamčené poznámky.
   Zapomněli jste heslo k zámku aplikace? Zavřete NoirPad, smažte z `notes_data.json` položku

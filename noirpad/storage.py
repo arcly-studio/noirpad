@@ -326,7 +326,7 @@ def write_data_unlocked(data: dict[str, Any]) -> None:
 
 
 # Kept in notes_data.json but never sent to the browser or put in a backup.
-PRIVATE_KEYS = ("app_lock", "scrub_pending")
+PRIVATE_KEYS = ("app_lock", "scrub_pending", "scrub_locked", "scrub_first_pass_done")
 
 
 def public_view(data: dict[str, Any]) -> dict[str, Any]:

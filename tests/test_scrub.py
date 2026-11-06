@@ -164,6 +164,114 @@ def test_a_copy_of_an_older_locked_version_stays_as_it_is(client, np_backend):
     assert json.loads(snap.read_text(encoding="utf-8"))["notes"][nid] == older
 
 
+# ---- only a lock changes a copy, and never one newer than the lock -----------
+
+
+def zip_note(archive, nid):
+    with zipfile.ZipFile(archive) as zf:
+        return json.loads(zf.read("notes_data.json"))["notes"][nid]
+
+
+def older_backup_of_a_locked_note(client, np_backend, nid, monkeypatch=None, then=None):
+    """A backup with this note locked, optionally long ago."""
+    if then is None:
+        lock(client, nid)
+    else:
+        with monkeypatch.context() as m:
+            m.setattr(time, "time", lambda: then)
+            lock(client, nid)
+    return client.get("/api/backup").content
+
+
+def edit_after_removing_the_lock(client, nid, text):
+    token = client.post("/api/unlock", json={"id": nid, "password": PW}).json()["unlock_token"]
+    assert client.post("/api/decrypt", json={"id": nid, "unlock_token": token}).status_code == 200
+    assert client.put(f"/api/note/{nid}", json={"content": text, "formats": []}).status_code == 200
+
+
+def import_backup(client, backup):
+    r = client.post("/api/backup/import", files={"file": ("b.zip", backup, "application/zip")})
+    assert r.status_code == 200, r.text
+
+
+def test_1_0_x_import_of_an_older_lock_keeps_the_newer_text_at_first_start(client, np_backend, monkeypatch):
+    """1.0.x data: the note was unlocked and edited, then a backup with the
+    older locked version was imported. The first pass of 1.1.0 covers every
+    locked note, but the safety copy holds the newer text."""
+    nid = new_note(client, content="starší text")
+    backup = older_backup_of_a_locked_note(client, np_backend, nid, monkeypatch, time.time() - 100 * DAY)
+    edit_after_removing_the_lock(client, nid, "NOVĚJŠÍ TEXT")
+    import_backup(client, backup)
+    # as 1.0.x left it: no mark of a lock, the first pass still to come
+    np_backend.update_data(lambda d: (d.pop("scrub_locked", None), d.pop("scrub_first_pass_done", None)))
+    archive = next(np_backend.backups_dir().glob("pre-import-*.zip"))
+    assert scrub.sweep() is True
+    assert zip_note(archive, nid) == "NOVĚJŠÍ TEXT"
+    assert np_backend.read_data()["scrub_first_pass_done"] is True
+
+
+def test_a_copy_newer_than_the_lock_is_skipped_even_for_a_marked_note(client, np_backend):
+    nid = new_note(client, content="čitelný text")
+    snap = snapshot(np_backend)
+    lock(client, nid)
+    in_an_hour = time.time() + 3600
+    os.utime(snap, (in_an_hour, in_an_hour))
+    assert scrub.sweep() is True
+    assert "čitelný text" in snap.read_text(encoding="utf-8")
+    assert "scrub_locked" not in np_backend.read_data()     # … left to rotation and limits
+
+
+def test_the_first_pass_cleans_copies_older_than_the_lock(client, np_backend):
+    """What the first pass is for: copies an older version left readable."""
+    nid = new_note(client, content=MARK)
+    snap = snapshot(np_backend)
+    long_ago = time.time() - 50 * DAY
+    os.utime(snap, (long_ago, long_ago))
+    lock(client, nid)
+    np_backend.update_data(lambda d: d.pop("scrub_locked", None))
+    scrub.sweep()
+    assert MARK not in snap.read_text(encoding="utf-8")
+
+
+def test_import_marks_nothing_and_changes_no_copy(client, np_backend):
+    """Within seconds, so the time check cannot tell: only a lock changes a copy."""
+    nid = new_note(client, content="starší text")
+    backup = older_backup_of_a_locked_note(client, np_backend, nid)
+    scrub.sweep()
+    edit_after_removing_the_lock(client, nid, "NOVĚJŠÍ TEXT")
+    import_backup(client, backup)
+    assert "scrub_locked" not in np_backend.read_data()
+    archive = next(np_backend.backups_dir().glob("pre-import-*.zip"))
+    assert scrub.sweep() is True
+    assert zip_note(archive, nid) == "NOVĚJŠÍ TEXT"
+
+
+def test_a_note_locked_anew_during_a_pass_stays_marked(client, np_backend, monkeypatch):
+    nid = new_note(client, content="text")
+    lock(client, nid)
+    real = scrub._copies
+
+    def lock_again_meanwhile():
+        def _mut(data):
+            data["notes"][nid] = scrub.storage.read_data_unlocked()["notes"][nid] + " "
+        np_backend.update_data(_mut)
+        return real()
+
+    monkeypatch.setattr(scrub, "_copies", lock_again_meanwhile)
+    scrub.sweep()
+    assert np_backend.read_data()["scrub_locked"] == [nid]
+
+
+def test_the_marks_stay_out_of_the_browser_and_backups(client, np_backend):
+    nid = new_note(client, content="text")
+    lock(client, nid)
+    scrub.sweep()
+    lock_data = client.get("/api/data").json()
+    lock_zip = zipfile.ZipFile(__import__("io").BytesIO(client.get("/api/backup").content))
+    for view in (lock_data, json.loads(lock_zip.read("notes_data.json"))):
+        assert "scrub_locked" not in view and "scrub_first_pass_done" not in view
+
+
 # ---- notes deleted for good --------------------------------------------------
 
 
@@ -395,6 +503,8 @@ def test_snapshots_have_no_age_limit(client, np_backend):
 @pytest.fixture
 def background(monkeypatch):
     monkeypatch.setattr(scrub, "BACKGROUND", True)
+    monkeypatch.setattr(scrub, "RETRY_DELAY", 0.05)   # polling can hold a file the pass replaces
+    monkeypatch.setattr(scrub, "_retries", 0)
     yield
     scrub.stop(5)
 
@@ -402,8 +512,11 @@ def background(monkeypatch):
 def wait_until(condition, timeout=5.0):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        if condition():
-            return True
+        try:
+            if condition():
+                return True
+        except OSError:     # Windows: a file the pass is writing right now
+            pass
         time.sleep(0.01)
     return False
 
@@ -492,6 +605,48 @@ def test_locking_right_before_closing_is_cleaned_before_the_app_ends(np_backend,
         snapshot(np_backend)
         lock(c, nid)
     assert all_bytes_with(np_backend) == []
+
+
+def test_a_failed_pass_is_repeated_a_few_times(np_backend, background, monkeypatch):
+    calls = []
+
+    def fails():
+        calls.append(1)
+        return False
+
+    monkeypatch.setattr(scrub, "sweep", fails)
+    scrub.request_sweep()
+    assert wait_until(lambda: len(calls) == 1 + scrub.MAX_RETRIES)
+    time.sleep(0.2)
+    assert len(calls) == 4                # … and then waits for the next start
+
+
+def test_the_retry_limits_are_60_seconds_and_3_times():
+    assert (scrub.RETRY_DELAY, scrub.MAX_RETRIES) == (60.0, 3)
+
+
+def test_a_pass_that_stopped_on_an_error_is_repeated_too(np_backend, background, monkeypatch):
+    """E.g. its last write, with a virus scanner holding notes_data.json open."""
+    calls = []
+
+    def fails_once():
+        calls.append(1)
+        if len(calls) == 1:
+            raise OSError(13, "Permission denied")
+        return True
+
+    monkeypatch.setattr(scrub, "sweep", fails_once)
+    scrub.request_sweep()
+    assert wait_until(lambda: len(calls) == 2)
+
+
+def test_a_pass_that_worked_is_not_repeated(np_backend, background, monkeypatch):
+    calls = []
+    monkeypatch.setattr(scrub, "sweep", lambda: calls.append(1) or True)
+    scrub.request_sweep()
+    assert wait_until(lambda: calls)
+    time.sleep(0.1)
+    assert len(calls) == 1
 
 
 def test_deleting_for_good_starts_a_pass(client, np_backend, background):

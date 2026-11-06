@@ -297,6 +297,63 @@ def test_n4_upgrade_cleans_the_weak_format_from_copies(client, np_backend):
     assert in_copy == stored(np_backend, nid) and in_copy != envelope
 
 
+def test_envelope_time_is_the_time_of_the_fernet_token():
+    salt = bytes(range(16))
+    key = crypto.derive_key(PW, salt)
+    envelope = crypto.encrypt_with_key("text", key, salt)
+    token = base64.b64decode(json.loads(envelope)["data"])[17:]
+    assert crypto.envelope_time(envelope) == crypto.Fernet(key).extract_timestamp(token)
+    assert crypto.envelope_time(legacy_envelope("text")) is None
+    assert crypto.envelope_time("obyčejný text") is None
+
+
+def snapshot_of(np_backend):
+    snap = np_backend.backups_dir() / "notes_data-20260101-000000-000000.json"
+    snap.parent.mkdir(exist_ok=True)
+    snap.write_bytes(np_backend.DATA_FILE.read_bytes())
+    return snap
+
+
+# A wrong password can open a short legacy note as nonsense. If that nonsense
+# is saved, its copies are the only way back to the note.
+def test_saving_after_an_unverified_unlock_keeps_the_legacy_copies(client, np_backend):
+    nid, envelope = legacy_note(client, np_backend, "ab")
+    wrong = _password_giving_valid_utf8(envelope)
+    snap = snapshot_of(np_backend)
+    body = unlock(client, nid, wrong).json()
+    client.post("/api/save-encrypted", json={"id": nid, "unlock_token": body["unlock_token"],
+                                             "content": body["content"], "formats": []})
+    assert version_of(stored(np_backend, nid)) == 1
+    assert "scrub_locked" not in np_backend.read_data()
+    assert scrub.sweep() is True
+    in_copy = json.loads(snap.read_text(encoding="utf-8"))["notes"][nid]
+    assert in_copy == envelope
+    assert crypto.decrypt_content(in_copy, PW) == "ab"
+
+
+def test_the_first_pass_keeps_legacy_copies_of_a_note_saved_by_1_0_x(client, np_backend):
+    """1.0.x upgraded a legacy note on any save, also one no password verified."""
+    nid, envelope = legacy_note(client, np_backend, "ab")
+    snap = snapshot_of(np_backend)
+    np_backend._update_data(lambda d: d["notes"].__setitem__(nid, crypto.encrypt_content("x", "y-y-y-y")))
+    assert scrub.sweep() is True
+    assert json.loads(snap.read_text(encoding="utf-8"))["notes"][nid] == envelope
+
+
+def test_a_save_seals_formats_only_with_a_verified_key(client, np_backend):
+    """A note whose conversion failed at unlock: the save does it, and cleans."""
+    nid = new_note(client, content="placeholder")
+    fmt = [{"start": 0, "end": 1, "link": "https://tajne-7f3a.example/"}]
+    token = client.post("/api/encrypt", json={"id": nid, "password": PW}).json()["unlock_token"]
+    scrub.sweep()
+    np_backend._update_data(lambda d: d["note_formats"].__setitem__(nid, fmt))
+    snap = snapshot_of(np_backend)
+    client.post("/api/save-encrypted", json={"id": nid, "unlock_token": token,
+                                             "content": "text", "formats": fmt})
+    assert scrub.sweep() is True
+    assert "tajne-7f3a" not in snap.read_text(encoding="utf-8")
+
+
 # Removing the lock through the token used to fail: the key it holds is the
 # new version-1 one, the note on disk still legacy.
 def test_removing_the_lock_of_a_legacy_note_with_a_token(client, np_backend):

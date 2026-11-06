@@ -210,8 +210,9 @@ Výchozí hodnoty jsou v `storage.DEFAULT_DATA`.
   heslem. `/api/note` a `/api/data` je u zamčené poznámky neposílají nikdy.
 - **`rev`:** `sha256(obsah + "\0" + json(formáty))[:16]`. Počítá se, neukládá. Uložení posílá
   `base_rev` a nesoulad vrátí `409 note_changed_elsewhere` (dvě okna webové verze).
-- **`scrub_pending`:** id trvale smazaných poznámek, dokud je čištění kopií nezpracuje. Soukromý
-  klíč jako `app_lock`: nejde do prohlížeče ani do zálohy.
+- **`scrub_pending`, `scrub_locked`, `scrub_first_pass_done`:** stav čištění kopií (trvale smazané
+  poznámky, nově zamčené poznámky, jednorázový průchod). Soukromé klíče jako `app_lock`: nejdou
+  do prohlížeče ani do zálohy.
 
 ### Zápis a odolnost
 
@@ -229,7 +230,15 @@ Výchozí hodnoty jsou v `storage.DEFAULT_DATA`.
   čitelného textu aktuální obálku a ztratí čitelné formáty, pokud už je nemá ani v aktuálních
   datech, trvale smazaná zmizí. Běží na vlastním vlákně a se svým zámkem,
   mimo `file_lock`: 5 s po startu serveru a hned po zamčení, přešifrování nebo trvalém smazání.
-  Zavírání čeká nejvýš 2 s. Poznámka chybějící v aktuálních datech se z kopií **nemaže** (vypadal by
+  Zavírání čeká nejvýš 2 s. Neúspěšný průchod se opakuje za 60 s, nejvýš 3× za relaci.
+  **Čistí se podle události:** kopie mění jen zamčení a přešifrování po ověřeném hesle, které id
+  zapíšou do `scrub_locked` (`scrub.mark_locked`) ve stejném zápisu jako poznámku. Import ani
+  uložení neověřené v2 nic nepřidají. Jednou (`scrub_first_pass_done`) proběhne průchod přes všechny
+  zamčené poznámky kvůli kopiím z 1.0.x, a to jen z čitelného textu na obálku, ne z v2 na v1.
+  **Novější kopie se nepřepisuje:** data nemají čas úpravy poznámky, porovnává se čas souboru kopie
+  s časem v Fernet tokenu aktuální obálky (`crypto.envelope_time`, s rezervou 10 s). Poznámka
+  v novější kopii se přeskočí a nechá na rotaci nebo limitu; legacy obálka čas nemá, přeskočí se taky.
+  Poznámka chybějící v aktuálních datech se z kopií **nemaže** (vypadal by
   tak i vyprázdněný soubor nebo import). Limity stáří se neuplatní, dokud v datech není žádná
   poznámka. Nová automatická kopie se musí přidat do `scrub._copies`.
 - `update_data_tracked` vrací ETag před zápisem a po něm. Hlavička `X-NoirPad-ETag-Before`
