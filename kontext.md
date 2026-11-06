@@ -581,6 +581,7 @@ npx vitest run                          # 31 souborů v tests/js (~270 testů)
 | `test_storage.py` | atomický zápis, obnova, snapshoty, zámek instance, plný disk, BOM |
 | `test_scrub.py` | čištění kopií (N1): zamčené a smazané poznámky, limity stáří, start a ukládání nečekají |
 | `test_note_formats.py` | šifrované formáty a odkazy (N2): převod, vazba na text, API bez hesla, kopie |
+| `test_ci.py` | tvar workflow (práva jobů, 4 soubory draftu, SHA), lock s hashi odpovídá `requirements*.txt` |
 | `i18n.test.js` | shodné klíče en/cs, žádný natvrdo zapsaný text v JS ani HTML, každý použitý klíč existuje |
 | `test_i18n_api.py` | každý chybový kód backendu má klíč v locale |
 
@@ -699,6 +700,19 @@ Našel je průzkum 27. 10. 2026. Jsou ověřené v kódu, ne v běžící aplika
    - nepoužitý parametr `log_file` v `desktop._run`,
    - dočasná složka z importu v `conftest.py` se neuklízí,
    - `BUILD.md` neuvádí `take_screenshots.py --only`.
+
+## 15a. Přístupnost a CI (N1.5)
+
+- Rozbalovací seznamy (`.np-dropdown`, `settings.js`) jsou `listbox` s ovládáním šipkami, Home, End,
+  Enter, mezerníkem, Esc a Tab; fokus se vrací na tlačítko. Tab z otevřeného seznamu řeší `dialog.js`.
+- Zoom desktopového okna: Ctrl+= / Ctrl+- / Ctrl+0 (`zoom-*` v `shortcuts.js`), `ui_zoom` 70–200 %,
+  CSS `zoom` na `html` a proměnná `--np-zoom`, ze které `#app` počítá výšku. Ve webové verzi zkratky
+  nejsou a zoom se nepoužije, řeší ho prohlížeč. Znak „+“ se v zápisu zkratky píše „=“.
+- Vysoký kontrast Windows (`NP.forcedColors`, `@media (forced-colors: active)`): déšť, záře, CRT
+  a glitch jsou vypnuté, nastavení zůstává. Stav se nesmí poznat jen podle pozadí.
+- `release.yml` má dva joby: `build` (jen čtení, spouští všechno cizí) a `publish` (zápis, jen
+  `gh release create`). Akce jsou na SHA, Inno Setup na verzi, CI buildy instalují
+  `requirements-ci.lock` s `--require-hashes` (postup aktualizace v `BUILD.md`). Hlídá `tests/test_ci.py`.
 
 ## 16. Podklady mimo repozitář (`C:\vibe coding picoviny\Noirpad\`)
 

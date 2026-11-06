@@ -44,6 +44,9 @@ window.NP = window.NP || {};
                     ["Ctrl+Shift+I", "shortcuts.labels.insertImage", "insert-image"],
                     ["Ctrl+Shift+T", "shortcuts.labels.openFontPicker", "open-font-picker"],
                     ["Ctrl+,", "shortcuts.labels.openSettings", "open-settings"],
+                    ["Ctrl+=", "shortcuts.labels.zoomIn", "zoom-in"],
+                    ["Ctrl+-", "shortcuts.labels.zoomOut", "zoom-out"],
+                    ["Ctrl+0", "shortcuts.labels.zoomReset", "zoom-reset"],
                     ["Ctrl+Tab", "help.keys.nextTab", "next-tab"],
                     ["Ctrl+Shift+Tab", "help.keys.prevTab", "prev-tab"],
                     ["Ctrl+W", "help.keys.closeTab", "close-tab"]

@@ -42,6 +42,11 @@ window.NP = window.NP || {};
     var HTML_ESCAPES = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
     /* A NoirPad encryption envelope {"encrypted": true, "data": base64},
        as crypto.py is_encrypted_content (C12). */
+    /* Windows high contrast (N12): the decorative effects stay off. */
+    NP.forcedColors = function () {
+        return !!(window.matchMedia && window.matchMedia("(forced-colors: active)").matches);
+    };
+
     NP.isEncryptedEnvelope = function (content) {
         if (typeof content !== "string" || content.charAt(0) !== "{") return false;
         try {

@@ -19,7 +19,8 @@
 [CmdletBinding()]
 param(
     [string]$Python = "",       # interpreter for the venv; default: py -3.14
-    [string]$Iscc = ""          # path to ISCC.exe; default: PATH / Inno Setup 6
+    [string]$Iscc = "",         # path to ISCC.exe; default: PATH / Inno Setup 6
+    [string]$RequirementsLock = ""  # CI: install this file with --require-hashes (see BUILD.md)
 )
 
 $ErrorActionPreference = "Stop"
@@ -55,7 +56,11 @@ if (-not (Test-Path ".venv\Scripts\python.exe")) {
     else { Run py -3.14 -m venv .venv }
 }
 $py = (Resolve-Path ".venv\Scripts\python.exe").Path
-Run $py -m pip install --disable-pip-version-check -q -r requirements-dev.txt
+if ($RequirementsLock) {
+    Run $py -m pip install --disable-pip-version-check -q --require-hashes -r $RequirementsLock
+} else {
+    Run $py -m pip install --disable-pip-version-check -q -r requirements-dev.txt
+}
 $version = (& $py -c "from noirpad.__version__ import __version__; print(__version__)").Trim()
 $url = (& $py -c "from noirpad.__version__ import PROJECT_URL; print(PROJECT_URL)").Trim()
 Write-Host "NoirPad $version ($commit), Python $(& $py -c 'import sys; print(sys.version.split()[0])')"

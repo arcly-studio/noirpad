@@ -83,6 +83,7 @@ class SettingsBody(BaseModel):
     custom_shortcuts: Optional[dict] = None
     language: Optional[Literal["auto", "en", "cs"]] = None
     md_split: Optional[bool] = None            # Markdown: preview next to the source
+    ui_zoom: Optional[Annotated[int, Field(ge=70, le=200)]] = None   # desktop window, percent
     # Start page "Recent": newest first, at most MAX_RECENT_NOTES.
     recent_notes: Optional[Annotated[list[RecentNote], Field(max_length=MAX_RECENT_NOTES)]] = None
 

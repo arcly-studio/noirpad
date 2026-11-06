@@ -4,6 +4,7 @@
 
 Please **do not open a public issue** for security problems. Report them privately via
 [GitHub Security Advisories](https://github.com/arcly-studio/NoirPad/security/advisories/new).
+If you can't use that, e-mail [arclystudio.dev@gmail.com](mailto:arclystudio.dev@gmail.com).
 Include the NoirPad version (Settings → About), how you run it (installed app / web), steps to
 reproduce and the impact you see. Never include real notes or passwords.
 
@@ -22,7 +23,7 @@ Only the latest release gets security fixes.
 - Requests are checked for the Host header (DNS rebinding), a custom header and same origin (CSRF).
   A strict Content-Security-Policy blocks inline and third-party scripts; rendered notes are
   sanitized with DOMPurify.
-- **Locked notes**: the text is encrypted (Fernet, key from PBKDF2-SHA256, 480 000 iterations, random
+- **Locked notes**: the text and its formatting, including links, are encrypted (Fernet, key from PBKDF2-SHA256, 480 000 iterations, random
   salt). Note names, tags, folders, images and settings are **not** encrypted. A forgotten note
   password cannot be recovered.
 - **App lock**: only a scrypt hash is stored; while locked the server refuses every API request.

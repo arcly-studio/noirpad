@@ -121,7 +121,7 @@
             <div id="editor-wrapper">
                 <!-- Command bar overlay (inside editor area) -->
                 <div id="command-bar">
-                    <input id="command-input" type="text" placeholder="> Type a command..." data-i18n-placeholder="ui.commandBar.placeholder" spellcheck="false" autocomplete="off">
+                    <input id="command-input" type="text" placeholder="> Type a command..." data-i18n-placeholder="ui.commandBar.placeholder" aria-label="Command" data-i18n-aria-label="ui.commandBar.label" spellcheck="false" autocomplete="off">
                     <div id="command-results"></div>
                 </div>
 
@@ -137,7 +137,7 @@
                     <div id="md-source">
                         <!-- The coloured copy of the source, under the textarea (md-source.js). -->
                         <div id="md-highlight" aria-hidden="true"></div>
-                        <textarea id="editor-md" spellcheck="true" autocomplete="off" wrap="soft" placeholder="Start typing markdown..." data-i18n-placeholder="ui.editor.markdownPlaceholder"></textarea>
+                        <textarea id="editor-md" spellcheck="true" autocomplete="off" wrap="soft" placeholder="Start typing markdown..." data-i18n-placeholder="ui.editor.markdownPlaceholder" aria-label="Markdown source" data-i18n-aria-label="ui.editor.markdownLabel"></textarea>
                     </div>
                     <div id="md-preview" aria-hidden="true"></div>
                 </div>
@@ -145,11 +145,11 @@
 
             <!-- Search bar (hidden by default) -->
             <div id="search-bar">
-                <input id="search-input" type="text" placeholder="Find..." data-i18n-placeholder="ui.search.findPlaceholder" spellcheck="false" autocomplete="off">
+                <input id="search-input" type="text" placeholder="Find..." data-i18n-placeholder="ui.search.findPlaceholder" aria-label="Find" data-i18n-aria-label="ui.search.findLabel" spellcheck="false" autocomplete="off">
                 <span id="search-count">0/0</span>
                 <button class="search-btn" id="search-prev" title="Previous" data-i18n-title="ui.search.previous">&#9650;</button>
                 <button class="search-btn" id="search-next" title="Next" data-i18n-title="ui.search.next">&#9660;</button>
-                <input id="replace-input" type="text" placeholder="Replace..." data-i18n-placeholder="ui.search.replacePlaceholder" spellcheck="false" autocomplete="off">
+                <input id="replace-input" type="text" placeholder="Replace..." data-i18n-placeholder="ui.search.replacePlaceholder" aria-label="Replace" data-i18n-aria-label="ui.search.replaceLabel" spellcheck="false" autocomplete="off">
                 <button class="search-btn" id="replace-btn" title="Replace" data-i18n-title="ui.search.replace" data-i18n="ui.search.replace">Replace</button>
                 <button class="search-btn" id="replace-all-btn" title="Replace All" data-i18n-title="ui.search.replaceAllTitle" data-i18n="ui.search.replaceAll">All</button>
                 <button class="search-btn" id="search-close" title="Close" data-i18n-title="common.close">&times;</button>
@@ -493,7 +493,7 @@
         </div>
 
         <div id="shortcuts-toolbar">
-            <input id="shortcuts-search" type="text" placeholder="Search shortcuts..." data-i18n-placeholder="ui.shortcuts.searchPlaceholder" spellcheck="false" autocomplete="off">
+            <input id="shortcuts-search" type="text" placeholder="Search shortcuts..." data-i18n-placeholder="ui.shortcuts.searchPlaceholder" aria-label="Search shortcuts" data-i18n-aria-label="ui.shortcuts.searchLabel" spellcheck="false" autocomplete="off">
             <button id="shortcuts-filter-customized" class="shortcuts-toolbar-btn" aria-pressed="false" data-i18n="ui.shortcuts.customizedOnly">Customized only</button>
             <button id="shortcuts-reset-all" class="shortcuts-toolbar-btn shortcuts-btn-danger" data-i18n="ui.shortcuts.resetAll">Reset all</button>
         </div>

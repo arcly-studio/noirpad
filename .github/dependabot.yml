@@ -1,0 +1,35 @@
+# Pull requests only: nothing merges by itself. Grouped, and a new version
+# waits a week, so a release pulled back in its first days never gets here.
+# A pip update also needs requirements-ci.lock regenerated (see BUILD.md):
+# tests/test_ci.py fails on the pull request until it is.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      python:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      javascript:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]

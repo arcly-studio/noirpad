@@ -601,6 +601,10 @@
       "openHelp": "Otevřít nápovědu",
       "openCommandPalette": "Otevřít příkazovou lištu",
       "openFontPicker": "Otevřít výběr písma",
+      "zoomIn": "Přiblížit",
+      "zoomOut": "Oddálit",
+      "zoomReset": "Výchozí přiblížení",
+      "zoomLevel": "Přiblížení: {n} %",
       "fullscreen": "Přepnout celou obrazovku",
       "nextTab": "Další karta",
       "prevTab": "Předchozí karta",
@@ -762,17 +766,21 @@
       "addLabel": "Přidat štítek (Enter)"
     },
     "commandBar": {
-      "placeholder": "> Zadejte příkaz…"
+      "placeholder": "> Zadejte příkaz…",
+      "label": "Příkaz"
     },
     "editor": {
       "placeholder": "Začněte psát…",
-      "markdownPlaceholder": "Začněte psát v Markdownu…"
+      "markdownPlaceholder": "Začněte psát v Markdownu…",
+      "markdownLabel": "Zdroj Markdownu"
     },
     "search": {
       "findPlaceholder": "Hledat…",
+      "findLabel": "Hledat",
       "previous": "Předchozí",
       "next": "Další",
       "replacePlaceholder": "Nahradit…",
+      "replaceLabel": "Nahradit",
       "replace": "Nahradit",
       "replaceAll": "Vše",
       "replaceAllTitle": "Nahradit vše"
@@ -851,6 +859,7 @@
     "shortcuts": {
       "title": "Klávesové zkratky",
       "searchPlaceholder": "Hledat zkratky…",
+      "searchLabel": "Hledat zkratky",
       "customizedOnly": "Jen upravené",
       "resetAll": "Obnovit vše",
       "summaryEmpty": "— zkratek · — upraveno",

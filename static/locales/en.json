@@ -575,6 +575,10 @@
       "openHelp": "Open help",
       "openCommandPalette": "Open command palette",
       "openFontPicker": "Open font picker",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "zoomReset": "Reset zoom",
+      "zoomLevel": "Zoom: {n}%",
       "fullscreen": "Toggle fullscreen",
       "nextTab": "Next tab",
       "prevTab": "Previous tab",
@@ -730,17 +734,21 @@
       "addLabel": "Add a tag (Enter)"
     },
     "commandBar": {
-      "placeholder": "> Type a command..."
+      "placeholder": "> Type a command...",
+      "label": "Command"
     },
     "editor": {
       "placeholder": "Start typing...",
-      "markdownPlaceholder": "Start typing markdown..."
+      "markdownPlaceholder": "Start typing markdown...",
+      "markdownLabel": "Markdown source"
     },
     "search": {
       "findPlaceholder": "Find...",
+      "findLabel": "Find",
       "previous": "Previous",
       "next": "Next",
       "replacePlaceholder": "Replace...",
+      "replaceLabel": "Replace",
       "replace": "Replace",
       "replaceAll": "All",
       "replaceAllTitle": "Replace All"
@@ -819,6 +827,7 @@
     "shortcuts": {
       "title": "Shortcuts",
       "searchPlaceholder": "Search shortcuts...",
+      "searchLabel": "Search shortcuts",
       "customizedOnly": "Customized only",
       "resetAll": "Reset all",
       "summaryEmpty": "— shortcuts · — customized",

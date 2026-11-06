@@ -6,6 +6,15 @@ notes_data.json
 images/
 .claude/settings.local.json
 
+# Secrets and signing material: never in the repo
+.env
+.env.*
+*.pfx
+*.p12
+*.pem
+*.key
+*.snk
+
 # PyInstaller / Inno Setup build artefacts
 build/
 dist/

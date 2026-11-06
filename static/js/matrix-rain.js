@@ -74,6 +74,7 @@ window.NP = window.NP || {};
 
         start: function () {
             if (this.running) return;
+            if (NP.forcedColors && NP.forcedColors()) return;
             /* Noir effect: only when matrix_rain_enabled is on (a new
                install has it off). */
             if (NP.state && NP.state.data &&

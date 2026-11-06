@@ -5,6 +5,8 @@ import json
 import re
 from pathlib import Path
 
+import pytest
+
 from conftest import ROOT, new_note
 
 LOCALES = ROOT / "static" / "locales"
@@ -61,3 +63,11 @@ def test_language_setting(client):
     assert client.put("/api/settings", json={"language": "cs"}).status_code == 200
     assert client.get("/api/session").json()["language"] == "cs"
     assert client.put("/api/settings", json={"language": "de"}).status_code == 422
+
+
+# N12: the zoom of the desktop window stays in its range.
+@pytest.mark.parametrize("value,status", [(70, 200), (200, 200), (69, 422), (201, 422), ("x", 422)])
+def test_ui_zoom_range(client, np_backend, value, status):
+    assert client.put("/api/settings", json={"ui_zoom": value}).status_code == status
+    if status == 200:
+        assert np_backend.read_data()["ui_zoom"] == value

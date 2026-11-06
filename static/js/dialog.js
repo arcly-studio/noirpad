@@ -201,7 +201,14 @@ window.NP = window.NP || {};
         if (!top) return;
         var list = focusables(top);
         if (!list.length) return;
-        var at = list.indexOf(document.activeElement);
+        /* In an open dropdown list (N11): Tab goes on from its button. */
+        var active = document.activeElement;
+        var dropdown = active && active.closest && active.closest(".np-dropdown");
+        if (dropdown) {
+            active = dropdown.querySelector(".np-dropdown-trigger");
+            if (NP.dropdown && NP.dropdown.closeAll) NP.dropdown.closeAll();
+        }
+        var at = list.indexOf(active);
         var next = e.shiftKey ? (at <= 0 ? list.length - 1 : at - 1)
                               : (at === -1 || at === list.length - 1 ? 0 : at + 1);
         e.preventDefault();

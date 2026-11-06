@@ -16,11 +16,106 @@ window.NP = window.NP || {};
 
     var _globalDropdownHandlersBound = false;
 
+    function setOpen(dropdown, open) {
+        dropdown.classList.toggle("open", open);
+        var trigger = dropdown.querySelector(".np-dropdown-trigger");
+        if (trigger) trigger.setAttribute("aria-expanded", open ? "true" : "false");
+    }
+
     function closeAllDropdowns(except) {
         var open = document.querySelectorAll(".np-dropdown.open");
         for (var i = 0; i < open.length; i++) {
-            if (open[i] !== except) open[i].classList.remove("open");
+            if (open[i] === except) continue;
+            /* The keyboard was inside: it goes back to the button, not to nowhere. */
+            var inside = document.activeElement && document.activeElement.closest &&
+                document.activeElement.closest(".np-dropdown-menu");
+            setOpen(open[i], false);
+            if (inside && open[i].contains(inside)) {
+                open[i].querySelector(".np-dropdown-trigger").focus();
+            }
         }
+    }
+
+    /* N11: a listbox for the keyboard and screen readers. Named by the
+       settings row it stands in. */
+    function describeDropdown(dropdown) {
+        var trigger = dropdown.querySelector(".np-dropdown-trigger");
+        var menu = dropdown.querySelector(".np-dropdown-menu");
+        if (!trigger || !menu) return;
+        var settingsRow = dropdown.closest(".settings-row");
+        var row = settingsRow && settingsRow.querySelector(".settings-label");
+        var value = dropdown.querySelector(".np-dropdown-label");
+        var names = [];
+        if (row && dropdown.id) {
+            row.id = row.id || dropdown.id + "-name";
+            names.push(row.id);
+            menu.setAttribute("aria-labelledby", row.id);
+        }
+        if (value && dropdown.id) {
+            value.id = value.id || dropdown.id + "-value";
+            names.push(value.id);
+        }
+        if (names.length) trigger.setAttribute("aria-labelledby", names.join(" "));
+        trigger.setAttribute("aria-haspopup", "listbox");
+        trigger.setAttribute("aria-expanded", "false");
+        menu.setAttribute("role", "listbox");
+        var decor = dropdown.querySelectorAll(".np-dropdown-arrow, .np-dropdown-marker");
+        for (var i = 0; i < decor.length; i++) decor[i].setAttribute("aria-hidden", "true");
+        var options = dropdown.querySelectorAll(".np-dropdown-option");
+        for (var o = 0; o < options.length; o++) {
+            options[o].setAttribute("role", "option");
+            options[o].setAttribute("tabindex", "-1");
+        }
+    }
+
+    function optionsOf(dropdown) {
+        return Array.prototype.slice.call(dropdown.querySelectorAll(".np-dropdown-option"));
+    }
+
+    function focusOption(option) {
+        if (!option) return;
+        option.focus();
+        if (option.scrollIntoView) option.scrollIntoView({ block: "nearest" });
+    }
+
+    function openWithKeyboard(dropdown) {
+        closeAllDropdowns(dropdown);
+        setOpen(dropdown, true);
+        focusOption(dropdown.querySelector(".np-dropdown-option-selected") || optionsOf(dropdown)[0]);
+    }
+
+    function onTriggerKey(dropdown, e) {
+        if (e.key !== "ArrowDown" && e.key !== "ArrowUp" && e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        e.stopPropagation();
+        openWithKeyboard(dropdown);
+    }
+
+    function onOptionKey(dropdown, e) {
+        var options = optionsOf(dropdown);
+        var at = options.indexOf(document.activeElement);
+        if (at === -1) return;
+        var next = null;
+        if (e.key === "ArrowDown") next = options[Math.min(at + 1, options.length - 1)];
+        else if (e.key === "ArrowUp") next = options[Math.max(at - 1, 0)];
+        else if (e.key === "Home") next = options[0];
+        else if (e.key === "End") next = options[options.length - 1];
+        else if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(dropdown, false);
+            dropdown.querySelector(".np-dropdown-trigger").focus();
+            selectOption(dropdown, options[at].getAttribute("data-value"), true);
+            return;
+        } else if (e.key === "Tab") {
+            closeAllDropdowns(null);
+            return;
+        } else {
+            return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        focusOption(next);
     }
 
     /* Reflect dropdown[data-value] into the trigger label + selected option.
@@ -32,6 +127,7 @@ window.NP = window.NP || {};
         for (var i = 0; i < options.length; i++) {
             var opt = options[i];
             var isSelected = opt.getAttribute("data-value") === value;
+            opt.setAttribute("aria-selected", isSelected ? "true" : "false");
             if (isSelected) {
                 opt.classList.add("np-dropdown-option-selected");
                 if (labelEl) {
@@ -64,6 +160,7 @@ window.NP = window.NP || {};
 
                 if (dropdown._npInited) return;
                 dropdown._npInited = true;
+                describeDropdown(dropdown);
 
                 var trigger = dropdown.querySelector(".np-dropdown-trigger");
                 if (trigger) {
@@ -71,15 +168,20 @@ window.NP = window.NP || {};
                         e.stopPropagation();
                         var willOpen = !dropdown.classList.contains("open");
                         closeAllDropdowns(dropdown);   /* only one open at a time */
-                        dropdown.classList.toggle("open", willOpen);
+                        setOpen(dropdown, willOpen);
                     });
+                    trigger.addEventListener("keydown", function (e) { onTriggerKey(dropdown, e); });
                 }
+
+                var menu = dropdown.querySelector(".np-dropdown-menu");
+                if (menu) menu.addEventListener("keydown", function (e) { onOptionKey(dropdown, e); });
 
                 var options = dropdown.querySelectorAll(".np-dropdown-option");
                 for (var i = 0; i < options.length; i++) {
                     options[i].addEventListener("click", function (e) {
                         e.stopPropagation();
-                        dropdown.classList.remove("open");
+                        setOpen(dropdown, false);
+                        if (trigger) trigger.focus();
                         selectOption(dropdown, this.getAttribute("data-value"), true);
                     });
                 }
@@ -103,6 +205,7 @@ window.NP = window.NP || {};
 
     NP.dropdown = {
         initAll: initDropdowns,
+        closeAll: function () { closeAllDropdowns(null); },
         setValue: function (dropdown, value, fireEvent) {
             if (typeof dropdown === "string") {
                 dropdown = document.getElementById(dropdown);
@@ -212,10 +315,13 @@ window.NP = window.NP || {};
     /* Show the effects on screen and the switches in Settings. */
     function applyEffects() {
         var e = effects();
+        /* N12: Windows high contrast. Nothing decorative over the text; the
+           settings themselves stay as they are for when it is switched off. */
+        var shown = !NP.forcedColors();
         applyGlow(sget("glow_intensity", 100));
-        if (NP.matrixRain && NP.matrixRain.setEnabled) NP.matrixRain.setEnabled(e.matrix);
-        if (NP.effects && NP.effects.crtShow) NP.effects.crtShow(e.crt);
-        document.body.classList.toggle("np-glow", e.glow);
+        if (NP.matrixRain && NP.matrixRain.setEnabled) NP.matrixRain.setEnabled(e.matrix && shown);
+        if (NP.effects && NP.effects.crtShow) NP.effects.crtShow(e.crt && shown);
+        document.body.classList.toggle("np-glow", e.glow && shown);
         setToggle("setting-noir-effects", e.glow || e.matrix || e.crt);
         setToggle("setting-glow", e.glow);
         setToggle("setting-matrix-rain", e.matrix);
@@ -228,6 +334,53 @@ window.NP = window.NP || {};
         if (glitch) glitch.disabled = !e.glow;
         var hint = document.getElementById("setting-glitch-hint");
         if (hint) hint.hidden = e.glow;
+    }
+
+    /* N12: zoom of the desktop window, Ctrl+= / Ctrl+- / Ctrl+0 (a browser has
+       its own). #app takes its height from --np-zoom. */
+    var ZOOM_DEFAULT = 100;
+    var ZOOM_MIN = 70;
+    var ZOOM_MAX = 200;
+    var ZOOM_STEP = 10;
+
+    function zoomInUse() {
+        return !!(NP.shortcuts && NP.shortcuts.inDesktop && NP.shortcuts.inDesktop());
+    }
+
+    function cleanZoom(value) {
+        var n = parseInt(value, 10);
+        if (isNaN(n)) return ZOOM_DEFAULT;
+        return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, n));
+    }
+
+    function applyZoom(percent) {
+        var z = cleanZoom(percent) / 100;
+        var root = document.documentElement;
+        root.style.zoom = String(z);
+        root.style.setProperty("--np-zoom", String(z));
+    }
+
+    function changeZoom(next) {
+        next = cleanZoom(next);
+        applyZoom(next);
+        if (next !== cleanZoom(sget("ui_zoom", ZOOM_DEFAULT))) saveSetting({ ui_zoom: next });
+        if (NP.toast) NP.toast(NP.t("shortcuts.labels.zoomLevel", { n: next }), { timeout: 2000 });
+    }
+
+    function bindZoomKeys() {
+        if (!NP.shortcuts || !NP.shortcuts.register) return;
+        function by(step) {
+            return function () {
+                if (!zoomInUse()) return false;
+                changeZoom(cleanZoom(sget("ui_zoom", ZOOM_DEFAULT)) + step);
+            };
+        }
+        NP.shortcuts.register("zoom-in", by(ZOOM_STEP));
+        NP.shortcuts.register("zoom-out", by(-ZOOM_STEP));
+        NP.shortcuts.register("zoom-reset", function () {
+            if (!zoomInUse()) return false;
+            changeZoom(ZOOM_DEFAULT);
+        });
     }
 
     /* CRT used to live only in this browser (localStorage). Data that has
@@ -314,7 +467,7 @@ window.NP = window.NP || {};
         if (isNaN(pct)) pct = 100;
         /* Glow is a Noir effect: off = no glow at all (the slider keeps its
            value for when it comes back). */
-        var m = sget("glow_enabled", false) === true ? pct / 100 : 0;
+        var m = sget("glow_enabled", false) === true && !NP.forcedColors() ? pct / 100 : 0;
         var root = document.documentElement;
         root.style.setProperty("--glow-multiplier", String(m));
         root.style.setProperty("--glow-core", (4 * m) + "px");
@@ -656,6 +809,12 @@ window.NP = window.NP || {};
 
             if (!NP.settings._inited) {
                 NP.settings._inited = true;
+                bindZoomKeys();
+                /* High contrast switched on or off while NoirPad runs. */
+                if (window.matchMedia) {
+                    var contrast = window.matchMedia("(forced-colors: active)");
+                    if (contrast && contrast.addEventListener) contrast.addEventListener("change", applyEffects);
+                }
 
                 var closeBtn = document.getElementById("settings-close");
                 if (closeBtn) {
@@ -750,6 +909,7 @@ window.NP = window.NP || {};
         applyRuntimeState: function () {
             migrateCrt();
             applyEffects();
+            if (zoomInUse()) applyZoom(sget("ui_zoom", ZOOM_DEFAULT));
             applySpellcheck(sget("spellcheck", true) !== false);
             /* Startup ALWAYS forces Landscape (user choice) — overrides any
                persisted Portrait. setOrientation keeps the body class, the

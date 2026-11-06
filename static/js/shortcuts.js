@@ -46,6 +46,11 @@ window.NP = window.NP || {};
             key === "Shift" || key === "Meta") {
             return null;
         }
+        /* "+" separates the parts of a keystroke: the plus key is written "=". */
+        if (key === "+") {
+            parts = parts.filter(function (p) { return p !== "Shift"; });
+            key = "=";
+        }
         parts.push(key);
         return parts.join("+");
     }
@@ -71,13 +76,23 @@ window.NP = window.NP || {};
 
     function matchesKeystroke(e, ks) {
         var p = parseKeystroke(ks);
+        var key = normalizeKey(e.key);
+        var shift = !!e.shiftKey;
+        /* The plus key, wherever a keyboard has it: Shift+= (US), its own key
+           (Czech) or the numeric keypad. */
+        if (key === "+") {
+            key = "=";
+            shift = false;
+        }
+        /* The key marked 0 gives another character on Czech keyboards. */
+        if (p.key === "0" && !shift && (e.code === "Digit0" || e.code === "Numpad0")) key = "0";
         /* ctrl == ctrl||meta to match the old `e.ctrlKey || e.metaKey`
            behaviour (Cmd on macOS) used by every migrated handler. */
         return (
             !!(e.ctrlKey || e.metaKey) === p.ctrl &&
             !!e.altKey === p.alt &&
-            !!e.shiftKey === p.shift &&
-            normalizeKey(e.key) === p.key
+            shift === p.shift &&
+            key === p.key
         );
     }
 
@@ -98,7 +113,11 @@ window.NP = window.NP || {};
     var WEB_DEFAULTS = {
         "new-note": "Alt+Shift+N",
         "open-font-picker": "Alt+Shift+T",
-        "insert-image": "Alt+Shift+I"
+        "insert-image": "Alt+Shift+I",
+        /* The browser's own zoom keys work there. */
+        "zoom-in": "",
+        "zoom-out": "",
+        "zoom-reset": ""
     };
 
     /* The desktop app opens the page with its per-launch token (api.js). */
@@ -172,7 +191,12 @@ window.NP = window.NP || {};
         /* Tabs */
         "next-tab":             { default: "Ctrl+Tab",      current: "Ctrl+Tab",      labelKey: "shortcuts.labels.nextTab",               categoryKey: "shortcuts.categories.tabs" },
         "prev-tab":             { default: "Ctrl+Shift+Tab",current: "Ctrl+Shift+Tab",labelKey: "shortcuts.labels.prevTab",           categoryKey: "shortcuts.categories.tabs" },
-        "close-tab":            { default: "Ctrl+W",        current: "Ctrl+W",        labelKey: "shortcuts.labels.closeTab",              categoryKey: "shortcuts.categories.tabs" }
+        "close-tab":            { default: "Ctrl+W",        current: "Ctrl+W",        labelKey: "shortcuts.labels.closeTab",              categoryKey: "shortcuts.categories.tabs" },
+
+        /* Zoom: last, so a key someone already gave another action stays with it. */
+        "zoom-in":              { default: "Ctrl+=",        current: "Ctrl+=",        labelKey: "shortcuts.labels.zoomIn",                categoryKey: "shortcuts.categories.ui" },
+        "zoom-out":             { default: "Ctrl+-",        current: "Ctrl+-",        labelKey: "shortcuts.labels.zoomOut",               categoryKey: "shortcuts.categories.ui" },
+        "zoom-reset":           { default: "Ctrl+0",        current: "Ctrl+0",        labelKey: "shortcuts.labels.zoomReset",             categoryKey: "shortcuts.categories.ui" }
     };
 
     var handlers = {}; /* id -> function (may return false = passthrough) */
@@ -180,6 +204,8 @@ window.NP = window.NP || {};
     /* ============== Public API ============== */
 
     NP.shortcuts = {
+
+        inDesktop: inDesktop,
 
         register: function (id, handler) {
             handlers[id] = handler;

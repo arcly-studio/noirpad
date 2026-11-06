@@ -42,6 +42,7 @@ window.NP = window.NP || {};
                 NP.state.data.glitch_effect === false) {
                 return;
             }
+            if (NP.forcedColors && NP.forcedColors()) return;
             var now = performance.now();
             inputTimes.push(now);
             /* Drop entries older than the rolling window */

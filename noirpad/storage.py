@@ -64,6 +64,7 @@ DEFAULT_DATA: dict[str, Any] = {
     "custom_shortcuts": {},  # id -> "Ctrl+Shift+X" (only non-default)
     "language": "auto",      # "auto" (browser language) | "en" | "cs"
     "md_split": True,        # Markdown: preview next to the source
+    "ui_zoom": 100,          # desktop window, percent (Ctrl+= / Ctrl+- / Ctrl+0)
     "recent_notes": [],      # start page: [{"id", "at"}], newest first (max 10)
 }
 

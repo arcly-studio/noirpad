@@ -35,7 +35,8 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 6. Inno Setup with `installer.iss` → `dist\installer\NoirPad-Setup-<version>.exe` (~19 MB)
    and `NoirPad-Setup-<version>.exe.sha256`.
 
-Options: `-Python C:\path\to\python.exe` (interpreter for the venv), `-Iscc C:\path\to\ISCC.exe`.
+Options: `-Python C:\path\to\python.exe` (interpreter for the venv), `-Iscc C:\path\to\ISCC.exe`,
+`-RequirementsLock requirements-ci.lock` (what CI uses, see below).
 
 ## Version
 
@@ -49,11 +50,36 @@ appears anywhere else.
 1. Update `__version__` and add a section to `CHANGELOG.md` (`## [x.y.z] – date`).
 2. Commit, then tag and push: `git tag v1.2.3 && git push origin v1.2.3`.
 3. `.github/workflows/release.yml` checks that the tag matches `__version__`, runs `build.ps1` on
-   `windows-latest` and creates a **draft** release with the installer, its `.sha256` and the
-   changelog section. Review it and publish.
+   `windows-latest` with a read-only token, then a separate job, the only one that may write,
+   creates a **draft** release with the installer, its `.sha256` and the changelog section.
+   Review it and publish.
 
 `.github/workflows/test.yml` runs pytest + vitest and the whole `build.ps1` (incl. the smoke
 test) on every push and pull request.
+
+## Pinned tools in CI
+
+Actions are pinned to a commit SHA with the version in a comment, Inno Setup to a version in the
+workflows. Dependabot proposes updates as grouped pull requests, a week after a release.
+
+### Python packages with hashes
+
+The CI builds install `requirements-ci.lock` with `pip install --require-hashes`: a package whose
+files changed on PyPI stops the build. Local development keeps using `requirements-dev.txt`.
+
+`requirements.txt` and `requirements-dev.txt` stay the source of the versions. After changing one,
+regenerate the lock (a throwaway venv, so your `.venv` stays as it is):
+
+```powershell
+py -3.14 -m venv $env:TEMP\np-piptools
+& $env:TEMP\np-piptools\Scripts\python.exe -m pip install pip-tools
+& $env:TEMP\np-piptools\Scripts\python.exe -m piptools compile --quiet --generate-hashes --allow-unsafe `
+    --no-strip-extras --no-emit-index-url --output-file requirements-ci.lock requirements-dev.txt
+```
+
+Commit the result together with the change. `tests/test_ci.py` fails when the lock and the
+requirements files disagree, so a forgotten lock (also on a Dependabot pull request) shows up in
+the tests, before the build.
 
 ## Notes
 
