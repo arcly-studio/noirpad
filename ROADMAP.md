@@ -41,7 +41,7 @@ Identita MSIX z Partner Center (do kódu až v této fázi):
 
 Data ve Store edici jsou v `%USERPROFILE%\NoirPad`. Jednorázový import z GitHub edice (`%LOCALAPPDATA%\NoirPad`) je kopie, ne přesun, a kontroluje zámek běžící GitHub edice. Privacy a README řeknou, že odinstalace ze Storu poznámky nesmaže, a jak je smazat ručně.
 
-**Kopie při importu (návrh rozhodnutí je součást N1.9):** datová složka GitHub edice může obsahovat čitelné kopie. Jednorázový import z `%LOCALAPPDATA%\NoirPad` buď nekopíruje `backups/` a `corrupt-*` soubory, nebo je po kopii vyčistí stejným mechanismem (`noirpad/scrub.py`).
+**Kopie při importu (návrh rozhodnutí je součást N1.9):** datová složka GitHub edice může obsahovat čitelné kopie. Jednorázový import z `%LOCALAPPDATA%\NoirPad` buď nekopíruje `backups/` a `corrupt-*` soubory, nebo je po kopii vyčistí stejným mechanismem (`noirpad/scrub.py`). Import musí zachovat čas souborů kopií (`shutil.copy2` nebo ekvivalent) a mít na to test: čištění podle něj pozná kopii novější než zamčení (čas souboru proti času ve Fernet tokenu obálky), s novým časem by ji přepsalo.
 
 ### N1.11: ruční checklist
 
