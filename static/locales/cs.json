@@ -346,7 +346,7 @@
       "fav": "Oblíbená poznámka – přidat, nebo odebrat",
       "emptyTrash": "Vysypat koš",
       "orientation": "Orientace stránky",
-      "matrix": "Efekt Matrix rain",
+      "matrix": "Déšť padajícího kódu",
       "help": "Tato nápověda"
     },
     "notes": {
@@ -404,7 +404,7 @@
     },
     "effects": {
       "title": "Efekty",
-      "matrix": ":matrix — zapnout/vypnout animaci Matrix rain",
+      "matrix": ":rain — zapnout/vypnout déšť padajícího kódu",
       "splash": "Úvodní obrazovka s ASCII art logem při spuštění",
       "focus": "Režim soustředění (Ctrl+B) — skryje postranní panel",
       "crt": ":crt — zapnout/vypnout CRT řádkování"
@@ -549,7 +549,7 @@
       "fav": "Oblíbená poznámka – přidat, nebo odebrat",
       "emptytrash": "Vysypat koš",
       "orientation": "Přepnout orientaci stránky",
-      "matrix": "Zapnout/vypnout efekt Matrix rain",
+      "matrix": "Zapnout/vypnout déšť padajícího kódu",
       "help": "Zobrazit nápovědu",
       "closetab": "Zavřít aktuální kartu",
       "closeall": "Zavřít všechny karty",
@@ -789,7 +789,6 @@
       "chars": "0 znaků",
       "words": "0 slov"
     },
-
     "settings": {
       "title": "Nastavení",
       "section": {
@@ -809,7 +808,7 @@
       "openFontPicker": "Vybrat písmo →",
       "glowIntensity": "Intenzita záře",
       "crt": "CRT řádkování",
-      "matrixRain": "Matrix déšť na pozadí",
+      "matrixRain": "Déšť padajícího kódu na pozadí",
       "showSplash": "Zobrazit úvodní obrazovku při spuštění",
       "autosave": "Automatické ukládání",
       "autosaveHint": "Vypnuto: ukládá se i tak chvíli po dopsání a každých 30 s",
@@ -853,7 +852,7 @@
       "by": "od {author}",
       "storageUsed": "Zabrané místo",
       "noirEffects": "Všechny Noir efekty",
-      "noirEffectsHint": "Záře, matrix déšť a CRT najednou. Výchozí stav: vypnuto.",
+      "noirEffectsHint": "Záře, déšť padajícího kódu a CRT najednou. Výchozí stav: vypnuto.",
       "glow": "Záře"
     },
     "shortcuts": {
@@ -936,5 +935,24 @@
     "yesterday": "včera",
     "help": "nápověda",
     "locked": "zamčená"
+  },
+  "themes": {
+    "matrix": "Fosforová zelená",
+    "amber": "Jantarová",
+    "cyan": "Azurová",
+    "red": "Červená",
+    "purple": "Fialová",
+    "blue": "Modrá",
+    "pink": "Růžová",
+    "white": "Bílá",
+    "gold": "Zlatá",
+    "lime": "Limetková",
+    "orange": "Oranžová",
+    "ice": "Ledová",
+    "dracula": "Levandulová noc",
+    "synthwave": "Neonový soumrak",
+    "nord": "Břidlice",
+    "gruvbox": "Teplé retro",
+    "tokyo-night": "Půlnoční modrá"
   }
 }

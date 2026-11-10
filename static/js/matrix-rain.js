@@ -1,4 +1,4 @@
-/* matrix-rain.js - Matrix rain canvas overlay animation */
+/* matrix-rain.js - falling-code rain behind the app (:rain; :matrix = old alias) */
 window.NP = window.NP || {};
 
 (function (NP) {
@@ -56,7 +56,7 @@ window.NP = window.NP || {};
             }
         },
 
-        /* :matrix — really toggles: switching on also turns the setting on
+        /* :rain (alias :matrix) — really toggles: switching on also turns the setting on
            (start() refuses while matrix_rain_enabled is false) (C7). */
         toggle: function () {
             var on = !this.running;
@@ -82,6 +82,8 @@ window.NP = window.NP || {};
                 return;
             }
             this.running = true;
+            /* The editor / start page let the rain through (noirpad.css, N1.6). */
+            document.body.classList.add("np-rain-on");
 
             /* Create canvas overlay */
             var canvas = document.createElement("canvas");
@@ -109,6 +111,7 @@ window.NP = window.NP || {};
 
         stop: function () {
             this.running = false;
+            if (document.body) document.body.classList.remove("np-rain-on");
             if (this.animId) {
                 cancelAnimationFrame(this.animId);
                 this.animId = null;

@@ -6,7 +6,8 @@ window.NP = window.NP || {};
 
     NP.themes = {
         apply: function (themeName) {
-            var name = themeName || "matrix";
+            /* An id (stored value, hidden alias) or a :theme name (N1.6). */
+            var name = (NP.themeId && NP.themeId(themeName)) || themeName || "matrix";
             if (!NP.THEMES[name]) {
                 name = "matrix";
             }

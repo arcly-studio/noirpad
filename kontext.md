@@ -17,8 +17,8 @@
   - **Desktop:** `NoirPad.exe` / `desktop.py`. Okno WebView2 přes pywebview, uvnitř lokální
     server FastAPI na `127.0.0.1`.
   - **Web / self-host:** `NoirPad-web.py`. Server na `127.0.0.1:8000`, ovládá se z prohlížeče.
-- Rozhraní je anglicky a česky. Má 17 barevných motivů a volitelné „Noir efekty“ (glow, Matrix
-  déšť, CRT, glitch).
+- Rozhraní je anglicky a česky. Má 17 barevných motivů a volitelné „Noir efekty“ (glow, déšť
+  padajícího kódu, CRT, glitch).
 - Vydavatel je **Arcly Studio**, repozitář [github.com/arcly-studio/NoirPad](https://github.com/arcly-studio/NoirPad)
   (veřejný). Licence MIT. Držitel copyrightu v `LICENSE` je záměrně původní vlastník repa a test
   hlídá, že jeho jméno není nikde jinde (viz §14).
@@ -484,9 +484,16 @@ poznámek, názvy ani hesla. Access log uvicornu je vypnutý.
 - **i18n:** viditelný text jde přes `NP.t()` nebo atributy `data-i18n*`. Klíče jsou v `en.json`
   i `cs.json` (stejné sady, 642 klíčů, množná čísla přes `Intl.PluralRules`).
 - **Jazyk „auto“:** použije se jazyk instalátoru, jinak jazyk prohlížeče.
-- **Motivy:** `themes.css`, 17 motivů. 12 jich mění jen akcent (matrix, amber, cyan, red,
-  purple, blue, pink, white, gold, lime, orange, ice) a 5 má plnou paletu (dracula, synthwave,
+- **Motivy:** `themes.css`, 17 motivů. 12 jich mění jen akcent (id matrix, amber, cyan, red,
+  purple, blue, pink, white, gold, lime, orange, ice) a 5 má plnou paletu (id dracula, synthwave,
   nord, gruvbox, tokyo-night).
+  - Id jsou jen interní (uložená hodnota `theme`, `data-theme`). Uživatel vidí popisné názvy
+    (`themes.<id>` v locales, např. Fosforová zelená, Levandulová noc) a v `:theme` přezdívky
+    z `NP.THEME_SLUGS` (`utils.js`): phosphor, lavender, neon, slate, retro, midnight. Stará id
+    fungují dál jako skrytý alias. Názvy cizích produktů nesmí být v UI, nápovědě, příkazech
+    ani README mimo licence (`tests/test_theme_names.py`).
+  - Déšť padajícího kódu: `:rain` (`:matrix` skrytý alias). Když běží, `body.np-rain-on`
+    zprůhlední `#editor-wrapper` na `--rain-veil` (kontrast v `test_contrast.py`).
   - Používej tokeny, ne natvrdo zapsané barvy (`--bg-panel`, `--accent-soft`, `--danger`,
     `--fg-muted`, `--control-off`, `--md-src-text` …).
   - Kontrast hlídá `tests/test_contrast.py`: text alespoň 4.5:1, ikony a obrys přepínače alespoň 3:1.

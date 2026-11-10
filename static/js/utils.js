@@ -253,6 +253,47 @@ window.NP = window.NP || {};
         "tokyo-night": "#7aa2f7"
     };
 
+    /* N1.6: the name a user types after :theme. The ids above stay the
+       stored value; an id still works after :theme, it is just not shown
+       (help, suggestions). Shown names: locale keys themes.<id>. */
+    NP.THEME_SLUGS = {
+        matrix: "phosphor",
+        amber: "amber",
+        cyan: "cyan",
+        red: "red",
+        purple: "purple",
+        blue: "blue",
+        pink: "pink",
+        white: "white",
+        gold: "gold",
+        lime: "lime",
+        orange: "orange",
+        ice: "ice",
+        dracula: "lavender",
+        synthwave: "neon",
+        nord: "slate",
+        gruvbox: "retro",
+        "tokyo-night": "midnight"
+    };
+
+    /* Theme id for a typed name: a slug or (hidden alias) an id. */
+    NP.themeId = function (name) {
+        var n = String(name || "").trim().toLowerCase();
+        if (NP.THEMES[n]) return n;
+        var ids = Object.keys(NP.THEME_SLUGS);
+        for (var i = 0; i < ids.length; i++) {
+            if (NP.THEME_SLUGS[ids[i]] === n) return ids[i];
+        }
+        return null;
+    };
+
+    /* Shown name of a theme id (Phosphor Green, ...). */
+    NP.themeName = function (id) {
+        var key = "themes." + id;
+        var name = NP.t ? NP.t(key) : key;
+        return name === key ? id : name;
+    };
+
     /* ---- Tkinter-style line.col <-> offset conversion ---- */
 
     /* R3: where each line starts, built once per text (the last text is

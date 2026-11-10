@@ -270,7 +270,7 @@ def demo_gif(pw) -> None:
         # 3. switch the theme from the command bar
         page.keyboard.press("Control+Shift+P")
         page.wait_for_timeout(250)
-        page.keyboard.type(":theme tokyo-night", delay=30)
+        page.keyboard.type(":theme midnight", delay=30)   # shown name of tokyo-night (N1.6)
         page.wait_for_timeout(300)
         page.keyboard.press("Enter")
         page.wait_for_timeout(pause + 200)

@@ -72,6 +72,11 @@
        themes below have a light --fg of their own and use that. */
     --md-src-text: var(--fg-dim);
 
+    /* Falling-code rain (N1.6): how much of the editor / start page
+       background stays over the rain. Text keeps 4.5:1 even over the
+       brightest glyph (--fg-bright), test_contrast. Themes below raise it. */
+    --rain-veil: 90%;
+
     /* Glow KEPT but softened — half-strength, neon-tinted.           */
     --glow: color-mix(in srgb, var(--accent) 55%, transparent);
 
@@ -279,6 +284,18 @@
 [data-theme="tokyo-night"] {
     --md-src-text: var(--fg);
 }
+
+/* Rain veil: higher where muted text would drop under 4.5:1 over a
+   bright glyph (test_contrast computes the minimum). */
+[data-theme="cyan"],
+[data-theme="gruvbox"]     { --rain-veil: 91%; }
+[data-theme="red"],
+[data-theme="nord"]        { --rain-veil: 92%; }
+[data-theme="purple"]      { --rain-veil: 93%; }
+[data-theme="amber"],
+[data-theme="dracula"],
+[data-theme="tokyo-night"] { --rain-veil: 94%; }
+[data-theme="synthwave"]   { --rain-veil: 95%; }
 
 /* Smooth theme cross-fade (kept — part of the identity feel). */
 *, *::before, *::after {

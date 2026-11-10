@@ -198,3 +198,52 @@ def test_start_page_contrast(theme, fg, bg, need):
     env = _theme_env(theme)
     ratio = contrast(_resolve_any(env[fg], env), _resolve_any(env[bg], env))
     assert ratio >= need, f"{theme}: {fg} on {bg} = {ratio:.2f}"
+
+
+# ---- N1.6: falling-code rain behind the note and the start page ----
+# With the rain on, #editor-wrapper paints --bg / --bg-entry at --rain-veil
+# over the canvas. Worst case under a letter: the brightest glyph
+# (--fg-bright, the head of a column) or the canvas' own dark trail fill.
+RAIN_PAIRS = [
+    ("--fg", "--bg", 4.5), ("--fg-dim", "--bg", 4.5), ("--fg-muted", "--bg", 4.5),
+    ("--md-src-text", "--bg", 4.5), ("--accent", "--bg", 4.5),   # no --danger text in these areas
+    ("--fg", "--bg-entry", 4.5), ("--fg-dim", "--bg-entry", 4.5), ("--accent", "--bg-entry", 4.5),
+    ("--fg-muted", "--bg-entry", 3.0),
+]
+RAIN_TRAIL = "#0a0a0a"   # matrix-rain.js: rgba(10, 10, 10, 0.15) every frame
+
+
+def _veil(env):
+    m = re.fullmatch(r"(\d+)%", env["--rain-veil"].strip())
+    assert m, env["--rain-veil"]
+    return int(m.group(1)) / 100
+
+
+@pytest.mark.parametrize("theme", THEMES)
+@pytest.mark.parametrize("fg,bg,need", RAIN_PAIRS)
+def test_rain_veil_keeps_text_readable(theme, fg, bg, need):
+    env = _theme_env(theme)
+    text, base = _resolve_any(env[fg], env), _resolve_any(env[bg], env)
+    for glyph in (_resolve_any(env["--fg-bright"], env), _hex(RAIN_TRAIL)):
+        under = _mix(base, glyph, _veil(env))
+        ratio = contrast(text, under)
+        assert ratio >= need, f"{theme}: {fg} on {bg} over the rain = {ratio:.2f}"
+
+
+@pytest.mark.parametrize("theme", THEMES)
+def test_rain_veil_still_shows_the_rain(theme):
+    """The fix must not hide the rain again: at least 5 % of it comes through."""
+    assert _veil(_theme_env(theme)) <= 0.95, theme
+
+
+def test_rain_uses_the_veil_token_and_theme_colours():
+    css = re.sub(r"/\*.*?\*/", "", (ROOT / "static" / "css" / "noirpad.css").read_text(encoding="utf-8"),
+                 flags=re.S)
+    rules = re.findall(r"(?m)^body\.np-rain-on #editor-wrapper[^{]*\{([^}]*)\}", css)
+    assert len(rules) == 2
+    for body in rules:
+        assert re.search(r"background:\s*color-mix\(in srgb,\s*var\(--bg(-entry)?\)\s+var\(--rain-veil\),\s*transparent\)", body)
+    js = (ROOT / "static" / "js" / "matrix-rain.js").read_text(encoding="utf-8")
+    # The brightest colour the rain draws is --fg-bright (the test above).
+    assert set(re.findall(r'getPropertyValue\("(--[\w-]+)"\)', js)) == {"--fg-bright", "--fg", "--fg-dim"}
+    assert "rgba(10, 10, 10, 0.15)" in js

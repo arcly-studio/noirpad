@@ -703,7 +703,7 @@ input, textarea {
     padding: 20px 34px 12px;
     border-bottom: 1px solid var(--border);
     flex-shrink: 0;
-    background: var(--bg);   /* opaque: Matrix rain must not run under the title (D11) */
+    background: var(--bg);   /* opaque: the rain must not run under the title (D11) */
 }
 
 #note-title-row {
@@ -938,6 +938,18 @@ body #editor-wrapper:has(.welcome-wrap) {
     display: block;
     overflow: hidden;
     background: var(--bg-entry);
+}
+
+/* N1.6: while the falling-code rain runs (matrix-rain.js sets
+   body.np-rain-on), the note and the start page let it show through.
+   --rain-veil keeps the text readable (test_contrast); the top bar and
+   the note title stay opaque (D11). Off = the solid backgrounds above. */
+body.np-rain-on #editor-wrapper {
+    background: color-mix(in srgb, var(--bg) var(--rain-veil), transparent);
+}
+
+body.np-rain-on #editor-wrapper:has(.welcome-wrap) {
+    background: color-mix(in srgb, var(--bg-entry) var(--rain-veil), transparent);
 }
 
 body #editor:has(.welcome-wrap) {

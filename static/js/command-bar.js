@@ -28,7 +28,7 @@ window.NP = window.NP || {};
         { cmd: ":fav", hint: "", desc: "commands.desc.fav" },
         { cmd: ":emptytrash", hint: "", desc: "commands.desc.emptytrash" },
         { cmd: ":orientation", hint: "", desc: "commands.desc.orientation" },
-        { cmd: ":matrix", hint: "", desc: "commands.desc.matrix" },
+        { cmd: ":rain", hint: "", desc: "commands.desc.matrix" },   /* :matrix = hidden alias */
         { cmd: ":help", hint: "", desc: "commands.desc.help" },
         { cmd: ":closetab", hint: "", desc: "commands.desc.closetab" },
         { cmd: ":closeall", hint: "", desc: "commands.desc.closeall" },
@@ -92,11 +92,13 @@ window.NP = window.NP || {};
             return c.cmd.indexOf(val) !== -1 ||
                 NP.searchFold(NP.t(c.desc)).indexOf(folded) !== -1;
         });
-        /* Also check theme names */
-        if (NP.THEMES) {
-            Object.keys(NP.THEMES).forEach(function (t) {
-                if (t.indexOf(val) !== -1) {
-                    matches.push({ cmd: t, hint: "", desc: "commands.applyTheme" });
+        /* Also check theme names: only the shown :theme names, the old
+           ids are hidden aliases (N1.6). */
+        if (NP.THEME_SLUGS) {
+            Object.keys(NP.THEME_SLUGS).forEach(function (id) {
+                var slug = NP.THEME_SLUGS[id];
+                if (slug.indexOf(val) !== -1) {
+                    matches.push({ cmd: slug, hint: "", desc: "commands.applyTheme" });
                 }
             });
         }
@@ -230,8 +232,9 @@ window.NP = window.NP || {};
             var lower = cmd.toLowerCase();
 
             /* Theme name without colon */
-            if (NP.THEMES && NP.THEMES[lower]) {
-                NP.themes.apply(lower);
+            var themeId = NP.themeId ? NP.themeId(lower) : null;
+            if (themeId) {
+                NP.themes.apply(themeId);
                 NP.commandBar.close();
                 return;
             }
@@ -301,7 +304,7 @@ window.NP = window.NP || {};
                 if (NP.trash) NP.trash.empty();
             } else if (lower === ":orientation") {
                 if (NP.settings && NP.settings.toggleOrientation) NP.settings.toggleOrientation();
-            } else if (lower === ":matrix") {
+            } else if (lower === ":rain" || lower === ":matrix") {   /* :matrix: hidden alias */
                 if (NP.matrixRain && NP.matrixRain.toggle) NP.matrixRain.toggle();
             } else if (lower === ":help") {
                 if (NP.help && NP.help.show) NP.help.show();

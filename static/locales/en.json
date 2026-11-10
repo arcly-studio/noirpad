@@ -324,7 +324,7 @@
       "fav": "Toggle favorite",
       "emptyTrash": "Empty trash",
       "orientation": "Page orientation",
-      "matrix": "Matrix rain effect",
+      "matrix": "Falling-code rain",
       "help": "This help"
     },
     "notes": {
@@ -382,7 +382,7 @@
     },
     "effects": {
       "title": "Effects",
-      "matrix": ":matrix — Turn the Matrix rain animation on/off",
+      "matrix": ":rain — Turn the falling-code rain on/off",
       "splash": "Splash screen with an ASCII art logo on startup",
       "focus": "Focus mode (Ctrl+B) — hides the sidebar",
       "crt": ":crt — Turn the CRT scanlines on/off"
@@ -523,7 +523,7 @@
       "fav": "Toggle favorite",
       "emptytrash": "Empty trash",
       "orientation": "Toggle page orientation",
-      "matrix": "Toggle matrix rain",
+      "matrix": "Toggle falling-code rain",
       "help": "Show help",
       "closetab": "Close current tab",
       "closeall": "Close all tabs",
@@ -757,7 +757,6 @@
       "chars": "0 chars",
       "words": "0 words"
     },
-
     "settings": {
       "title": "Settings",
       "section": {
@@ -777,7 +776,7 @@
       "openFontPicker": "Open font picker →",
       "glowIntensity": "Glow intensity",
       "crt": "CRT scanlines",
-      "matrixRain": "Matrix rain background",
+      "matrixRain": "Falling-code rain background",
       "showSplash": "Show splash on startup",
       "autosave": "Autosave",
       "autosaveHint": "Off: still saved a moment after you stop typing, and every 30 s",
@@ -821,7 +820,7 @@
       "by": "by {author}",
       "storageUsed": "Storage used",
       "noirEffects": "All Noir effects",
-      "noirEffectsHint": "Glow, matrix rain and CRT at once. Off by default.",
+      "noirEffectsHint": "Glow, falling-code rain and CRT at once. Off by default.",
       "glow": "Glow"
     },
     "shortcuts": {
@@ -896,5 +895,24 @@
     "yesterday": "yesterday",
     "help": "help",
     "locked": "locked"
+  },
+  "themes": {
+    "matrix": "Phosphor Green",
+    "amber": "Amber",
+    "cyan": "Cyan",
+    "red": "Red",
+    "purple": "Purple",
+    "blue": "Blue",
+    "pink": "Pink",
+    "white": "White",
+    "gold": "Gold",
+    "lime": "Lime",
+    "orange": "Orange",
+    "ice": "Ice",
+    "dracula": "Lavender Night",
+    "synthwave": "Neon Dusk",
+    "nord": "Slate",
+    "gruvbox": "Warm Retro",
+    "tokyo-night": "Midnight Blue"
   }
 }

@@ -27,7 +27,7 @@
   a NoirPad sám nic po síti neposílá.
 - **Šifrování jednotlivých poznámek** — každou poznámku můžete zamknout vlastním heslem.
 - **Skutečný Markdown** — živý náhled vedle zdroje, tabulky, úkoly a zvýrazněný kód.
-- **17 motivů** — od zelené Matrix po Tokyo Night, k tomu volitelná záře, CRT řádky a padající znaky.
+- **17 motivů** — od Fosforové zelené po Půlnoční modrou, k tomu volitelná záře, CRT řádky a déšť padajícího kódu.
 
 ## Funkce
 
@@ -56,7 +56,7 @@
 
 ### Markdown a kód
 
-![Markdown vedle sebe v motivu Tokyo Night: vlevo zdroj, vpravo vykreslená tabulka, zvýrazněný kód v Pythonu a seznam úkolů](docs/screenshots/split-preview.png)
+![Markdown vedle sebe v motivu Půlnoční modrá: vlevo zdroj, vpravo vykreslená tabulka, zvýrazněný kód v Pythonu a seznam úkolů](docs/screenshots/split-preview.png)
 
 - Vlevo zdroj, vpravo **živý náhled**.
 - **Tabulky, úkoly, citace** a **bloky kódu se zvýrazněním syntaxe**.
@@ -73,10 +73,10 @@
 
 ### Motivy
 
-![Stejná poznámka ve čtyřech motivech: Matrix, Tokyo Night, Amber a Dracula](docs/screenshots/themes.png)
+![Stejná poznámka ve čtyřech motivech: Fosforová zelená, Půlnoční modrá, Jantarová a Levandulová noc](docs/screenshots/themes.png)
 
 - **17 motivů**; nastavit jde i písmo rozhraní a editoru.
-- **Noir efekty** - záře, Matrix déšť na pozadí, CRT řádkování a efekt „glitch" při psaní - jsou
+- **Noir efekty** - záře, déšť padajícího kódu na pozadí, CRT řádkování a efekt „glitch" při psaní - jsou
   ve výchozím stavu **vypnuté**. Zapnete je v Nastavení → Noir efekty, jednotlivě nebo jedním
   přepínačem *Všechny Noir efekty*. Starší instalace si po upgradu ponechají dosavadní vzhled
   (záře zapnutá, déšť pokud jste ho nevypnuli).

@@ -90,7 +90,7 @@ window.NP = window.NP || {};
                     [":fav", "help.commands.fav"],
                     [":emptytrash", "help.commands.emptyTrash"],
                     [":orientation", "help.commands.orientation"],
-                    [":matrix", "help.commands.matrix"],
+                    [":rain", "help.commands.matrix"],
                     [":help", "help.commands.help"],
                     [":findall", "commands.desc.findall"],
                     [":clearformat", "commands.desc.clearformat"],
@@ -174,9 +174,10 @@ window.NP = window.NP || {};
             content: [
                 { type: "text", value: "help.themes.intro" },
                 { type: "bullets", raw: true, value: [
-                    "matrix, amber, cyan, red, purple, blue",
+                    /* :theme names (N1.6); the old ids are hidden aliases */
+                    "phosphor, amber, cyan, red, purple, blue",
                     "pink, white, gold, lime, orange, ice",
-                    "dracula, synthwave, nord, gruvbox, tokyo-night"
+                    "lavender, neon, slate, retro, midnight"
                 ]}
             ]
         },

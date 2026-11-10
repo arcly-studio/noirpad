@@ -28,7 +28,7 @@
     <div id="splash-subtitle" data-i18n="ui.splash.loading">Loading...</div>
 </div>
 
-<!-- ============ Matrix Rain Canvas ============ -->
+<!-- ============ Falling-code rain canvas ============ -->
 <canvas id="matrix-canvas"></canvas>
 
 <!-- ============ CRT Overlay (toggle via :crt) ============ -->
@@ -212,29 +212,29 @@
 
             <div class="settings-row">
                 <span class="settings-label" data-i18n="ui.settings.theme">Theme</span>
-                <div class="np-dropdown" data-value="matrix" id="setting-theme" translate="no">
+                <div class="np-dropdown" data-value="matrix" id="setting-theme">
                     <button class="np-dropdown-trigger" type="button">
-                        <span class="np-dropdown-label">Matrix</span>
+                        <span class="np-dropdown-label" data-i18n="themes.matrix">Phosphor Green</span>
                         <span class="np-dropdown-arrow">&#9660;</span>
                     </button>
                     <div class="np-dropdown-menu">
-                        <div class="np-dropdown-option" data-value="matrix"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Matrix</span></div>
-                        <div class="np-dropdown-option" data-value="amber"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Amber</span></div>
-                        <div class="np-dropdown-option" data-value="cyan"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Cyan</span></div>
-                        <div class="np-dropdown-option" data-value="red"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Red</span></div>
-                        <div class="np-dropdown-option" data-value="purple"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Purple</span></div>
-                        <div class="np-dropdown-option" data-value="blue"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Blue</span></div>
-                        <div class="np-dropdown-option" data-value="pink"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Pink</span></div>
-                        <div class="np-dropdown-option" data-value="white"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">White</span></div>
-                        <div class="np-dropdown-option" data-value="gold"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Gold</span></div>
-                        <div class="np-dropdown-option" data-value="lime"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Lime</span></div>
-                        <div class="np-dropdown-option" data-value="orange"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Orange</span></div>
-                        <div class="np-dropdown-option" data-value="ice"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Ice</span></div>
-                        <div class="np-dropdown-option" data-value="dracula"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Dracula</span></div>
-                        <div class="np-dropdown-option" data-value="synthwave"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Synthwave</span></div>
-                        <div class="np-dropdown-option" data-value="nord"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Nord</span></div>
-                        <div class="np-dropdown-option" data-value="gruvbox"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Gruvbox</span></div>
-                        <div class="np-dropdown-option" data-value="tokyo-night"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label">Tokyo Night</span></div>
+                        <div class="np-dropdown-option" data-value="matrix"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.matrix">Phosphor Green</span></div>
+                        <div class="np-dropdown-option" data-value="amber"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.amber">Amber</span></div>
+                        <div class="np-dropdown-option" data-value="cyan"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.cyan">Cyan</span></div>
+                        <div class="np-dropdown-option" data-value="red"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.red">Red</span></div>
+                        <div class="np-dropdown-option" data-value="purple"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.purple">Purple</span></div>
+                        <div class="np-dropdown-option" data-value="blue"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.blue">Blue</span></div>
+                        <div class="np-dropdown-option" data-value="pink"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.pink">Pink</span></div>
+                        <div class="np-dropdown-option" data-value="white"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.white">White</span></div>
+                        <div class="np-dropdown-option" data-value="gold"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.gold">Gold</span></div>
+                        <div class="np-dropdown-option" data-value="lime"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.lime">Lime</span></div>
+                        <div class="np-dropdown-option" data-value="orange"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.orange">Orange</span></div>
+                        <div class="np-dropdown-option" data-value="ice"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.ice">Ice</span></div>
+                        <div class="np-dropdown-option" data-value="dracula"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.dracula">Lavender Night</span></div>
+                        <div class="np-dropdown-option" data-value="synthwave"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.synthwave">Neon Dusk</span></div>
+                        <div class="np-dropdown-option" data-value="nord"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.nord">Slate</span></div>
+                        <div class="np-dropdown-option" data-value="gruvbox"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.gruvbox">Warm Retro</span></div>
+                        <div class="np-dropdown-option" data-value="tokyo-night"><span class="np-dropdown-marker">&rsaquo;</span><span class="np-dropdown-option-label" data-i18n="themes.tokyo-night">Midnight Blue</span></div>
                     </div>
                 </div>
             </div>
@@ -295,7 +295,7 @@
             <div class="settings-row">
                 <div class="settings-label-col">
                     <span class="settings-label" data-i18n="ui.settings.noirEffects">All Noir effects</span>
-                    <span class="settings-sublabel" data-i18n="ui.settings.noirEffectsHint">Glow, matrix rain and CRT at once. Off by default.</span>
+                    <span class="settings-sublabel" data-i18n="ui.settings.noirEffectsHint">Glow, falling-code rain and CRT at once. Off by default.</span>
                 </div>
                 <button class="settings-toggle" id="setting-noir-effects" role="switch" aria-checked="false" aria-label="All Noir effects" data-i18n-aria-label="ui.settings.noirEffects"><span class="settings-toggle-knob"></span></button>
             </div>
@@ -311,8 +311,8 @@
             </div>
 
             <div class="settings-row">
-                <span class="settings-label" data-i18n="ui.settings.matrixRain">Matrix rain background</span>
-                <button class="settings-toggle" id="setting-matrix-rain" role="switch" aria-checked="false" aria-label="Matrix rain background" data-i18n-aria-label="ui.settings.matrixRain"><span class="settings-toggle-knob"></span></button>
+                <span class="settings-label" data-i18n="ui.settings.matrixRain">Falling-code rain background</span>
+                <button class="settings-toggle" id="setting-matrix-rain" role="switch" aria-checked="false" aria-label="Falling-code rain background" data-i18n-aria-label="ui.settings.matrixRain"><span class="settings-toggle-knob"></span></button>
             </div>
 
             <div class="settings-row">

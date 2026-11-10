@@ -38,7 +38,7 @@ window.NP = window.NP || {};
             }) },
             { ok: "[ OK ]", msg: NP.t("splash.crypto") },
             { ok: "[ OK ]", msg: NP.t("splash.backend", { port: port }) },
-            { ok: "[ OK ]", msg: NP.t("splash.theme", { theme: theme }) },
+            { ok: "[ OK ]", msg: NP.t("splash.theme", { theme: NP.themeName ? NP.themeName(theme) : theme }) },
             { ok: "[ OK ]", msg: NP.t("splash.target") },
             { ok: "[ OK ]", msg: NP.t("splash.ready") }
         ];

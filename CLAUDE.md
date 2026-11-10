@@ -43,19 +43,25 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
 - Wizard BMPs (`installer/wizard-small-*.bmp`) come from `tools/make_wizard_images.ps1` (32-bit with alpha).
 - Windows may show the old icon from its icon cache for a while; not a bug.
 
-## Noir effects (glow, Matrix rain, CRT)
+## Noir effects (glow, falling-code rain, CRT)
 - Data keys `glow_enabled`, `matrix_rain_enabled`, `crt_enabled`; all `False` in
   `noirpad/storage.py` `DEFAULT_DATA` (also in `models.py`).
 - One-time migration for pre-redesign data: `_migrate_noir_effects` -> `_noir_effects_upgrade`
   (keeps old look: glow on, rain unless explicitly off). `glow_enabled` present = already done.
   Also applied to a snapshot restored after a damaged data file.
 - Frontend: `settings.js` `effects()`, `applyEffects()`, `setEffects({glow,matrix,crt})`;
-  `effects.js` and `matrix-rain.js` call `setEffects`. CRT used to live in localStorage
+  `effects.js` and `matrix-rain.js` call `setEffects`. Rain command `:rain` (`:matrix` = hidden
+  alias). While it runs, `body.np-rain-on` makes `#editor-wrapper` see-through at `--rain-veil`
+  (per theme, `test_contrast.py`); top bar and note header stay opaque. CRT used to live in localStorage
   (`migrateCrt` moves it).
 - CSS: `body:not(.np-glow) * { text-shadow: none !important }` (top of `noirpad.css`); glow
   variables are set to 0 while effects are off. Do not add text-shadow outside this rule's reach.
 
 ## Design tokens / theming
+- Theme ids (`matrix`, `dracula`, …) are internal: saved `theme`, `data-theme`. Users see the
+  names in `themes.<id>` (locales) and type the `:theme` names from `NP.THEME_SLUGS` (`utils.js`);
+  an old id still works as a hidden alias. No other product's name in the UI, help, commands or
+  README outside the licence section (`tests/test_theme_names.py`).
 - `static/css/themes.css` (17 themes). Tokens added in the redesign: `--font-brand`, `--bg-panel`,
   `--folder-color`, `--code-bg`, `--accent-soft`, `--danger`; later `--control-off`,
   `--control-off-track` (grey off state of toggles) and `--md-src-text` (plain text in the

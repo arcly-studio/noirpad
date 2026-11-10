@@ -27,7 +27,7 @@
   network requests of its own.
 - **Per-note encryption** — lock any note with its own password.
 - **Real Markdown** — live side-by-side preview, tables, task lists and syntax-highlighted code.
-- **17 themes** — from Matrix green to Tokyo Night, plus optional glow, CRT scanlines and Matrix rain.
+- **17 themes** — from Phosphor Green to Midnight Blue, plus optional glow, CRT scanlines and falling-code rain.
 
 ## Features
 
@@ -54,7 +54,7 @@
 
 ### Markdown & code
 
-![Markdown split view in the Tokyo Night theme: the source on the left; the rendered table, highlighted Python code and task list on the right](docs/screenshots/split-preview.png)
+![Markdown split view in the Midnight Blue theme: the source on the left; the rendered table, highlighted Python code and task list on the right](docs/screenshots/split-preview.png)
 
 - Source on the left, **live preview** on the right.
 - **Tables, task lists, quotes** and fenced **code blocks with syntax highlighting**.
@@ -71,10 +71,10 @@
 
 ### Themes
 
-![The same note in four themes: Matrix, Tokyo Night, Amber and Dracula](docs/screenshots/themes.png)
+![The same note in four themes: Phosphor Green, Midnight Blue, Amber and Lavender Night](docs/screenshots/themes.png)
 
 - **17 themes**; UI and editor fonts are configurable too.
-- **Noir effects** - glow, Matrix rain in the background, CRT scanlines and a glitch effect while
+- **Noir effects** - glow, falling-code rain in the background, CRT scanlines and a glitch effect while
   typing - are **off by default**. Turn them on in Settings → Noir effects, one by one or with
   the single *All Noir effects* switch. Existing installations keep their previous look after the
   upgrade (glow on, rain unless you had switched it off).
