@@ -83,7 +83,7 @@ WizardStyle=modern
 
 SetupIconFile=noirpad.ico
 ; Logo in the wizard's top-right corner; Setup picks the size for the DPI.
-; Generated from docs\brand by tools\make_wizard_images.ps1.
+; Rendered from docs\brand\noirpad-icon.svg by tools\make_icons.py.
 WizardSmallImageFile=installer\wizard-small-55.bmp,installer\wizard-small-64.bmp,installer\wizard-small-69.bmp,installer\wizard-small-83.bmp,installer\wizard-small-92.bmp,installer\wizard-small-110.bmp,installer\wizard-small-138.bmp
 WizardImageAlphaFormat=defined
 UninstallDisplayIcon={app}\{#AppExeName}

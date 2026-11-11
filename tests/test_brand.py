@@ -148,3 +148,90 @@ def test_i5_copyright_and_uninstall_name():
     spec = (ROOT / "noirpad.spec").read_text(encoding="utf-8")
     assert "StringStruct('LegalCopyright', 'MIT License')" not in spec
     assert "StringStruct('LegalCopyright', '{COPYRIGHT}. MIT License.')" in spec   # N9
+
+
+# ---- Green M1 (N1.9-logo): every raster comes from the green SVGs -----------------
+#
+# tools/make_icons.py renders all of them and records the SHA-256 of the two
+# SVG sources and of each output in docs/brand/icons.json. A source changed
+# without a new run, an output edited by hand, or a new raster icon that the
+# script does not make fails here; so does a blue (old) colour.
+
+import json
+import sys
+
+sys.path.insert(0, str(ROOT / "tools"))
+import make_icons  # noqa: E402
+
+GREENS = ("#00ff41", "#17ff52", "#31ff66")                    # green M1 tones
+OLD_BLUES = ("#3d8bff", "#1c56d6", "#4a94ff", "#5aa2ff", "#9ccaff")   # blue M1 (1.0.1)
+MANIFEST = json.loads((ROOT / "docs" / "brand" / "icons.json").read_text(encoding="utf-8"))
+
+
+def test_svg_sources_are_green():
+    for path in (make_icons.BIG, make_icons.SMALL):
+        text = path.read_text(encoding="utf-8").lower()
+        assert any(c in text for c in GREENS), path.name
+        assert not [c for c in OLD_BLUES if c in text], path.name
+
+
+def test_rasters_were_made_from_the_current_svgs():
+    sources = {p.relative_to(ROOT).as_posix(): make_icons.sha(p) for p in make_icons.SOURCES}
+    assert MANIFEST["sources"] == sources, "a source changed: run tools/make_icons.py"
+    for rel, digest in MANIFEST["outputs"].items():
+        assert make_icons.sha(ROOT / rel) == digest, f"{rel} differs from tools/make_icons.py output"
+
+
+def test_every_raster_icon_is_made_by_the_script():
+    expected = {*make_icons.PNGS, *make_icons.ICOS, *make_icons.BMPS, make_icons.SOCIAL[0]}
+    assert set(MANIFEST["outputs"]) == expected
+    found = {p.relative_to(ROOT).as_posix()
+             for pattern in ("*.ico", "docs/*.png", "docs/brand/*.png", "static/*.ico",
+                             "static/img/*.png", "installer/*.bmp")
+             for p in ROOT.glob(pattern)}
+    assert found <= expected, sorted(found - expected)
+
+
+def _colours(pixels, step=1):
+    """Coloured, opaque pixels: (green-dominant, blue-dominant) counts."""
+    green = blue = 0
+    for i in range(0, len(pixels), 4 * step):
+        r, g, b, a = pixels[i:i + 4]
+        if a < 200 or max(r, g, b) - min(r, g, b) < 60:
+            continue                                        # transparent, dark or grey
+        if g > r and g > b:
+            green += 1
+        elif b > r and b > g:
+            blue += 1
+    return green, blue
+
+
+def _assert_green(name, pixels, step=1):
+    green, blue = _colours(pixels, step)
+    assert green > 20 and green > 10 * blue, f"{name}: green {green}, blue {blue}"
+
+
+def test_every_icon_is_green():
+    for rel in ("docs/logo.png", "static/img/icon-192.png", "static/img/apple-touch-icon.png"):
+        _assert_green(rel, make_icons.png_rgba((ROOT / rel).read_bytes())[2])
+    for rel in make_icons.ICOS:
+        data = (ROOT / rel).read_bytes()
+        count = struct.unpack_from("<H", data, 4)[0]
+        for i in range(count):
+            size, offset = struct.unpack_from("<I", data, 6 + 16 * i + 8)[0], struct.unpack_from("<I", data, 6 + 16 * i + 12)[0]
+            if data[6 + 16 * i] in (16, 20, 24):
+                continue                                    # too few coloured pixels to judge
+            w, _, px = make_icons.png_rgba(data[offset:offset + size])
+            _assert_green(f"{rel} {w}px", px, step=4 if w >= 128 else 1)
+    for rel in make_icons.BMPS:
+        data = (ROOT / rel).read_bytes()
+        bgra = data[struct.unpack_from("<I", data, 10)[0]:]
+        rgba = bytearray(len(bgra))
+        rgba[0::4], rgba[1::4], rgba[2::4], rgba[3::4] = bgra[2::4], bgra[1::4], bgra[0::4], bgra[3::4]
+        _assert_green(rel, rgba)
+
+
+def test_colour_check_catches_the_blue_logo():
+    blue = bytes([61, 139, 255, 255]) * 100 + bytes([0, 255, 65, 255]) * 5
+    green, b = _colours(blue)
+    assert b == 100 and green == 5

@@ -90,12 +90,14 @@ the tests, before the build.
   `tools/take_screenshots.py [--gif]` starts `desktop.py` on them and regenerates the README's
   `docs/screenshots/` (and `docs/demo.gif`) over the WebView2 DevTools protocol (needs
   `pip install playwright`, plus `ffmpeg` and `oxipng` on PATH).
-- **Logo (M1 "glass sheets", 1.0.1):** the sources are `docs/brand/noirpad-icon.svg` (40 px and
-  up) and `noirpad-icon-small.svg` (32 px and less) with the raster export
-  `docs/brand/noirpad-1024.png`. `noirpad.ico` (exe, window, installer), `static/favicon.ico`,
-  `static/img/` (copies of both SVGs, `tests/test_brand.py` keeps them equal) and `docs/logo.png`
-  are exported from them; `tools/make_wizard_images.ps1` regenerates the installer's
-  `installer/wizard-small-*.bmp` (32-bit with alpha). The UI shows the SVG through `<img>` only
+- **Logo (M1 "glass sheets", green since 1.1.0):** the only sources are `docs/brand/noirpad-icon.svg`
+  (40 px and up) and `noirpad-icon-small.svg` (32 px and less); `static/img/` holds identical
+  copies. Every raster is rendered from them by `tools/make_icons.py` (chrome-headless-shell from
+  Playwright, standard library otherwise): `docs/brand/noirpad-1024.png`, `docs/logo.png`,
+  `static/img/icon-*.png`, `apple-touch-icon.png`, `noirpad.ico` (exe, window, installer),
+  `static/favicon.ico`, `installer/wizard-small-*.bmp` (32-bit with alpha) and
+  `docs/brand/social-preview.png`. It writes their hashes to `docs/brand/icons.json`;
+  `tests/test_brand.py` fails on a hand-edited or stale raster and on a non-green icon. The UI shows the SVG through `<img>` only
   (never inline: the file has `id`s). Icon URLs in `static/index.html` and `static/manifest.json`
   end in `?v=__NP_VERSION__`; the server fills in the version, so browsers drop a cached old icon.
   `docs/brand/social-preview.png` (1280×640) is a headless-Chrome screenshot of

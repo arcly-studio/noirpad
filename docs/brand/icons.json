@@ -1,0 +1,25 @@
+{
+  "generator": "tools/make_icons.py",
+  "sources": {
+    "docs/brand/noirpad-icon.svg": "525b4ad6e8e6917e263b4438844986731069c6d9d31def582abd938c8df09fe8",
+    "docs/brand/noirpad-icon-small.svg": "bf628f2480bfad0e75fe84e6d4ae66d2a681372623cbb221a1c0729779ab9551",
+    "docs/brand/social-preview.html": "68f4c58e5855f5049f49b34e419420553d4781307f03c230c3563b1ed01c35e1"
+  },
+  "outputs": {
+    "docs/brand/noirpad-1024.png": "04f0b16a45e8bc2f50228683b6a4b54f99b00be104f2ccfed20f55b73faf103a",
+    "docs/brand/social-preview.png": "1ab63376e9750fb280fe3c92af7563d2b53a00e39e16cc6467e9d4043085c411",
+    "docs/logo.png": "a08f45d3a0ec1985d0e53a3dd41135919f8d4b0a26b1faa53c6201141dc1f6bf",
+    "installer/wizard-small-110.bmp": "3ef5455a388b0078b340932853138a797a0e785834c30e16b532bab9538e880e",
+    "installer/wizard-small-138.bmp": "75022601458db937d3300ababea9f8fab258e6596db95775023e097780bda556",
+    "installer/wizard-small-55.bmp": "dbc672f0a9f4fead31ac93b49beb0ae2d7bc6431db1cec390b43f51c252afde1",
+    "installer/wizard-small-64.bmp": "0a52dc009c20224f34d42938b5e8114ece6d7919273092a63378241fc03c24ed",
+    "installer/wizard-small-69.bmp": "842a939187cd753d9f444ebe5660707a2deaca75efcc5d4c038b686bd424e4b9",
+    "installer/wizard-small-83.bmp": "1f8460df68d769510ca8cc378611aab95afa345ff3ad2f94cdf795e66ec189af",
+    "installer/wizard-small-92.bmp": "b204dc1dc85d60697b41afcdd09c887e224c5b4ccbf12b1052dad318ef3d2472",
+    "noirpad.ico": "c857f7e4355364b02fb774084d9878b08b3e512a155060800b665ef26b0b1004",
+    "static/favicon.ico": "607b7382f557924ccfcdd4d996d2cc2205a3bb353f49737f1c2a03eab5581b79",
+    "static/img/apple-touch-icon.png": "a00744c0689c826048b12d5e1ad4d260db5c4b86ac8e8b9b3640c9f9b41a79c1",
+    "static/img/icon-192.png": "8b29fae6a97acff8df0065e2d618448f03423f3b6721918325f5bfb025dabc4e",
+    "static/img/icon-512.png": "d54de6c737756b0f59179b37342ae841faafe184400a73c8e83d64605acf5558"
+  }
+}

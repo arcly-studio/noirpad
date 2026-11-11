@@ -106,7 +106,7 @@ souborů. Aplikace sama žádný JS build nemá.
 │  ├─ manifest.json        PWA manifest (bez service workeru)
 │  └─ vendor/              GENEROVANÉ přes `npm run vendor`, ručně needitovat
 ├─ tests/                  pytest (19 souborů + conftest), tests/js (31 *.test.js + harness)
-├─ tools/                  vendor.mjs, demo_data.py, take_screenshots.py, smoke_test.ps1, make_wizard_images.ps1
+├─ tools/                  vendor.mjs, demo_data.py, take_screenshots.py, smoke_test.ps1, make_icons.py
 ├─ installer.iss           Inno Setup (per-user instalace, WebView2, jazyk, odinstalace)
 ├─ installer/              BMP obrázky průvodce (generované)
 ├─ noirpad.spec            PyInstaller spec
@@ -652,7 +652,7 @@ Před každým publikováním repa, tagem nebo releasem se ptej.
 | `demo_data.py <prázdná složka> [--lang cs]` | demo poznámky (jedna zamčená heslem `demo-password`) pro screenshoty a zkoušky |
 | `take_screenshots.py [--gif \| --only shots\|gif]` | spustí `desktop.py` na demo datech a přes CDP a Playwright vyrobí `docs/screenshots/*` a `docs/demo.gif`. Potřebuje playwright, ffmpeg a oxipng. |
 | `smoke_test.ps1 -Exe … -Version …` | smoke test zabaleného exe (volá ho build.ps1 i release.yml) |
-| `make_wizard_images.ps1` | z `docs/brand/noirpad-1024.png` vyrobí `installer/wizard-small-*.bmp` (32bit s alfou). Spouští se ručně po změně loga. |
+| `make_icons.py` | ze zelených SVG v `docs/brand/` vykreslí všechny rastry loga (PNG, ICO, BMP průvodce, social preview) a hashe zapíše do `docs/brand/icons.json`. Spouští se ručně po změně loga. |
 
 ## 14. Pravidla a konvence (souhrn)
 

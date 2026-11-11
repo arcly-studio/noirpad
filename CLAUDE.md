@@ -40,7 +40,10 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
 - In the UI only as `<img class="... np-decorative">`, never inline (the SVG has `id`s).
 - Icon URLs carry `?v=__NP_VERSION__`; `noirpad/app.py` (`VERSION_MARK`) fills it in
   `index.html` and `manifest.json` (cache busting).
-- Wizard BMPs (`installer/wizard-small-*.bmp`) come from `tools/make_wizard_images.ps1` (32-bit with alpha).
+- The logo is green (main tone `#00ff41`). Every raster (PNGs, `noirpad.ico`, `favicon.ico`, wizard
+  BMPs, `social-preview.png`) comes from the two SVGs via `tools/make_icons.py`; never edit a
+  raster by hand. After touching an SVG run it and commit the outputs and `docs/brand/icons.json`
+  (`tests/test_brand.py` checks hashes and that every icon is green).
 - Windows may show the old icon from its icon cache for a while; not a bug.
 
 ## Noir effects (glow, falling-code rain, CRT)
