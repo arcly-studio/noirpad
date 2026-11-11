@@ -92,6 +92,13 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   commit the file; `build.ps1` and `tests/test_third_party_notices.py` fail when it is out of date.
   Shipped next to the exe (installer) and in the bundle; About → Licenses (`licenses.js`,
   `/api/licenses`) shows it with LICENSE. About also shows the contact (`mailto:`).
+- Privacy: `PRIVACY.md` / `PRIVACY.cs.md` (approved wording; Store parts are placeholders until
+  N1.9 / N1.11), linked from the READMEs and About (`#about-privacy`, GitHub page in the UI
+  language). Main sentence: "Markdown notes you can lock with a password – for Windows." /
+  "Markdown poznámky, které můžete zamknout heslem – pro Windows." – never "encrypted" there.
+  The repo and the app address users formally (vykání). The name WebView2 only in the Privacy
+  files, the README install section, the installer and the missing-component message
+  (`tests/test_privacy.py`).
 - External links in the UI: plain `<a href>`; `static/js/links.js` intercepts the click
   (`window.open`, noopener) and desktop pywebview hands it to the system browser
   (`OPEN_EXTERNAL_LINKS_IN_BROWSER`). Never custom navigation.

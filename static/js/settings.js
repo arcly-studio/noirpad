@@ -795,6 +795,14 @@ window.NP = window.NP || {};
             aboutContact.textContent = info.contact;
             aboutContact.hidden = false;
         }
+        /* N1.8: the privacy policy in the UI language, on GitHub (links.js
+           opens it in the browser). The language changes only with a reload. */
+        var aboutPrivacy = document.getElementById("about-privacy");
+        if (aboutPrivacy && info.url) {
+            var csPolicy = NP.i18n && NP.i18n.lang && NP.i18n.lang() === "cs";
+            aboutPrivacy.href = info.url + "/blob/main/" + (csPolicy ? "PRIVACY.cs.md" : "PRIVACY.md");
+            aboutPrivacy.hidden = false;
+        }
         /* N8: LICENSE + THIRD-PARTY-NOTICES.txt (licenses.js) */
         var aboutLicenses = document.getElementById("about-licenses");
         if (aboutLicenses) {

@@ -858,7 +858,9 @@
       "contact": "Kontakt",
       "license": "Licence",
       "copyrightLine": "{copyright} · MIT",
-      "showLicenses": "Licence →"
+      "showLicenses": "Licence →",
+      "privacy": "Soukromí",
+      "privacyLink": "Zásady ochrany soukromí ↗"
     },
     "licenses": {
       "title": "Licence",

@@ -4,7 +4,7 @@
 
 # NoirPad
 
-**Encrypted markdown notes with a terminal soul — for Windows.**
+**Markdown notes you can lock with a password – for Windows.**
 
 **English** · [Čeština](README.cs.md)
 
@@ -186,6 +186,8 @@ download too.
   `notes_data.json`, start NoirPad again — your notes are untouched.
 - **No network requests**: fonts, Markdown renderer and code highlighter are bundled. The only
   links that leave the app are the ones you click.
+
+What NoirPad stores, where, and what leaves your computer: [privacy policy](PRIVACY.md).
 
 Security issues: please report them privately, see [SECURITY.md](SECURITY.md).
 

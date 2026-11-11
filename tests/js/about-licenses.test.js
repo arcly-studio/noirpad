@@ -102,3 +102,22 @@ describe("About → Licenses (N8)", () => {
         expect($(win, "#licenses-overlay")).toBeNull();
     });
 });
+
+describe("About → Privacy (N1.8)", () => {
+    it("links the English policy on GitHub; links.js opens it in the browser", () => {
+        const win = boot();
+        const a = $(win, "#about-privacy");
+        expect(a.hidden).toBe(false);
+        expect(a.getAttribute("href")).toBe("https://github.com/arcly-studio/noirpad/blob/main/PRIVACY.md");
+        expect(a.closest(".settings-row").querySelector("[data-i18n]").textContent).toBe("Privacy");
+        a.dispatchEvent(new win.MouseEvent("click", { bubbles: true, cancelable: true }));
+        expect(win.open).toHaveBeenCalledWith(a.getAttribute("href"), "_blank", "noopener,noreferrer");
+    });
+
+    it("links the Czech policy when the UI is Czech", () => {
+        const win = boot({ lang: "cs" });
+        expect($(win, "#about-privacy").getAttribute("href"))
+            .toBe("https://github.com/arcly-studio/noirpad/blob/main/PRIVACY.cs.md");
+        expect(locale("cs").ui.settings.privacy).toBe("Soukromí");
+    });
+});

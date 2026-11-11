@@ -4,7 +4,7 @@
 
 # NoirPad
 
-**Šifrované poznámky v Markdownu s duší terminálu — pro Windows.**
+**Markdown poznámky, které můžete zamknout heslem – pro Windows.**
 
 [English](README.md) · **Čeština**
 
@@ -189,6 +189,8 @@ zálohách.
   `"app_lock": { … }` a NoirPad znovu spusťte — poznámek se to nedotkne.
 - **Žádné síťové požadavky**: písma, vykreslování Markdownu i zvýrazňování kódu jsou součástí
   aplikace. Ven vedou jen odkazy, na které sami kliknete.
+
+Co NoirPad ukládá, kam a co opouští váš počítač: [zásady ochrany soukromí](PRIVACY.cs.md).
 
 Bezpečnostní problémy hlaste prosím neveřejně, viz [SECURITY.md](SECURITY.md).
 
