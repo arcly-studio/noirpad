@@ -30,7 +30,8 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 4. PyInstaller with `noirpad.spec` → `dist\NoirPad\NoirPad.exe` (onedir; ~45 MB);
 5. smoke test (`tools/smoke_test.ps1`) of that very `dist\NoirPad`: `NoirPad.exe --smoke-test`
    with a throwaway `NOIRPAD_DATA_DIR` must import every module it loads by name at run time
-   (`noirpad/runtime_imports.py`), answer `GET /api/version` with 200 within 15 s and exit
+   (`noirpad/runtime_imports.py`), answer `GET /api/version` with 200 within 15 s, serve LICENSE and
+   `THIRD-PARTY-NOTICES.txt` from the bundle on `GET /api/licenses` and exit
    cleanly — otherwise no installer is built;
 6. Inno Setup with `installer.iss` → `dist\installer\NoirPad-Setup-<version>.exe` (~19 MB)
    and `NoirPad-Setup-<version>.exe.sha256`.

@@ -82,6 +82,9 @@ def test_build_checks_and_ships_it():
     iss = (ROOT / "installer.iss").read_text(encoding="utf-8-sig")
     assert re.search(r'^Source: "THIRD-PARTY-NOTICES\.txt"; DestDir: "\{app\}"', iss, re.M)
     assert re.search(r'^Source: "LICENSE"; DestDir: "\{app\}"; DestName: "LICENSE\.txt"', iss, re.M)
+    # The smoke test of the built exe asks for them too (bundle path, N1.7).
+    smoke = (ROOT / "tools" / "smoke_test.ps1").read_text(encoding="utf-8-sig")
+    assert "/api/licenses" in smoke and "BEGIN THEME PALETTES" in smoke
 
 
 def test_api_serves_both_texts(client):

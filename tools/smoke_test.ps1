@@ -8,7 +8,9 @@
     name at run time is in the bundle (noirpad/runtime_imports.py), starts
     the server and writes its port and token to smoke-test.json. This script
     then needs GET /api/version = 200 with the expected version within
-    -TimeoutSec, deletes smoke-test.json and expects the exe to exit with 0.
+    -TimeoutSec, then GET /api/licenses = 200 with LICENSE (copyright line of
+    Arcly Studio) and THIRD-PARTY-NOTICES.txt from the bundle (N8), deletes
+    smoke-test.json and expects the exe to exit with 0.
     Any failure prints the exe's log and exits with 1.
 
     build.ps1 runs it between PyInstaller and Inno Setup, on the very
@@ -73,6 +75,23 @@ try {
     if ($Version -and $answer.version -ne $Version) {
         Fail "/api/version says '$($answer.version)', expected '$Version'"
     }
+
+    # N8: About -> Licenses reads LICENSE and THIRD-PARTY-NOTICES.txt from the bundle.
+    try {
+        $lr = Invoke-WebRequest -UseBasicParsing -TimeoutSec 5 `
+            -Uri "http://127.0.0.1:$($smoke.port)/api/licenses" `
+            -Headers @{ "X-NoirPad-Token" = $smoke.token }
+    } catch {
+        Fail "/api/licenses failed: $($_.Exception.Message)"
+    }
+    $lic = [Text.Encoding]::UTF8.GetString($lr.RawContentStream.ToArray()) | ConvertFrom-Json
+    if ($lic.license -notmatch "Copyright \(c\) 2026 Arcly Studio") {
+        Fail "/api/licenses: LICENSE without the copyright line"
+    }
+    if ($lic.notices -notmatch "NoirPad third-party notices" -or $lic.notices -notmatch "BEGIN THEME PALETTES") {
+        Fail "/api/licenses: THIRD-PARTY-NOTICES.txt missing or incomplete"
+    }
+    Write-Host "Smoke test: /api/licenses OK ($($lic.notices.Length) chars of notices)"
 
     # Ask for a clean shutdown and check it happens.
     Remove-Item -LiteralPath $info
