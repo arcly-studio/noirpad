@@ -280,3 +280,10 @@ def test_import_notice_is_a_toast_not_a_dialog():
     assert "NP.toast(text" in js
     # The browser's own alert/confirm (NP.dialog.alert is the app's window for other notices).
     assert not re.search(r"(?<![.\w])(alert|confirm)\(|window\.(alert|confirm)\(", js)
+
+
+def test_builds_do_not_delete_each_others_output():
+    ps = (ROOT / "build.ps1").read_text(encoding="utf-8-sig")
+    assert r'$outputs = @("build", "dist\NoirPad")' in ps
+    assert 'foreach ($dir in "build", "dist")' not in ps
+    assert r'"dist\msix"' not in ps.split("# ---- 3. PyInstaller", 1)[1].split("# ---- 4.", 1)[0]

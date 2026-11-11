@@ -80,7 +80,11 @@ Run npx vitest run
 
 # ---- 3. PyInstaller ---------------------------------------------------------
 Step "PyInstaller (onedir)"
-foreach ($dir in "build", "dist") {
+# Only this script's outputs: dist\msix belongs to build-msix.ps1, and with
+# -SkipInstaller (build-msix.ps1) the installer of the last full build stays.
+$outputs = @("build", "dist\NoirPad")
+if (-not $SkipInstaller) { $outputs += "dist\installer" }
+foreach ($dir in $outputs) {
     if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
 }
 Run $py -m PyInstaller --clean --noconfirm --log-level WARN noirpad.spec
