@@ -120,6 +120,20 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   every fix that goes through tabs gets an integration test (`flow-*.test.js`) that fails without
   the fix.
 
+## Store edition (MSIX, N1.9)
+- `noirpad/edition.py`: `github` | `store` (package identity; `NOIRPAD_EDITION` overrides).
+  Store data folder `%USERPROFILE%\NoirPad` (MSIX virtualizes AppData). `/api/version` has `edition`.
+- `noirpad/store_import.py`: one-time COPY of the GitHub edition's `notes_data.json` + `images/`
+  (copy2, never written into the source; not while the GitHub edition runs: installer mutex or
+  data lock). `backups/` / `corrupt-*` are NOT copied until the user decides. Toast notices
+  `github_imported` / `github_import_blocked` (no dialog). With `NOIRPAD_DATA_DIR` set the source
+  is only `NOIRPAD_IMPORT_FROM` (tests never read real data).
+- Never write next to the exe: the MSIX install folder is read-only. `build-msix.ps1` smoke-tests
+  the layout writable (no file may change) and write-protected with icacls.
+- `tools/msix_manifest.py` writes AppxManifest.xml (version X.Y.Z.0, MinVersion 10.0.17763.0 with
+  the reason in its docstring). MSIX images: `tools/make_icons.py` -> `store/Assets/`.
+- Test certificate, installing the MSIX and WACK only in N1.11 after the user's explicit yes.
+
 ## Backend notes
 - Notes carry `rev`; saves send `base_rev`; mismatch -> 409 `note_changed_elsewhere` (two web windows).
 - Poll ETag: `storage.update_data_tracked` returns before/after; header `X-NoirPad-ETag-Before`

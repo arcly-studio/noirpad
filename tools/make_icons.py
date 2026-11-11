@@ -11,7 +11,9 @@ Outputs (commit them with docs/brand/icons.json):
   icon-512.png, apple-touch-icon.png (180), noirpad.ico (exe + installer,
   9 sizes), static/favicon.ico (16/32/48), installer/wizard-small-*.bmp
   (32-bit with alpha, Inno Setup), docs/brand/social-preview.png (rendered
-  from social-preview.html, which shows noirpad-1024.png).
+  from social-preview.html, which shows noirpad-1024.png), and the MSIX
+  images in store/Assets/ (tiles, Square44x44Logo target sizes, StoreLogo,
+  SplashScreen; see store_assets()).
 
 The SVGs are rendered by chrome-headless-shell (Playwright's, in
 %LOCALAPPDATA%\\ms-playwright, or NOIRPAD_CHROMIUM) with a throwaway profile,
@@ -55,6 +57,39 @@ ICOS = {
 # Inno Setup WizardSmallImageFile: 100 %, 125 %, 125 % (classic), 150 %, 175 %, 200 %, 250 %
 BMPS = {f"installer/wizard-small-{s}.bmp": s for s in (55, 64, 69, 83, 92, 110, 138)}
 SOCIAL = ("docs/brand/social-preview.png", BRAND / "social-preview.html", (1280, 640))
+# MSIX (Store edition, N1.9): store/Assets/<name>.scale-<n>.png and the
+# Square44x44Logo target sizes (taskbar, Start list) in three variants. The
+# logo's own dark rounded square is drawn on a transparent canvas, so plated
+# and unplated look the same. Tiles: the logo centred at ICON_SHARE of the
+# shorter side (Windows asks for padding on tiles and the splash screen).
+STORE_DIR = "store/Assets"
+STORE_SCALES = (100, 125, 150, 200, 400)
+STORE_TILES = {                     # name: (width, height, share of the shorter side)
+    "Square44x44Logo": (44, 44, 1.0),
+    "StoreLogo": (50, 50, 1.0),
+    "Square71x71Logo": (71, 71, 0.75),
+    "Square150x150Logo": (150, 150, 0.6),
+    "Wide310x150Logo": (310, 150, 0.6),
+    "Square310x310Logo": (310, 310, 0.55),
+    "SplashScreen": (620, 300, 200 / 300),
+}
+STORE_TARGET_SIZES = (16, 24, 32, 48, 256)
+STORE_VARIANTS = ("", "_altform-unplated", "_altform-lightunplated")
+
+
+def store_assets() -> dict:
+    """{path: (width, height, logo size)} for every MSIX image."""
+    out = {}
+    for name, (w, h, share) in STORE_TILES.items():
+        for scale in STORE_SCALES:
+            sw, sh = round(w * scale / 100), round(h * scale / 100)
+            out[f"{STORE_DIR}/{name}.scale-{scale}.png"] = (sw, sh, round(min(sw, sh) * share))
+    for size in STORE_TARGET_SIZES:
+        for variant in STORE_VARIANTS:
+            out[f"{STORE_DIR}/Square44x44Logo.targetsize-{size}{variant}.png"] = (size, size, size)
+    return out
+
+
 # Files the outputs depend on (hashes in icons.json).
 SOURCES = (BIG, SMALL, BRAND / "social-preview.html")
 
@@ -90,6 +125,20 @@ def screenshot(url: str, width: int, height: int, tmp: Path) -> bytes:
     if (w, h) != (width, height):
         raise SystemExit(f"Chromium gave {w}x{h}, expected {width}x{height}")
     return data
+
+
+def render_tile(width: int, height: int, logo: int, tmp: Path) -> bytes:
+    """The logo (small SVG up to SMALL_MAX px) centred on a transparent canvas."""
+    if (width, height) == (logo, logo):
+        return render_svg(logo, tmp)
+    svg = SMALL if logo <= SMALL_MAX else BIG
+    page = tmp / f"tile-{width}x{height}-{logo}.html"
+    page.write_text(
+        "<!doctype html><html><head><style>html,body{margin:0;background:transparent;"
+        f"overflow:hidden;width:{width}px;height:{height}px}}body{{display:flex;align-items:center;"
+        f"justify-content:center}}img{{display:block;width:{logo}px;height:{logo}px}}</style></head>"
+        f'<body><img src="{svg.as_uri()}"></body></html>', encoding="utf-8")
+    return screenshot(page.as_uri(), width, height, tmp)
 
 
 def render_svg(size: int, tmp: Path) -> bytes:
@@ -201,6 +250,9 @@ def main() -> int:
             written[rel] = ico([(s, icon(s)) for s in sizes])
         for rel, size in BMPS.items():
             written[rel] = bmp32(icon(size))
+        (ROOT / STORE_DIR).mkdir(parents=True, exist_ok=True)
+        for rel, (w, h, logo) in store_assets().items():
+            written[rel] = icon(w) if w == h == logo else render_tile(w, h, logo, tmp)
         for rel, data in written.items():
             (ROOT / rel).write_bytes(data)
             print(rel)

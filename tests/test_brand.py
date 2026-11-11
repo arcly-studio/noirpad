@@ -183,11 +183,12 @@ def test_rasters_were_made_from_the_current_svgs():
 
 
 def test_every_raster_icon_is_made_by_the_script():
-    expected = {*make_icons.PNGS, *make_icons.ICOS, *make_icons.BMPS, make_icons.SOCIAL[0]}
+    expected = {*make_icons.PNGS, *make_icons.ICOS, *make_icons.BMPS, make_icons.SOCIAL[0],
+                *make_icons.store_assets()}
     assert set(MANIFEST["outputs"]) == expected
     found = {p.relative_to(ROOT).as_posix()
              for pattern in ("*.ico", "docs/*.png", "docs/brand/*.png", "static/*.ico",
-                             "static/img/*.png", "installer/*.bmp")
+                             "static/img/*.png", "installer/*.bmp", "store/Assets/*")
              for p in ROOT.glob(pattern)}
     assert found <= expected, sorted(found - expected)
 

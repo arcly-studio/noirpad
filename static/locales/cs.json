@@ -91,7 +91,9 @@
   },
   "notice": {
     "data_restored": "Soubor s poznámkami byl poškozený. Zůstal uložený jako {file} a obnovila se poslední dobrá záloha ({when}). Změny provedené po této záloze mohou chybět.",
-    "data_reset": "Soubor s poznámkami byl poškozený a žádná použitelná záloha se nenašla. Poškozený soubor zůstal uložený jako {file}; NoirPad začíná prázdný."
+    "data_reset": "Soubor s poznámkami byl poškozený a žádná použitelná záloha se nenašla. Poškozený soubor zůstal uložený jako {file}; NoirPad začíná prázdný.",
+    "github_imported": "Poznámky z GitHub verze NoirPadu jsou zkopírované sem. Pokud tu verzi už nepotřebujete, můžete ji odinstalovat v Nastavení Windows → Aplikace.",
+    "github_import_blocked": "Běží GitHub verze NoirPadu. Zavřete ji a spusťte NoirPad znovu, poznámky se pak zkopírují sem."
   },
   "language": {
     "label": "Jazyk",

@@ -12,7 +12,7 @@ from conftest import ROOT
 def test_api_version(client):
     assert client.get("/api/version").json() == {
         "version": __version__, "url": PROJECT_URL, "author": AUTHOR,
-        "copyright": COPYRIGHT, "contact": CONTACT_EMAIL}
+        "copyright": COPYRIGHT, "contact": CONTACT_EMAIL, "edition": "github"}
 
 
 def test_fastapi_reports_same_version(np_backend):

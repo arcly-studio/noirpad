@@ -62,7 +62,13 @@ A silent installation (e.g. winget) installs it without asking.
 ## Microsoft Store edition
 
 The download, installation and updates of the Store edition are provided by the Microsoft Store
-under Microsoft's terms and the Microsoft Privacy Statement. *(To be completed in N1.9.)*
+under Microsoft's terms and the Microsoft Privacy Statement. Depending on your Windows diagnostic
+data settings, Microsoft may share download statistics and crash reports (Windows Error Reporting)
+with us in Partner Center. NoirPad itself sends nothing.
+
+On its first start, the Store edition copies the notes and images of the GitHub edition from
+`%LOCALAPPDATA%\NoirPad` into its own folder, if there are any. It is a copy: the GitHub
+edition's folder stays as it is. Automatic copies (backups) are not copied.
 
 ## Uninstalling and deleting your data
 

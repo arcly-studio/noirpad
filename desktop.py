@@ -345,8 +345,19 @@ def _run(data_dir: Path, log_file: Path, lang: str, smoke: bool = False) -> int:
             return 3
         _focus_running_instance(lang)
         return 0
+    from noirpad import edition, store_import
+    store = edition.edition() == edition.STORE
+    # Store edition: copy the GitHub edition's notes once, before the
+    # backend (and its migrations) touch the data folder.
+    blocked = store_import.maybe_import(data_dir) if store else None
     from noirpad import app as _backend  # noqa: F401  (the import points storage at data_dir)
-    _hold_app_mutex()
+    if store:
+        from noirpad.runtime import RUNTIME
+        notice = blocked if blocked and blocked["code"] == store_import.NOTICE_BLOCKED             else store_import.pending_notice(data_dir)
+        if notice and RUNTIME.data_notice is None:       # a recovered data file comes first
+            RUNTIME.data_notice = notice
+    else:
+        _hold_app_mutex()      # the installer's mutex belongs to the GitHub edition
     # The data lock is released before main() shows an error box, so a
     # NoirPad started meanwhile doesn't report "already running" on top of it.
     try:

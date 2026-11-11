@@ -163,13 +163,20 @@ window.NP = window.NP || {};
         return bootApp().then(showDataNotice);
     }
 
-    /* The backend recovered from a corrupt notes file (or found none). */
+    /* Notices shown as a toast (information), the others as a dialog. */
+    var TOAST_NOTICES = ["github_imported", "github_import_blocked"];
+
+    /* The backend recovered from a corrupt notes file (or found none),
+       or the Store edition imported the GitHub edition's notes. */
     function showDataNotice() {
         if (!session || !session.data_notice) return;
         var notice = session.data_notice;
         session.data_notice = null;
         setTimeout(function () {
-            NP.dialog.alert(NP.t("notice." + notice.code, notice.params));
+            var text = NP.t("notice." + notice.code, notice.params);
+            /* Store edition import (N1.9): information only, not a dialog. */
+            if (TOAST_NOTICES.indexOf(notice.code) !== -1 && NP.toast) NP.toast(text, { timeout: 30000 });
+            else NP.dialog.alert(text);
             NP.api.dismissNotice().catch(function () { /* shown anyway */ });
         }, 300);
     }

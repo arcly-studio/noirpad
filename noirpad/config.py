@@ -6,6 +6,9 @@ Two separate roots:
   * data root — writable user data (notes_data.json, backups/, images/).
     The NOIRPAD_DATA_DIR env var if set (tests, portable setups), else the
     platformdirs user_data_dir, so web mode and NoirPad.exe share notes.
+    The Store edition (MSIX) uses %USERPROFILE%\\NoirPad instead (edition.py).
+    Nothing is ever written next to the exe: the MSIX install folder is
+    read-only (build-msix.ps1 smoke-tests a write-protected copy).
 """
 
 import os
@@ -34,8 +37,8 @@ def get_data_dir() -> Path:
     if override:
         path = Path(override)
     else:
-        from platformdirs import user_data_dir
-        path = Path(user_data_dir("NoirPad", appauthor=False))
+        from . import edition
+        path = edition.store_data_dir() if edition.edition() == edition.STORE else edition.github_data_dir()
     path.mkdir(parents=True, exist_ok=True)
     return path
 

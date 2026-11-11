@@ -21,7 +21,8 @@
 param(
     [string]$Python = "",       # interpreter for the venv; default: py -3.14
     [string]$Iscc = "",         # path to ISCC.exe; default: PATH / Inno Setup 6
-    [string]$RequirementsLock = ""  # CI: install this file with --require-hashes (see BUILD.md)
+    [string]$RequirementsLock = "",  # CI: install this file with --require-hashes (see BUILD.md)
+    [switch]$SkipInstaller           # build-msix.ps1: stop after the smoke test (no Inno Setup)
 )
 
 $ErrorActionPreference = "Stop"
@@ -91,6 +92,12 @@ Write-Host "dist\NoirPad: $(SizeMB 'dist\NoirPad')"
 Step "Smoke test (NoirPad.exe --smoke-test)"
 & "$PSScriptRoot\tools\smoke_test.ps1" -Exe "dist\NoirPad\NoirPad.exe" -Version $version
 if ($LASTEXITCODE -ne 0) { Fail "smoke test of dist\NoirPad\NoirPad.exe" }
+
+if ($SkipInstaller) {
+    Step "Done (no installer: -SkipInstaller)"
+    Write-Host "dist\NoirPad: $(SizeMB 'dist\NoirPad')"
+    exit 0
+}
 
 # ---- 5. Inno Setup ----------------------------------------------------------
 Step "Inno Setup"

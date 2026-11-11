@@ -46,6 +46,19 @@ The version lives **only** in `noirpad/__version__.py` (`__version__`, plus `PRO
 (`/DAppVersion`, passed by `build.ps1`) all read it from there. A test fails if the version string
 appears anywhere else.
 
+## Store edition (MSIX)
+
+```powershell
+powershell -ExecutionPolicy Bypass -File build-msix.ps1
+```
+
+Needs the Windows SDK (`makeappx.exe`, `makepri.exe`); the script installs nothing and says what
+is missing. It runs `build.ps1 -SkipInstaller` (clean tree, tests, PyInstaller, smoke test), builds
+the layout `dist\msix\layout` (copy of `dist\NoirPad`, `store\Assets`, `AppxManifest.xml` from
+`tools\msix_manifest.py` with version X.Y.Z.0, `resources.pri`), smoke-tests it as the Store
+edition twice (writable: no file may change; write-protected with icacls: must still pass) and
+packs `dist\msix\NoirPad-<version>.msix` + `.sha256`. Unsigned: the Store signs it.
+
 ## Releasing
 
 1. Update `__version__` and add a section to `CHANGELOG.md` (`## [x.y.z] – date`).

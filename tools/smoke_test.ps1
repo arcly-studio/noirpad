@@ -23,7 +23,8 @@
 param(
     [string]$Exe = "dist\NoirPad\NoirPad.exe",
     [string]$Version = "",          # expected /api/version; empty = don't compare
-    [int]$TimeoutSec = 15
+    [int]$TimeoutSec = 15,
+    [string]$Edition = ""           # "store": NOIRPAD_EDITION for this start, /api/version must say so
 )
 
 $ErrorActionPreference = "Stop"
@@ -44,11 +45,14 @@ New-Item -ItemType Directory -Path $data | Out-Null
 $info = Join-Path $data "smoke-test.json"
 
 $previous = $env:NOIRPAD_DATA_DIR
+$previousEdition = $env:NOIRPAD_EDITION
 $env:NOIRPAD_DATA_DIR = $data          # inherited by the exe only for this start
+if ($Edition) { $env:NOIRPAD_EDITION = $Edition }
 try {
     $proc = Start-Process -FilePath $Exe -ArgumentList "--smoke-test" -PassThru
 } finally {
     $env:NOIRPAD_DATA_DIR = $previous
+    $env:NOIRPAD_EDITION = $previousEdition
 }
 $null = $proc.Handle                    # keeps ExitCode readable after exit
 
@@ -72,6 +76,9 @@ try {
 
     if ($proc.HasExited) { Fail "NoirPad.exe exited early with code $($proc.ExitCode)" }
     if (-not $answer) { Fail "no 200 from /api/version within $TimeoutSec s" }
+    if ($Edition -and $answer.edition -ne $Edition) {
+        Fail "/api/version says edition '$($answer.edition)', expected '$Edition'"
+    }
     if ($Version -and $answer.version -ne $Version) {
         Fail "/api/version says '$($answer.version)', expected '$Version'"
     }

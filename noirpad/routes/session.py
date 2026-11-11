@@ -5,7 +5,7 @@ import time
 
 from fastapi import APIRouter, Request, Response
 
-from .. import app_lock, config, storage
+from .. import app_lock, config, edition, storage
 from .. import server_auth as auth
 from ..__version__ import AUTHOR, CONTACT_EMAIL, COPYRIGHT, PROJECT_URL, __version__
 from ..errors import ApiError
@@ -37,7 +37,7 @@ def session_info(request: Request):
 def version():
     """For the About box, the start page and bug reports (noirpad/__version__.py)."""
     return {"version": __version__, "url": PROJECT_URL, "author": AUTHOR,
-            "copyright": COPYRIGHT, "contact": CONTACT_EMAIL}
+            "copyright": COPYRIGHT, "contact": CONTACT_EMAIL, "edition": edition.edition()}
 
 
 # Shipped next to the app (noirpad.spec datas, installer.iss [Files]).
@@ -58,6 +58,9 @@ def licenses():
 
 @router.post("/api/session/dismiss-notice")
 def dismiss_notice():
+    from .. import store_import
+    if RUNTIME.data_notice and RUNTIME.data_notice.get("code") == store_import.NOTICE_DONE:
+        store_import.mark_notice_shown(storage.DATA_DIR)     # shown once (N1.9)
     RUNTIME.data_notice = None
     return {"ok": True}
 

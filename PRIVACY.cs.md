@@ -60,7 +60,13 @@ instalace (např. winget) ho nainstaluje bez ptaní.
 ## Edice z Microsoft Storu
 
 Stažení, instalaci a aktualizace Store edice zajišťuje Microsoft Store podle pravidel Microsoftu
-a jeho prohlášení o zásadách ochrany osobních údajů. *(Doplní se v N1.9.)*
+a jeho prohlášení o zásadách ochrany osobních údajů. Podle nastavení diagnostických dat ve Windows
+nám Microsoft může v Partner Center ukázat statistiky stažení a hlášení o pádech (Windows Error
+Reporting). NoirPad sám nic neposílá.
+
+Při prvním spuštění Store edice zkopíruje poznámky a obrázky GitHub edice ze složky
+`%LOCALAPPDATA%\NoirPad` do své složky, pokud tam nějaké jsou. Je to kopie: složka GitHub edice
+zůstane, jak je. Automatické kopie (zálohy) se nekopírují.
 
 ## Odinstalace a smazání dat
 

@@ -46,6 +46,13 @@ Data ve Store edici jsou v `%USERPROFILE%\NoirPad`. Jednorázový import z GitHu
 ### N1.11: ruční checklist
 
 - [ ] Zamknout poznámku se značkovým textem, zavřít aplikaci, prohledat celou datovou složku včetně `webview/` a obsahu zipů v `backups/`: text se nesmí najít. Totéž pro značkovou URL odkazu v té poznámce.
+- [ ] MSIX z `build-msix.ps1` podepsat testovacím certifikátem (až po „ano“) a nainstalovat na druhém účtu; projít WACK.
+- [ ] Nainstalovaná Store edice: složka dat je `%USERPROFILE%\NoirPad`, nic nepřistane v `AppData\Local\Packages\krystof02.NoirPad_*\LocalCache` (virtualizace AppData), okno se otevře, WebView2 zapisuje jen do `webview/` v datech. Smoke test balíčku okno neotevírá, takže WebView2 a pythonnet ověří až tohle.
+- [ ] Ikony: dlaždice ve Startu, hlavní panel (target size, světlý i tmavý motiv: `altform-unplated` / `lightunplated`), úvodní obrazovka, Nastavení → Aplikace.
+- [ ] Import z GitHub edice: s běžící GitHub edicí toast „zavřete ji“ a nic se nezkopíruje; po zavření a novém startu se poznámky a obrázky zkopírují (časy souborů zachované), jednou toast o odinstalaci přes Nastavení → Aplikace; složka GitHub edice beze změny.
+- [ ] Odinstalace Store edice: poznámky v `%USERPROFILE%\NoirPad` zůstanou; podle výsledku finální znění v Privacy (zástupné texty) a README.
+- [ ] Upgrade MSIX (vyšší verze X.Y.Z.0) přes starou instalaci: data zůstanou.
+- [ ] Spuštění na Windows 10 (MinVersion 10.0.17763) jen pokud bude k dispozici stroj; VM se nedělá.
 
 ### Podmínky před odesláním do Storu
 
