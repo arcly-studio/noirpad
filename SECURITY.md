@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please **do not open a public issue** for security problems. Report them privately via
-[GitHub Security Advisories](https://github.com/arcly-studio/NoirPad/security/advisories/new).
+[GitHub Security Advisories](https://github.com/arcly-studio/noirpad/security/advisories/new).
 If you can't use that, e-mail [arclystudio.dev@gmail.com](mailto:arclystudio.dev@gmail.com).
 Include the NoirPad version (Settings → About), how you run it (installed app / web), steps to
 reproduce and the impact you see. Never include real notes or passwords.

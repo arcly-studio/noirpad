@@ -86,7 +86,8 @@
     "image_write_failed": "Obrázek se nepodařilo uložit ({error}).",
     "data_write_failed": "Poznámky se nepodařilo uložit ({error}). Není plný disk? Naposledy uložený stav zůstal beze změny.",
     "export_locked_note": "Zamčenou poznámku nelze exportovat. Nejdřív odstraňte zámek.",
-    "note_changed_elsewhere": "Tuto poznámku mezitím změnilo jiné okno."
+    "note_changed_elsewhere": "Tuto poznámku mezitím změnilo jiné okno.",
+    "licenses_missing": "V této instalaci chybí texty licencí."
   },
   "notice": {
     "data_restored": "Soubor s poznámkami byl poškozený. Zůstal uložený jako {file} a obnovila se poslední dobrá záloha ({when}). Změny provedené po této záloze mohou chybět.",
@@ -853,7 +854,18 @@
       "storageUsed": "Zabrané místo",
       "noirEffects": "Všechny Noir efekty",
       "noirEffectsHint": "Záře, déšť padajícího kódu a CRT najednou. Výchozí stav: vypnuto.",
-      "glow": "Záře"
+      "glow": "Záře",
+      "contact": "Kontakt",
+      "license": "Licence",
+      "copyrightLine": "{copyright} · MIT",
+      "showLicenses": "Licence →"
+    },
+    "licenses": {
+      "title": "Licence",
+      "noirpad": "NoirPad",
+      "thirdParty": "Software třetích stran",
+      "loading": "Načítám…",
+      "failed": "Licence se nepodařilo načíst."
     },
     "shortcuts": {
       "title": "Klávesové zkratky",

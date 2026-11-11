@@ -32,7 +32,7 @@ describe("theme names (N1.6)", () => {
 
     it("old ids still work, after :theme and alone (hidden aliases)", () => {
         const win = boot();
-        win.NP.commandBar.execute(":theme Tokyo-Night");
+        win.NP.commandBar.execute(":theme TOKYO-NIGHT");
         expect(win.NP.state.data.theme).toBe("tokyo-night");
         win.NP.commandBar.execute("dracula");
         expect(win.NP.state.data.theme).toBe("dracula");

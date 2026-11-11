@@ -78,7 +78,8 @@
     "image_write_failed": "The image could not be saved ({error}).",
     "data_write_failed": "The notes could not be saved ({error}). Is the disk full? The last saved state is unchanged.",
     "export_locked_note": "A locked note cannot be exported. Remove the lock first.",
-    "note_changed_elsewhere": "This note was changed in another window meanwhile."
+    "note_changed_elsewhere": "This note was changed in another window meanwhile.",
+    "licenses_missing": "The license texts are missing from this installation."
   },
   "notice": {
     "data_restored": "Your notes file was damaged. It was kept as {file} and the latest good backup ({when}) was restored. Changes made after that backup may be missing.",
@@ -821,7 +822,18 @@
       "storageUsed": "Storage used",
       "noirEffects": "All Noir effects",
       "noirEffectsHint": "Glow, falling-code rain and CRT at once. Off by default.",
-      "glow": "Glow"
+      "glow": "Glow",
+      "contact": "Contact",
+      "license": "License",
+      "copyrightLine": "{copyright} · MIT",
+      "showLicenses": "Licenses →"
+    },
+    "licenses": {
+      "title": "Licenses",
+      "noirpad": "NoirPad",
+      "thirdParty": "Third-party software",
+      "loading": "Loading…",
+      "failed": "The licenses could not be loaded."
     },
     "shortcuts": {
       "title": "Shortcuts",

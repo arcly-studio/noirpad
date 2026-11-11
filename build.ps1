@@ -5,7 +5,8 @@
 .DESCRIPTION
     Run from a clean checkout (git status must be empty, otherwise the build
     stops: what ships must be exactly a commit). Steps:
-      1. .venv with Python 3.14 + pinned requirements-dev.txt
+      1. .venv with Python 3.14 + pinned requirements-dev.txt; THIRD-PARTY-NOTICES.txt
+         must exist and match the pinned dependencies (tools\third_party_notices.py --check)
       2. npm ci (vitest) and the full test suite (pytest + vitest)
       3. PyInstaller onedir  → dist\NoirPad\NoirPad.exe
       4. Smoke test          → that NoirPad.exe must start and answer /api/version
@@ -64,6 +65,11 @@ if ($RequirementsLock) {
 $version = (& $py -c "from noirpad.__version__ import __version__; print(__version__)").Trim()
 $url = (& $py -c "from noirpad.__version__ import PROJECT_URL; print(PROJECT_URL)").Trim()
 Write-Host "NoirPad $version ($commit), Python $(& $py -c 'import sys; print(sys.version.split()[0])')"
+
+# ---- 1b. third-party notices (N8) -------------------------------------------
+Step "Third-party notices"
+& $py tools\third_party_notices.py --check
+if ($LASTEXITCODE -ne 0) { Fail "THIRD-PARTY-NOTICES.txt is missing or out of date (tools\third_party_notices.py)" }
 
 # ---- 2. tests ---------------------------------------------------------------
 Step "Tests"

@@ -17,8 +17,8 @@ All Python packages are pinned: `requirements.txt` (runtime) and `requirements-d
 ## One command
 
 ```powershell
-git clone https://github.com/arcly-studio/NoirPad.git
-cd NoirPad
+git clone https://github.com/arcly-studio/noirpad.git
+cd noirpad
 powershell -ExecutionPolicy Bypass -File build.ps1
 ```
 

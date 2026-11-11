@@ -66,7 +66,7 @@ easier to use with a keyboard or screen reader.
 - Focus is visible everywhere; the six switches in Settings have names.
 - Muted text and the red danger colour reach 4.5:1 contrast in all 17 themes; the outline of a
   switched-off toggle reaches 3:1.
-- With "reduce motion" the Matrix rain is only a still image.
+- With "reduce motion" the falling-code rain is only a still image.
 - The confirmation of a dangerous action starts focused on Cancel.
 - Pressing Delete on a tab keeps focus in the tab bar.
 
@@ -198,7 +198,7 @@ First public release.
 - HTML exports include the note's images. A note in the trash can be opened read-only and
   restored from there; restored favorites keep their star.
 - Search ignores accents and letter case (`cestina` finds `Čeština`).
-- Readable secondary text in every theme, Matrix rain no longer runs under the note title, `F11`
+- Readable secondary text in every theme, falling-code rain no longer runs under the note title, `F11`
   toggles full screen, guessing a note's password is rate-limited.
 - Clicking anywhere on a folder row opens or closes it.
 - Smaller fixes: shortcuts no longer act behind Settings or Help, `:matrix` really toggles,
@@ -233,7 +233,7 @@ First public release.
   "yesterday" / date). It is stored in the new setting `recent_notes` (up to 10 entries) and
   survives "Reset settings".
 - Search in all notes from the sidebar search box or `Ctrl+Shift+K`.
-- Settings → Noir effects: glow, Matrix rain and CRT, each switchable. They are off by default;
+- Settings → Noir effects: glow, falling-code rain and CRT, each switchable. They are off by default;
   existing installs keep the look they had.
 - Markdown source is coloured: plain text, with headings, markup and code in the accent colour.
 - Single-row top bar (title, tabs, icon buttons) with Export and ⋯ menus (Export includes Markdown of just the current note).
@@ -246,8 +246,8 @@ First public release.
 - One window style for dialogs, menus, command bar, Settings, Help and toasts; the interface font
   (default JetBrains Mono) is also used for Settings selects and buttons.
 - Switched-off toggles are neutral grey, switched-on ones use the accent colour.
-- Text and icon contrast verified in all 17 themes (fixed muted text in Dracula, Nord and
-  Tokyo Night).
+- Text and icon contrast verified in all 17 themes (fixed muted text in Lavender Night, Slate and
+  Midnight Blue).
 
 ### Fixes after the new look
 - After closing the last tab with a Markdown note the source stayed visible instead of the start
@@ -259,10 +259,10 @@ First public release.
 
 ### Project
 - NoirPad is published by Arcly Studio: the repository moved to
-  [github.com/arcly-studio/NoirPad](https://github.com/arcly-studio/NoirPad), the installer and
+  [github.com/arcly-studio/noirpad](https://github.com/arcly-studio/noirpad), the installer and
   `NoirPad.exe` name Arcly Studio as publisher, and the start page and About link to the project
   page ("by Arcly Studio").
 
-[1.0.2]: https://github.com/arcly-studio/NoirPad/compare/v1.0.1...v1.0.2
-[1.0.1]: https://github.com/arcly-studio/NoirPad/compare/v1.0.0...v1.0.1
-[1.0.0]: https://github.com/arcly-studio/NoirPad/releases/tag/v1.0.0
+[1.0.2]: https://github.com/arcly-studio/noirpad/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/arcly-studio/noirpad/compare/v1.0.0...v1.0.1
+[1.0.0]: https://github.com/arcly-studio/noirpad/releases/tag/v1.0.0

@@ -1,14 +1,15 @@
 """N1.6: no other products' names in what users read.
 
 Themes have descriptive names (locale keys themes.<id>); the internal ids
-and the saved values stay. The old names may appear only in the
-third-party licence notices (N1.7). This guards future texts too: every
+and the saved values stay. The old names may appear only in
+THIRD-PARTY-NOTICES.txt (N1.7). This guards future texts too: every
 locale string, the visible text of index.html, the help, the command
-suggestions and the READMEs outside their licence section.
+suggestions, the READMEs, and (written as names) every file in the repo.
 """
 
 import json
 import re
+import subprocess
 from html.parser import HTMLParser
 
 import pytest
@@ -104,25 +105,54 @@ def test_command_suggestions_have_no_foreign_names():
     assert "NP.THEME_SLUGS" in js and "Object.keys(NP.THEMES)" not in js
 
 
-def _without_licence(text):
-    """The README minus its licence section (where the notices may name them)."""
-    return re.sub(r"(?ims)^##\s*licen[cs]e.*?(?=^##\s|\Z)", "", text)
-
-
 @pytest.mark.parametrize("name", ["README.md", "README.cs.md"])
-def test_readme_outside_licences_has_no_foreign_names(name):
-    text = _without_licence((ROOT / name).read_text(encoding="utf-8"))
+def test_readme_has_no_foreign_names(name):
+    """N1.7: no exception for the licence section any more (it links LICENSE)."""
+    text = (ROOT / name).read_text(encoding="utf-8")
     assert [ln for ln in text.splitlines() if FORBIDDEN.search(ln)] == []
+
+
+# The original names as written (capitalised). The internal ids in code, CSS
+# and data are lower case and stay. Built from lower case so that this file
+# does not contain them either: THIRD-PARTY-NOTICES.txt is the only exception.
+_CAP = [w.capitalize() for w in ("dracula", "nord", "gruvbox", "matrix")]
+NAMES = re.compile(r"\b(" + "|".join(_CAP + ["Synth[wW]ave", "tokyo".capitalize() + "[ -]?Night"]) + r")\b")
+ONLY_HERE = "THIRD-PARTY-NOTICES.txt"
+
+
+def _repo_text_files():
+    """Every file in git plus new, not ignored ones; binaries skipped."""
+    out = subprocess.run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+                         cwd=ROOT, capture_output=True, check=True).stdout
+    for rel in sorted(set(filter(None, out.decode("utf-8").split("\0")))):
+        path = ROOT / rel
+        if path.is_file():
+            try:
+                yield rel, path.read_bytes().decode("utf-8-sig")
+            except UnicodeDecodeError:
+                continue                                  # images, fonts, ...
+
+
+def test_original_names_only_in_the_notices():
+    hits = [f"{rel}:{n}" for rel, text in _repo_text_files() if rel != ONLY_HERE
+            for n, line in enumerate(text.splitlines(), 1) if NAMES.search(line)]
+    assert hits == []
+    # ... and they are there: the licences of the five palettes (N8).
+    notices = (ROOT / ONLY_HERE).read_text(encoding="utf-8")
+    found = {m.group(1).lower().replace("-", " ") for m in re.finditer(NAMES.pattern, notices, re.I)}
+    assert len(found - {"matrix"}) == 5
 
 
 def test_guard_catches_a_new_text():
     """The scan itself works: a fresh string with an old name is caught."""
-    assert FORBIDDEN.search("Tokyo Night theme") and FORBIDDEN.search("Matrix déšť")
-    assert FORBIDDEN.search("the Nord palette") and not FORBIDDEN.search("Nordic")
-    assert _without_licence("# A\n## License\nDracula MIT\n## Next\nok\n") == "# A\n## Next\nok\n"
+    assert FORBIDDEN.search("tokyo night theme".title()) and FORBIDDEN.search("matrix déšť".upper())
+    assert FORBIDDEN.search("the nord palette") and not FORBIDDEN.search("Nordic")
+    cap = "gruvbox".capitalize()
+    assert NAMES.search(f"the {cap} palette") and NAMES.search("tokyo night".title())
+    assert not NAMES.search("tokyo-night matrix_rain_enabled DOMMatrix Nordic")
     parser = _Visible()
-    parser.feed('<div data-value="dracula" id="matrix-canvas"><span title="Gruvbox">x</span></div>')
-    assert [t for t in parser.out if FORBIDDEN.search(t)] == ["<span title> Gruvbox"]
+    parser.feed(f'<div data-value="dracula" id="matrix-canvas"><span title="{cap}">x</span></div>')
+    assert [t for t in parser.out if FORBIDDEN.search(t)] == [f"<span title> {cap}"]
 
 
 @pytest.mark.parametrize("lang", ["en", "cs"])

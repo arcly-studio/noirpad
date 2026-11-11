@@ -19,7 +19,7 @@
   - **Web / self-host:** `NoirPad-web.py`. Server na `127.0.0.1:8000`, ovládá se z prohlížeče.
 - Rozhraní je anglicky a česky. Má 17 barevných motivů a volitelné „Noir efekty“ (glow, déšť
   padajícího kódu, CRT, glitch).
-- Vydavatel je **Arcly Studio**, repozitář [github.com/arcly-studio/NoirPad](https://github.com/arcly-studio/NoirPad)
+- Vydavatel je **Arcly Studio**, repozitář [github.com/arcly-studio/noirpad](https://github.com/arcly-studio/noirpad)
   (veřejný). Licence MIT. Držitel copyrightu v `LICENSE` je záměrně původní vlastník repa a test
   hlídá, že jeho jméno není nikde jinde (viz §14).
 - Předchůdce je tkinter verze v repu `NoirPad-legacy`, která zůstává beze změny. Šifrovací obálka

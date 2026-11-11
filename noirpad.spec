@@ -26,6 +26,7 @@ ROOT = Path(SPECPATH)
 _VERSION_PY = (ROOT / "noirpad" / "__version__.py").read_text(encoding="utf-8")
 VERSION = re.search(r'__version__ = "([^"]+)"', _VERSION_PY).group(1)
 AUTHOR = re.search(r'^AUTHOR = "([^"]+)"', _VERSION_PY, re.M).group(1)
+COPYRIGHT = re.search(r'^COPYRIGHT = "([^"]+)"', _VERSION_PY, re.M).group(1)
 
 
 # ---- Data: the frontend, without work files ---------------------------------
@@ -40,7 +41,8 @@ def _static_files():
     return out
 
 
-datas = _static_files()
+# N8/N9: About → Licenses reads both from the bundle root (/api/licenses).
+datas = _static_files() + [(str(ROOT / "LICENSE"), "."), (str(ROOT / "THIRD-PARTY-NOTICES.txt"), ".")]
 
 
 # ---- Hidden imports ---------------------------------------------------------
@@ -69,7 +71,7 @@ def _version_file():
       StringStruct('FileDescription', 'NoirPad'),
       StringStruct('FileVersion', '{VERSION}'),
       StringStruct('InternalName', 'NoirPad'),
-      StringStruct('LegalCopyright', 'Copyright (c) 2025-2026 the NoirPad authors. MIT License.'),
+      StringStruct('LegalCopyright', '{COPYRIGHT}. MIT License.'),
       StringStruct('OriginalFilename', 'NoirPad.exe'),
       StringStruct('ProductName', 'NoirPad'),
       StringStruct('ProductVersion', '{VERSION}')])]),

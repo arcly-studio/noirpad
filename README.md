@@ -8,14 +8,14 @@
 
 **English** · [Čeština](README.cs.md)
 
-[![Latest release](https://img.shields.io/github/v/release/arcly-studio/NoirPad)](https://github.com/arcly-studio/NoirPad/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/arcly-studio/NoirPad/total)](https://github.com/arcly-studio/NoirPad/releases)
-[![License](https://img.shields.io/github/license/arcly-studio/NoirPad)](LICENSE)
+[![Latest release](https://img.shields.io/github/v/release/arcly-studio/noirpad)](https://github.com/arcly-studio/noirpad/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/arcly-studio/noirpad/total)](https://github.com/arcly-studio/noirpad/releases)
+[![License](https://img.shields.io/github/license/arcly-studio/noirpad)](LICENSE)
 ![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows)
 
-<a href="https://github.com/arcly-studio/NoirPad/releases/latest/download/NoirPad-Setup.exe"><img src="docs/buttons/download.svg" alt="Download for Windows" height="68"></a>
+<a href="https://github.com/arcly-studio/noirpad/releases/latest/download/NoirPad-Setup.exe"><img src="docs/buttons/download.svg" alt="Download for Windows" height="68"></a>
 
-<sub>[All releases](https://github.com/arcly-studio/NoirPad/releases)</sub>
+<sub>[All releases](https://github.com/arcly-studio/noirpad/releases)</sub>
 
 <img src="docs/demo.gif" width="960" alt="NoirPad demo: a new note, Markdown with a Python code block and live preview, switching the theme from the command bar, locking the note with a password">
 
@@ -121,8 +121,8 @@ The full list, with remapping, is in Settings → Keyboard shortcuts → Manage,
 
 ## Install
 
-1. Download **[NoirPad-Setup.exe](https://github.com/arcly-studio/NoirPad/releases/latest/download/NoirPad-Setup.exe)**
-   (or a specific version from [Releases](https://github.com/arcly-studio/NoirPad/releases)).
+1. Download **[NoirPad-Setup.exe](https://github.com/arcly-studio/noirpad/releases/latest/download/NoirPad-Setup.exe)**
+   (or a specific version from [Releases](https://github.com/arcly-studio/noirpad/releases)).
 2. Run it. It installs for your user only — no admin rights — into
    `%LOCALAPPDATA%\Programs\NoirPad`.
 
@@ -194,8 +194,8 @@ Security issues: please report them privately, see [SECURITY.md](SECURITY.md).
 NoirPad also runs as a small web server (Python 3.14), e.g. on a home server:
 
 ```bash
-git clone https://github.com/arcly-studio/NoirPad.git
-cd NoirPad
+git clone https://github.com/arcly-studio/noirpad.git
+cd noirpad
 python -m venv .venv
 .venv/bin/pip install -r requirements.txt        # Windows: .venv\Scripts\pip
 NOIRPAD_PASSWORD='a long passphrase' NOIRPAD_ALLOWED_HOSTS=notes.example.org \
@@ -224,7 +224,7 @@ Requirements and details are in [BUILD.md](BUILD.md). From source: `python deskt
 
 ## Contributing
 
-Bug reports and ideas are welcome in [Issues](https://github.com/arcly-studio/NoirPad/issues).
+Bug reports and ideas are welcome in [Issues](https://github.com/arcly-studio/noirpad/issues).
 For a pull request, run the tests first:
 
 ```bash
@@ -236,4 +236,5 @@ Changes per version: [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Arcly Studio.
+Third-party software and its licences: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).

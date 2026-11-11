@@ -8,14 +8,14 @@
 
 [English](README.md) · **Čeština**
 
-[![Poslední verze](https://img.shields.io/github/v/release/arcly-studio/NoirPad)](https://github.com/arcly-studio/NoirPad/releases/latest)
-[![Stažení](https://img.shields.io/github/downloads/arcly-studio/NoirPad/total)](https://github.com/arcly-studio/NoirPad/releases)
-[![Licence](https://img.shields.io/github/license/arcly-studio/NoirPad)](LICENSE)
+[![Poslední verze](https://img.shields.io/github/v/release/arcly-studio/noirpad)](https://github.com/arcly-studio/noirpad/releases/latest)
+[![Stažení](https://img.shields.io/github/downloads/arcly-studio/noirpad/total)](https://github.com/arcly-studio/noirpad/releases)
+[![Licence](https://img.shields.io/github/license/arcly-studio/noirpad)](LICENSE)
 ![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4?logo=windows)
 
-<a href="https://github.com/arcly-studio/NoirPad/releases/latest/download/NoirPad-Setup.exe"><img src="docs/buttons/download-cs.svg" alt="Stáhnout pro Windows" height="68"></a>
+<a href="https://github.com/arcly-studio/noirpad/releases/latest/download/NoirPad-Setup.exe"><img src="docs/buttons/download-cs.svg" alt="Stáhnout pro Windows" height="68"></a>
 
-<sub>[Všechny verze](https://github.com/arcly-studio/NoirPad/releases)</sub>
+<sub>[Všechny verze](https://github.com/arcly-studio/noirpad/releases)</sub>
 
 <img src="docs/demo.gif" width="960" alt="Ukázka NoirPadu: nová poznámka, Markdown s blokem kódu v Pythonu a živým náhledem, přepnutí motivu z příkazové lišty, zamčení poznámky heslem">
 
@@ -124,8 +124,8 @@ Ve webové verzi (`NoirPad-web.py`) patří `Ctrl+Shift+N` / `T` / `I` prohlíž
 
 ## Instalace
 
-1. Stáhněte **[NoirPad-Setup.exe](https://github.com/arcly-studio/NoirPad/releases/latest/download/NoirPad-Setup.exe)**
-   (nebo konkrétní verzi z [Releases](https://github.com/arcly-studio/NoirPad/releases)).
+1. Stáhněte **[NoirPad-Setup.exe](https://github.com/arcly-studio/noirpad/releases/latest/download/NoirPad-Setup.exe)**
+   (nebo konkrétní verzi z [Releases](https://github.com/arcly-studio/noirpad/releases)).
 2. Spusťte ho. Nainstaluje se jen pro vašeho uživatele — bez administrátorských práv — do
    `%LOCALAPPDATA%\Programs\NoirPad`.
 
@@ -197,8 +197,8 @@ Bezpečnostní problémy hlaste prosím neveřejně, viz [SECURITY.md](SECURITY.
 NoirPad běží i jako malý webový server (Python 3.14), třeba na domácím serveru:
 
 ```bash
-git clone https://github.com/arcly-studio/NoirPad.git
-cd NoirPad
+git clone https://github.com/arcly-studio/noirpad.git
+cd noirpad
 python -m venv .venv
 .venv/bin/pip install -r requirements.txt        # Windows: .venv\Scripts\pip
 NOIRPAD_PASSWORD='dlouhé heslo' NOIRPAD_ALLOWED_HOSTS=notes.example.org \
@@ -227,7 +227,7 @@ Požadavky a podrobnosti jsou v [BUILD.md](BUILD.md). Ze zdrojů: `python deskto
 
 ## Přispívání
 
-Chyby a nápady pište do [Issues](https://github.com/arcly-studio/NoirPad/issues). Před pull
+Chyby a nápady pište do [Issues](https://github.com/arcly-studio/noirpad/issues). Před pull
 requestem spusťte testy:
 
 ```bash
@@ -239,4 +239,5 @@ Změny v jednotlivých verzích: [CHANGELOG.md](CHANGELOG.md).
 
 ## Licence
 
-MIT — viz [LICENSE](LICENSE).
+MIT — viz [LICENSE](LICENSE). Copyright (c) 2026 Arcly Studio.
+Software třetích stran a jeho licence: [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).

@@ -17,13 +17,13 @@
   #error Pass /DAppVersion=x.y.z (build.ps1 does this from noirpad\__version__.py)
 #endif
 #ifndef AppURL
-  #define AppURL "https://github.com/arcly-studio/NoirPad"
+  #define AppURL "https://github.com/arcly-studio/noirpad"
 #endif
 
 #define AppName       "NoirPad"
 #define AppPublisher  "Arcly Studio"
-; I5: a real copyright line (the holder is named in LICENSE).
-#define AppCopyright  "Copyright (c) 2025-2026 the NoirPad authors. MIT License."
+; N9: the copyright line of LICENSE (COPYRIGHT in noirpad\__version__.py).
+#define AppCopyright  "Copyright (c) 2026 Arcly Studio. MIT License."
 #define AppExeName    "NoirPad.exe"
 #define SourceDir     "dist\NoirPad"
 ; Same name as APP_MUTEX in desktop.py: setup/uninstall see a running NoirPad.
@@ -119,6 +119,9 @@ Type: filesandordirs; Name: "{app}\_internal"
 [Files]
 ; The bootloader (NoirPad.exe) and _internal\ must stay together.
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; N8/N9: the licences next to NoirPad.exe (the app shows them in About too).
+Source: "LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+Source: "THIRD-PARTY-NOTICES.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; IconFilename: "{app}\{#AppExeName}"

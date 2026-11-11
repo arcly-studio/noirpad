@@ -782,6 +782,26 @@ window.NP = window.NP || {};
             aboutBy.textContent = NP.t("ui.settings.by", { author: info.author });
             aboutBy.hidden = false;
         }
+        /* N9: "Copyright (c) 2026 Arcly Studio · MIT" (the line of LICENSE). */
+        var aboutCopyright = document.getElementById("about-copyright");
+        if (aboutCopyright && info.copyright) {
+            aboutCopyright.textContent = NP.t("ui.settings.copyrightLine", { copyright: info.copyright });
+        }
+        /* N10: e-mail for people without a GitHub account; links.js hands
+           mailto: to the system mail app. */
+        var aboutContact = document.getElementById("about-contact");
+        if (aboutContact && info.contact) {
+            aboutContact.href = "mailto:" + info.contact;
+            aboutContact.textContent = info.contact;
+            aboutContact.hidden = false;
+        }
+        /* N8: LICENSE + THIRD-PARTY-NOTICES.txt (licenses.js) */
+        var aboutLicenses = document.getElementById("about-licenses");
+        if (aboutLicenses) {
+            aboutLicenses.addEventListener("click", function () {
+                if (NP.licenses) NP.licenses.open();
+            });
+        }
 
         /* ---- Session (only for a password-protected server) ---- */
         var sessionSection = document.getElementById("settings-session-section");
@@ -840,6 +860,8 @@ window.NP = window.NP || {};
                        own Escape handler close it, don't close Settings. */
                     var sov = document.getElementById("shortcuts-overlay");
                     if (sov && sov.classList.contains("visible")) return;
+                    /* Same for About → Licenses (licenses.js). */
+                    if (NP.licenses && NP.licenses.isOpen()) return;
                     if (!overlay.classList.contains("visible")) return;
                     if (overlay.querySelector(".np-dropdown.open")) {
                         closeAllDropdowns(null);

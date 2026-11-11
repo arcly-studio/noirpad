@@ -213,9 +213,14 @@ window.NP = window.NP || {};
             });
         },
 
-        /* → {version, url} from noirpad/__version__.py */
+        /* → {version, url, author, copyright, contact} from noirpad/__version__.py */
         version: function () {
             return request("GET", "/api/version");
+        },
+
+        /* → {license, notices}: LICENSE and THIRD-PARTY-NOTICES.txt (About → Licenses) */
+        licenses: function () {
+            return request("GET", "/api/licenses");
         },
 
         getNote: function (id) {

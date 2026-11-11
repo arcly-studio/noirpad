@@ -147,4 +147,4 @@ def test_i5_copyright_and_uninstall_name():
     assert re.search(r"^UninstallDisplayName=\{#AppName\}$", iss, re.M)
     spec = (ROOT / "noirpad.spec").read_text(encoding="utf-8")
     assert "StringStruct('LegalCopyright', 'MIT License')" not in spec
-    assert re.search(r"LegalCopyright', 'Copyright \(c\) [^']+MIT License\.'", spec)
+    assert "StringStruct('LegalCopyright', '{COPYRIGHT}. MIT License.')" in spec   # N9

@@ -7,7 +7,7 @@ from fastapi import APIRouter, Request, Response
 
 from .. import app_lock, config, storage
 from .. import server_auth as auth
-from ..__version__ import AUTHOR, PROJECT_URL, __version__
+from ..__version__ import AUTHOR, CONTACT_EMAIL, COPYRIGHT, PROJECT_URL, __version__
 from ..errors import ApiError
 from ..models import LoginReq
 from ..runtime import RUNTIME
@@ -36,7 +36,24 @@ def session_info(request: Request):
 @router.get("/api/version")
 def version():
     """For the About box, the start page and bug reports (noirpad/__version__.py)."""
-    return {"version": __version__, "url": PROJECT_URL, "author": AUTHOR}
+    return {"version": __version__, "url": PROJECT_URL, "author": AUTHOR,
+            "copyright": COPYRIGHT, "contact": CONTACT_EMAIL}
+
+
+# Shipped next to the app (noirpad.spec datas, installer.iss [Files]).
+LICENSE_FILES = {"license": "LICENSE", "notices": "THIRD-PARTY-NOTICES.txt"}
+
+
+@router.get("/api/licenses")
+def licenses():
+    """N8: About → Licenses. NoirPad's own LICENSE and the third-party notices."""
+    out = {}
+    for key, name in LICENSE_FILES.items():
+        try:
+            out[key] = config.resource_path(name).read_text(encoding="utf-8")
+        except OSError:
+            raise ApiError(404, "licenses_missing")
+    return out
 
 
 @router.post("/api/session/dismiss-notice")

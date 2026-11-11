@@ -184,7 +184,7 @@ describe("a dangerous confirm starts on Cancel (U14)", () => {
     });
 });
 
-describe("Matrix rain and reduced motion (U9)", () => {
+describe("Falling-code rain and reduced motion (U9)", () => {
     function rain(reduce) {
         const win = loadApp(["js/utils.js", "js/matrix-rain.js"]);
         win.HTMLCanvasElement.prototype.getContext = () => ({ fillRect() {}, fillText() {} });

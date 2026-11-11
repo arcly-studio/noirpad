@@ -56,11 +56,11 @@ describe("start page", () => {
     });
 
     it("\"by <author>\" links to the project page as a plain anchor (links.js opens it)", () => {
-        win.NP.appInfo = { version: "9.8.7", url: "https://github.com/arcly-studio/NoirPad", author: "Arcly Studio" };
+        win.NP.appInfo = { version: "9.8.7", url: "https://github.com/arcly-studio/noirpad", author: "Arcly Studio" };
         render();
         const a = ed().querySelector(".welcome-by a");
         expect(a.textContent).toBe("by Arcly Studio");
-        expect(a.getAttribute("href")).toBe("https://github.com/arcly-studio/NoirPad");
+        expect(a.getAttribute("href")).toBe("https://github.com/arcly-studio/noirpad");
         expect(a.getAttribute("target")).toBe("_blank");
         expect(a.getAttribute("rel")).toBe("noopener noreferrer");
         expect(rows().includes(a)).toBe(false);                      // not part of the keyboard list
