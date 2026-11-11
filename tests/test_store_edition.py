@@ -248,13 +248,14 @@ def test_build_msix_checks_a_read_only_install_folder():
         "$before = Snapshot $layout",
         "-Edition store",
         'AssertUnchanged $before $layout "NoirPad (writable layout)"',
-        "icacls $layout /deny",
+        "Protect $layout",
         "if ($writable) { Fail",
         'AssertUnchanged $before $layout "NoirPad (read-only layout)"',
         "Run $makeappx pack",
     )]
     assert order == sorted(order)
     assert "Unprotect $layout" in ps.split("finally", 1)[1]
+    assert "/inheritance:r /grant:r" in ps and "(OI)(CI)RX" in ps and "/reset /T" in ps
     assert "installs nothing" in ps and "Install-" not in ps and "winget" not in ps
 
 

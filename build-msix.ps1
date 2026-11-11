@@ -13,8 +13,9 @@
          must not write next to its exe (logs, caches, __pycache__, temp):
            a. smoke test of the layout as the Store edition -> no file in the
               layout may be added or changed;
-           b. write access denied to everyone (icacls), a probe write must
-              fail, then the same smoke test again -> it must pass.
+           b. the layout made read-and-execute only, like an installed MSIX
+              folder (icacls: no inherited rights, Users and Everyone RX), a
+              probe write must fail, then the same smoke test -> it must pass.
       4. makeappx pack -> dist\msix\NoirPad-<version>.msix + .sha256.
     Not signed: the Store signs it. A test certificate and installing the
     package are N1.11 (only after the user's explicit yes).
@@ -64,9 +65,14 @@ function AssertUnchanged($before, $dir, $what) {
         Fail "$what wrote into the install folder (see the list above)"
     }
 }
-$Everyone = "*S-1-1-0"
+function Protect($dir) {
+    # Read and execute only, nothing inherited (an installed package folder).
+    icacls $dir /inheritance:r /grant:r "*S-1-5-32-545:(OI)(CI)RX" "*S-1-1-0:(OI)(CI)RX" /C /Q | Out-Null
+    if ($LASTEXITCODE -ne 0) { Fail "icacls (read-only layout)" }
+}
 function Unprotect($dir) {
-    if (Test-Path -LiteralPath $dir) { icacls $dir /remove:d $Everyone /T /C /Q | Out-Null }
+    # The owner can always rewrite the ACL; back to the inherited defaults.
+    if (Test-Path -LiteralPath $dir) { icacls $dir /reset /T /C /Q | Out-Null }
 }
 
 # ---- 1. app build (clean tree, tests, PyInstaller, smoke test) --------------
@@ -115,10 +121,9 @@ $before = Snapshot $layout
 if ($LASTEXITCODE -ne 0) { Fail "smoke test of the layout" }
 AssertUnchanged $before $layout "NoirPad (writable layout)"
 
-Step "Smoke test with the install folder write-protected (icacls)"
+Step "Smoke test with a read-only install folder (icacls RX)"
 try {
-    icacls $layout /deny "${Everyone}:(OI)(CI)(W,D,DC)" /T /C /Q | Out-Null
-    if ($LASTEXITCODE -ne 0) { Fail "icacls /deny" }
+    Protect $layout
     $probe = Join-Path $layout "_internal\write-probe.tmp"
     $writable = $true
     try { [IO.File]::WriteAllText($probe, "x") } catch { $writable = $false }
