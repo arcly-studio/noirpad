@@ -145,3 +145,11 @@ def test_component_name_in_readme_only_in_install(name, install):
     section = re.search(rf"(?ms)^## {install}\n.*?(?=^## )", text).group(0)
     assert COMPONENT.search(section)
     assert not COMPONENT.search(text.replace(section, ""))
+
+
+def test_social_preview_title_and_second_line():
+    """Green title (logo accent), second line without a second "Windows"."""
+    html = _read("docs/brand/social-preview.html")
+    assert re.search(r"h1\{[^}]*color:#00ff41", html)
+    assert "<br>No account, no cloud.</p>" in html
+    assert "7ab6ff" not in html.lower()
