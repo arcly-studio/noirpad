@@ -4,6 +4,7 @@ from the GitHub edition, AppxManifest, MSIX images, read-only install folder."""
 import json
 import os
 import re
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -339,11 +340,43 @@ def test_test_cert_subject_is_the_manifest_publisher():
 def test_test_cert_signs_a_copy_and_trusts_nothing():
     """The Store package stays unsigned; trusting the .cer is the user's admin step."""
     src = _test_cert()
-    assert "dist\msix-test" in src and "Copy-Item -LiteralPath $msix -Destination $signed" in src
-    assert "sign /fd SHA256 /sha1 $cert.Thumbprint $signed" in src
-    code = "\n".join(ln for ln in src.splitlines() if not ln.lstrip().startswith(("Write-Host", "#")))
+    assert r'$TestDir = Join-Path $Root "dist\msix-test"' in src
+    assert "Copy-Item -LiteralPath $msix -Destination $test0" in src
+    assert "sign /fd SHA256 /sha1 $cert.Thumbprint $file" in src
+    assert "Sign $test0" in src and "Sign $test1" in src
+    # Everything the script writes goes into $TestDir (dist\msix-test).
+    for var in ("$test0", "$test1", "$layout", "$dir"):
+        assert re.search(rf"^\s*{re.escape(var)} = Join-Path \$TestDir ", src, re.M), var
+    code ="\n".join(ln for ln in src.splitlines() if not ln.lstrip().startswith(("Write-Host", "#")))
     assert "Import-Certificate" not in code and "Import-PfxCertificate" not in code
     assert "Add-AppxPackage" not in src and "Start-Process" not in src
+
+
+def test_test_packages_say_test_and_only_raise_the_version():
+    """Upgrade test package X.Y.Z.1: TEST in the name, nothing but Identity Version changed."""
+    src = _test_cert()
+    assert '"NoirPad-$baseVersion-TEST.msix"' in src
+    assert '"NoirPad-$upgradeVersion-TEST-UPGRADE.msix"' in src
+    assert r"$upgradeVersion = $baseVersion -replace '\.0$', '.1'" in src
+    assert "$changed.Replace($upgradeVersion, $baseVersion) -ne $original" in src
+    assert "Assert-Signed $test0 $baseVersion" in src and "Assert-Signed $test1 $upgradeVersion" in src
+    assert "Smoke $test0" in src and "Smoke $test1" in src and "-Edition store" in src
+
+
+def test_upgrade_test_version_is_never_in_git():
+    """The upgrade test version (X.Y.Z.1) is computed by test-cert.ps1, never written in git."""
+    out = subprocess.run(["git", "ls-files"], cwd=ROOT, capture_output=True, text=True, check=True).stdout
+    from noirpad.__version__ import __version__
+    test_ver = __version__ + ".1"
+    hits = []
+    for name in out.splitlines():
+        path = ROOT / name
+        if path.suffix.lower() in {".png", ".ico", ".bmp", ".gif", ".zip", ".woff2", ".ttf"} or not path.is_file():
+            continue
+        if test_ver in path.read_text(encoding="utf-8", errors="ignore"):
+            hits.append(name)
+    assert hits == []
+    assert re.search(r'^__version__ = "\d+\.\d+\.\d+"$', (ROOT / "noirpad" / "__version__.py").read_text(encoding="utf-8"), re.M)
 
 
 def test_test_cert_remove_looks_in_every_store():

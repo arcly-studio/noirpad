@@ -136,8 +136,10 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
 - `tools/msix_manifest.py` writes AppxManifest.xml (version X.Y.Z.0, MinVersion 10.0.17763.0 with
   the reason in its docstring). MSIX images: `tools/make_icons.py` -> `store/Assets/`.
 - `tools/test-cert.ps1 -Create` / `-Remove` (N1.11, never run without the user's yes): self-signed
-  cert with Subject = manifest Publisher, private key non-exportable in `CurrentUser\My`, signed copy
-  in `dist\msix-test\`, only the public `.cer` exported. Trusting the `.cer` in
+  cert with Subject = manifest Publisher, private key non-exportable in `CurrentUser\My`, signed TEST
+  packages X.Y.Z.0 and X.Y.Z.1 (upgrade test; that version never in git) in `dist\msix-test\`,
+  both smoke-tested, only the public `.cer` exported. Partner Center gets only the unsigned
+  `dist\msix\NoirPad-<version>.msix`. Trusting the `.cer` in
   `LocalMachine\TrustedPeople` is the user's manual admin step.
 - Test certificate, installing the MSIX and WACK only in N1.11 after the user's explicit yes.
 

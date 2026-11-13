@@ -62,15 +62,19 @@ packs `dist\msix\NoirPad-<version>.msix` + `.sha256`. Unsigned: the Store signs 
 Test signing for a local install (N1.11, only after an explicit yes), in Windows PowerShell 5.1:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools\test-cert.ps1 -Create   # cert + signed copy in dist\msix-test
+powershell -ExecutionPolicy Bypass -File tools\test-cert.ps1 -Create   # cert + signed TEST packages in dist\msix-test
 powershell -ExecutionPolicy Bypass -File tools\test-cert.ps1 -Remove   # remove the cert from every store
 ```
 
 `-Create` makes a self-signed code-signing certificate whose Subject is exactly the manifest
-`Publisher`, keeps its private key non-exportable in `Cert:\CurrentUser\My`, signs a copy of the
-MSIX (`signtool sign /fd SHA256 /sha1 <thumbprint>`) into `dist\msix-test\` and exports only the
-public `.cer`. Trusting that `.cer` in `Cert:\LocalMachine\TrustedPeople` is a separate manual
-step as administrator. No `.pfx` is ever written.
+`Publisher` and keeps its private key non-exportable in `Cert:\CurrentUser\My`. It empties
+`dist\msix-test\` and writes two signed packages there (`signtool sign /fd SHA256 /sha1 <thumbprint>`):
+`NoirPad-X.Y.Z.0-TEST.msix` (copy of the Store package) and `NoirPad-X.Y.Z.1-TEST-UPGRADE.msix`
+(the same files, only `Identity Version` raised, for the upgrade test; that version is never in
+git). It checks both signatures from the files, smoke-tests both unpacked packages as the Store
+edition (writable and read-only) and exports only the public `.cer`. Trusting that `.cer` in
+`Cert:\LocalMachine\TrustedPeople` is a separate manual step as administrator. No `.pfx` is ever
+written. **Only `dist\msix\NoirPad-<version>.msix` (unsigned, X.Y.Z.0) goes to Partner Center.**
 
 Third-party licences of the Rust crates inside `cryptography` and `pydantic_core`: after bumping
 either, run `.venv\Scripts\python.exe tools\rust_notices.py` (crate list from the wheel's SBOM,
