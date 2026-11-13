@@ -61,6 +61,8 @@ def dismiss_notice():
     from .. import store_import
     if RUNTIME.data_notice and RUNTIME.data_notice.get("code") == store_import.NOTICE_DONE:
         store_import.mark_notice_shown(storage.DATA_DIR)     # shown once (N1.9)
+    elif RUNTIME.data_notice and RUNTIME.data_notice.get("code") == store_import.NOTICE_SKIPPED:
+        store_import.mark_skipped_shown(storage.DATA_DIR)    # shown once (N1.11)
     RUNTIME.data_notice = None
     return {"ok": True}
 

@@ -44,6 +44,8 @@ APP_MUTEX = "NoirPad-B6F2E7C0-AppMutex"     # desktop.py / installer.iss (GitHub
 
 NOTICE_DONE = "github_imported"
 NOTICE_BLOCKED = "github_import_blocked"
+NOTICE_SKIPPED = "github_import_skipped"     # own notes here: Settings → Data adds them
+SKIP_MARKER = "github-import-skipped.json"   # that notice was shown once
 
 
 def source_dir() -> Optional[Path]:
@@ -107,6 +109,43 @@ def _copy_file(src: Path, dst: Path) -> None:
     os.replace(tmp, dst)
 
 
+def source_has_notes(src: Path) -> bool:
+    """The installer edition really has notes (in its tree, not only in the trash)."""
+    try:
+        data = json.loads((Path(src) / DATA_NAME).read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return False
+    if not isinstance(data, dict) or not isinstance(data.get("notes"), dict):
+        return False
+    from .tree import collect_note_ids
+    tree = data.get("tree") if isinstance(data.get("tree"), list) else []
+    try:
+        ids = [nid for item in tree for nid in collect_note_ids(item)]
+    except (AttributeError, TypeError):
+        return False
+    return any(nid in data["notes"] for nid in ids)
+
+
+def installer_notes_available(target: Path) -> bool:
+    """Settings → Data → "Add notes from the installer version" is offered."""
+    if edition.edition() != edition.STORE or (Path(target) / IMPORT_MARKER).exists():
+        return False
+    src = source_dir()
+    if src is None or src.resolve() == Path(target).resolve():
+        return False
+    return source_has_notes(src)
+
+
+def mark_skipped_shown(target: Path) -> None:
+    path = Path(target) / SKIP_MARKER
+    try:
+        path.write_text(json.dumps({
+            "notice_shown_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        }) + "\n", encoding="utf-8")
+    except OSError as exc:
+        log.warning("Could not write %s: errno %s", SKIP_MARKER, exc.errno)
+
+
 def _replaceable(data_file: Path) -> bool:
     """True when the Store data file is missing or holds nothing of the user's.
 
@@ -135,12 +174,18 @@ def maybe_import(target: Path) -> Optional[dict]:
     if edition.edition() != edition.STORE:
         return None
     target = Path(target)
-    if (target / IMPORT_MARKER).exists() or not _replaceable(target / DATA_NAME):
+    if (target / IMPORT_MARKER).exists():
         return None
     src = source_dir()
     if src is None or not (src / DATA_NAME).is_file():
         return None
     if src.resolve() == target.resolve():
+        return None
+    if not _replaceable(target / DATA_NAME):
+        # Own notes here (e.g. written after a postponed import): never copied
+        # over them. Say once how to add them (Settings → Data, store_merge).
+        if source_has_notes(src) and not (target / SKIP_MARKER).exists():
+            return {"code": NOTICE_SKIPPED, "params": {}}
         return None
     if github_running(src):
         log.info("GitHub edition is running; import postponed")

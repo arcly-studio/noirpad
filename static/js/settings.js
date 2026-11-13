@@ -663,6 +663,28 @@ window.NP = window.NP || {};
             });
         }
 
+        /* Store edition (N1.11): add the installer edition's notes into a
+           new folder. Shown only while the backend offers it (refreshed on
+           every open, see refreshInstallerNotes). */
+        var addInstaller = document.getElementById("setting-add-installer-notes");
+        if (addInstaller) {
+            addInstaller.addEventListener("click", function () {
+                addInstaller.disabled = true;
+                NP.api.addInstallerNotes(NP.t("settings.installerFolder")).then(function (res) {
+                    addInstaller.hidden = true;
+                    return NP.state.init().then(function () {
+                        if (NP.tree && NP.tree.render) NP.tree.render();
+                        NP.toast(NP.t("settings.installerAdded", { folder: res.folder }), { timeout: 10000 });
+                    });
+                }).catch(function (err) {
+                    NP.dialog.alert(NP.t("settings.installerAddFailed", {
+                        error: err && err.message ? err.message : err
+                    }));
+                    refreshInstallerNotes();
+                }).finally(function () { addInstaller.disabled = false; });
+            });
+        }
+
         var exportAll = document.getElementById("setting-export-all");
         if (exportAll) {
             exportAll.addEventListener("click", function () {
@@ -824,6 +846,20 @@ window.NP = window.NP || {};
                 });
             });
         }
+    }
+
+    /* The "Add notes from the installer version" button: Store edition only,
+       and only until the notes were copied or added (backend decides). */
+    function refreshInstallerNotes() {
+        var btn = document.getElementById("setting-add-installer-notes");
+        if (!btn) return Promise.resolve();
+        if ((NP.appInfo || {}).edition !== "store" || !NP.api.installerNotesStatus) {
+            btn.hidden = true;
+            return Promise.resolve();
+        }
+        return NP.api.installerNotesStatus().then(function (res) {
+            btn.hidden = !(res && res.available);
+        }, function () { btn.hidden = true; });
     }
 
     NP.settings = {
@@ -1029,6 +1065,7 @@ window.NP = window.NP || {};
             NP.settings.syncFromState();
             applyUiFont(currentUiFont());
             refreshStorageUsed();
+            refreshInstallerNotes();
             if (NP.shortcutsManager && NP.shortcutsManager.refreshSummary) {
                 NP.shortcutsManager.refreshSummary();
             }

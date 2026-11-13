@@ -87,13 +87,20 @@
     "data_write_failed": "Poznámky se nepodařilo uložit ({error}). Není plný disk? Naposledy uložený stav zůstal beze změny.",
     "export_locked_note": "Zamčenou poznámku nelze exportovat. Nejdřív odstraňte zámek.",
     "note_changed_elsewhere": "Tuto poznámku mezitím změnilo jiné okno.",
-    "licenses_missing": "V této instalaci chybí texty licencí."
+    "licenses_missing": "V této instalaci chybí texty licencí.",
+    "not_store_edition": "V této verzi není k dispozici.",
+    "installer_import_done": "Poznámky z verze z instalátoru už jsou přidané.",
+    "installer_import_nothing": "Verze z instalátoru nemá žádné poznámky k přidání.",
+    "installer_import_running": "Běží NoirPad z instalátoru. Zavřete ho a zkuste to znovu.",
+    "installer_import_unreadable": "Soubor s poznámkami verze z instalátoru nejde přečíst. Nic se nezměnilo.",
+    "installer_import_conflict": "Zamčená poznámka verze z instalátoru používá obrázek, jehož název tu už má jiný obrázek. Nic se nezměnilo."
   },
   "notice": {
     "data_restored": "Soubor s poznámkami byl poškozený. Zůstal uložený jako {file} a obnovila se poslední dobrá záloha ({when}). Změny provedené po této záloze mohou chybět.",
     "data_reset": "Soubor s poznámkami byl poškozený a žádná použitelná záloha se nenašla. Poškozený soubor zůstal uložený jako {file}; NoirPad začíná prázdný.",
-    "github_imported": "Poznámky z GitHub verze NoirPadu jsou zkopírované sem. Pokud tu verzi už nepotřebujete, můžete ji odinstalovat v Nastavení Windows → Aplikace.",
-    "github_import_blocked": "Běží GitHub verze NoirPadu. Zavřete ji a spusťte NoirPad znovu, poznámky se pak zkopírují sem."
+    "github_imported": "Poznámky z verze z instalátoru jsou zkopírované sem. Pokud tu verzi už nepotřebujete, můžete ji odinstalovat v Nastavení Windows → Aplikace.",
+    "github_import_blocked": "Běží NoirPad z instalátoru. Zavřete ho a spusťte NoirPad znovu dřív, než tu začnete psát, poznámky se pak zkopírují sem.",
+    "github_import_skipped": "Poznámky z verze z instalátoru se nezkopírovaly, protože tu už máte vlastní poznámky. Přidat je můžete v Nastavení → Data → Přidat poznámky z verze z instalátoru."
   },
   "language": {
     "label": "Jazyk",
@@ -862,7 +869,8 @@
       "copyrightLine": "{copyright} · MIT",
       "showLicenses": "Licence →",
       "privacy": "Soukromí",
-      "privacyLink": "Zásady ochrany soukromí ↗"
+      "privacyLink": "Zásady ochrany soukromí ↗",
+      "addFromInstaller": "Přidat poznámky z verze z instalátoru"
     },
     "licenses": {
       "title": "Licence",
@@ -926,7 +934,10 @@
     "serverError": "Chyba serveru {status}",
     "resetFailed": "Nastavení se nepodařilo obnovit: {error}",
     "logoutConfirm": "Odhlásit se z NoirPadu?",
-    "resetOk": "Obnovit nastavení"
+    "resetOk": "Obnovit nastavení",
+    "installerFolder": "Z verze z instalátoru",
+    "installerAdded": "Poznámky z verze z instalátoru jsou přidané ve složce „{folder}“.",
+    "installerAddFailed": "Poznámky se nepodařilo přidat: {error}"
   },
   "dialog": {
     "newNoteTitle": "Nová poznámka",

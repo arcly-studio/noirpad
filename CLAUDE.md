@@ -131,6 +131,11 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   data lock). `backups/` / `corrupt-*` are never copied (user's decision A). Toast notices
   `github_imported` / `github_import_blocked` (no dialog). With `NOIRPAD_DATA_DIR` set the source
   is only `NOIRPAD_IMPORT_FROM` (tests never read real data).
+- Store data with own notes is never overwritten: the start shows `github_import_skipped` once
+  (`github-import-skipped.json`) and Settings → Data offers "Add notes from the installer version"
+  (`noirpad/store_merge.py`, `/api/store/installer-notes`): adds into a new folder, new ids / image
+  names on collision, all or nothing (pre-import zip, images, one atomic data write, then the marker).
+  In the UI the GitHub edition is "the installer version"; no "GitHub" in locales (test).
 - Never write next to the exe: the MSIX install folder is read-only. `build-msix.ps1` smoke-tests
   the layout writable (no file may change) and write-protected with icacls.
 - `tools/msix_manifest.py` writes AppxManifest.xml (version X.Y.Z.0, MinVersion 10.0.17763.0 with

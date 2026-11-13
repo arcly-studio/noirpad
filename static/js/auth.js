@@ -164,7 +164,7 @@ window.NP = window.NP || {};
     }
 
     /* Notices shown as a toast (information), the others as a dialog. */
-    var TOAST_NOTICES = ["github_imported", "github_import_blocked"];
+    var TOAST_NOTICES = ["github_imported", "github_import_blocked", "github_import_skipped"];
 
     /* The backend recovered from a corrupt notes file (or found none),
        or the Store edition imported the GitHub edition's notes. */

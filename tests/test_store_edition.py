@@ -200,12 +200,63 @@ def test_notice_is_shown_once(store, client):
     assert json.loads(marker.read_text(encoding="utf-8"))["notice_shown"] is True
 
 
+APPROVED_NOTICES = {
+    "en": {
+        "github_import_blocked": "NoirPad (installer version) is running. Close it and start NoirPad again before you "
+                                 "add notes here, and your notes will be copied here.",
+        "github_import_skipped": "Your notes from the installer version were not copied, because NoirPad already has "
+                                 "notes here. To add them, go to Settings → Data → Add notes from the installer version.",
+    },
+    "cs": {
+        "github_import_blocked": "Běží NoirPad z instalátoru. Zavřete ho a spusťte NoirPad znovu dřív, než tu začnete "
+                                 "psát, poznámky se pak zkopírují sem.",
+        "github_import_skipped": "Poznámky z verze z instalátoru se nezkopírovaly, protože tu už máte vlastní poznámky. "
+                                 "Přidat je můžete v Nastavení → Data → Přidat poznámky z verze z instalátoru.",
+    },
+}
+
+
+def _locale(lang):
+    return json.loads((ROOT / "static" / "locales" / f"{lang}.json").read_text(encoding="utf-8"))
+
+
 @pytest.mark.parametrize("lang", ["en", "cs"])
 def test_notice_texts(lang):
-    notice = json.loads((ROOT / "static" / "locales" / f"{lang}.json").read_text(encoding="utf-8"))["notice"]
-    done, blocked = notice["github_imported"], notice["github_import_blocked"]
-    assert ("Settings → Apps" if lang == "en" else "Nastavení Windows → Aplikace") in done
-    assert "GitHub" in done and "GitHub" in blocked
+    notice = _locale(lang)["notice"]
+    for code, text in APPROVED_NOTICES[lang].items():
+        assert notice[code] == text
+    assert ("Settings → Apps" if lang == "en" else "Nastavení Windows → Aplikace") in notice["github_imported"]
+
+
+def _strings(node):
+    if isinstance(node, dict):
+        for v in node.values():
+            yield from _strings(v)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _strings(v)
+    elif isinstance(node, str):
+        yield node
+
+
+@pytest.mark.parametrize("lang", ["en", "cs"])
+def test_no_github_in_the_ui(lang):
+    """No other product's name in the UI: the users see "installer version"."""
+    assert [s for s in _strings(_locale(lang)) if "github" in s.lower()] == []
+    html = re.sub(r"<!--.*?-->|<script.*?</script>", "", (ROOT / "static" / "index.html").read_text(encoding="utf-8"), flags=re.S)
+    assert "github" not in re.sub(r'href="[^"]*"', "", html).lower()
+
+
+@pytest.mark.parametrize("lang", ["en", "cs"])
+def test_skipped_notice_names_the_real_settings_path(lang):
+    """Settings → Data → <button>: the same words as the window title, section and button."""
+    loc = _locale(lang)
+    path = " → ".join([loc["ui"]["settings"]["title"], loc["ui"]["settings"]["section"]["data"],
+                       loc["ui"]["settings"]["addFromInstaller"]])
+    assert path in loc["notice"]["github_import_skipped"]
+    html = (ROOT / "static" / "index.html").read_text(encoding="utf-8")
+    data = html[html.index('data-i18n="ui.settings.section.data"'):html.index('id="settings-session-section"')]
+    assert 'id="setting-add-installer-notes" data-i18n="ui.settings.addFromInstaller" hidden' in data
 
 
 # ---- AppxManifest ----------------------------------------------------------------
@@ -302,7 +353,7 @@ def test_nothing_is_written_next_to_the_exe():
 def test_import_notice_is_a_toast_not_a_dialog():
     """Information only (N1.9): NP.toast, never alert/confirm."""
     js = (ROOT / "static" / "js" / "auth.js").read_text(encoding="utf-8")
-    assert re.search(r'TOAST_NOTICES = \["github_imported", "github_import_blocked"\]', js)
+    assert 'TOAST_NOTICES = ["github_imported", "github_import_blocked", "github_import_skipped"]' in js
     assert "NP.toast(text" in js
     # The browser's own alert/confirm (NP.dialog.alert is the app's window for other notices).
     assert not re.search(r"(?<![.\w])(alert|confirm)\(|window\.(alert|confirm)\(", js)
@@ -327,7 +378,7 @@ def test_test_cert_keeps_the_private_key_in_the_store():
     assert "-KeyExportPolicy NonExportable" in src
     assert "Export-PfxCertificate" not in src and ".pfx" not in src.replace("No .pfx", "").replace("no .pfx", "")
     assert re.search(r"Export-Certificate -Cert \$cert -FilePath \$CerFile -Type CERT", src)
-    assert '-CertStoreLocation "Cert:\CurrentUser\My"' in src
+    assert r'-CertStoreLocation "Cert:\CurrentUser\My"' in src
 
 
 def test_test_cert_subject_is_the_manifest_publisher():
@@ -381,7 +432,7 @@ def test_upgrade_test_version_is_never_in_git():
 
 def test_test_cert_remove_looks_in_every_store():
     src = _test_cert()
-    assert '"Cert:\CurrentUser", "Cert:\LocalMachine"' in src
+    assert r'"Cert:\CurrentUser", "Cert:\LocalMachine"' in src
     assert "-DeleteKey" in src
     assert "$_.Subject -eq $Publisher -and $_.Issuer -eq $Publisher" in src
 

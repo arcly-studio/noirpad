@@ -404,6 +404,15 @@ window.NP = window.NP || {};
             return request("POST", "/api/backup/import", fd);
         },
 
+        /* Store edition (N1.11): Settings → Data → add the installer edition's notes. */
+        installerNotesStatus: function () {
+            return request("GET", "/api/store/installer-notes");
+        },
+
+        addInstallerNotes: function (folder) {
+            return request("POST", "/api/store/installer-notes", { folder: folder });
+        },
+
         /* ---- Session (password-protected server mode) ---- */
         session: function () {
             return request("GET", "/api/session");

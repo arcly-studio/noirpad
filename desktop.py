@@ -353,7 +353,10 @@ def _run(data_dir: Path, log_file: Path, lang: str, smoke: bool = False) -> int:
     from noirpad import app as _backend  # noqa: F401  (the import points storage at data_dir)
     if store:
         from noirpad.runtime import RUNTIME
-        notice = blocked if blocked and blocked["code"] == store_import.NOTICE_BLOCKED             else store_import.pending_notice(data_dir)
+        # Postponed (installer edition running) or skipped (own notes here):
+        # that notice; otherwise the "copied" notice until it was seen once.
+        early = (store_import.NOTICE_BLOCKED, store_import.NOTICE_SKIPPED)
+        notice = blocked if blocked and blocked["code"] in early else store_import.pending_notice(data_dir)
         if notice and RUNTIME.data_notice is None:       # a recovered data file comes first
             RUNTIME.data_notice = notice
     else:

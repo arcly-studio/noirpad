@@ -16,6 +16,8 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   close it and start again. After the copy a one-time message says that you can uninstall the
   GitHub edition in Windows Settings → Apps if you no longer need it; NoirPad uninstalls nothing
   itself.
+- If the Store edition already has notes of its own, nothing is copied over them: Settings → Data →
+  Add notes from the installer version adds the GitHub edition's notes into a new folder instead.
 
 ### Locked notes
 - The formatting of a locked note, including its links, is now encrypted together with its text.

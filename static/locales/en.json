@@ -79,13 +79,20 @@
     "data_write_failed": "The notes could not be saved ({error}). Is the disk full? The last saved state is unchanged.",
     "export_locked_note": "A locked note cannot be exported. Remove the lock first.",
     "note_changed_elsewhere": "This note was changed in another window meanwhile.",
-    "licenses_missing": "The license texts are missing from this installation."
+    "licenses_missing": "The license texts are missing from this installation.",
+    "not_store_edition": "Not available in this version.",
+    "installer_import_done": "The notes from the installer version have already been added.",
+    "installer_import_nothing": "The installer version has no notes to add.",
+    "installer_import_running": "NoirPad (installer version) is running. Close it and try again.",
+    "installer_import_unreadable": "The notes file of the installer version cannot be read. Nothing was changed.",
+    "installer_import_conflict": "A locked note of the installer version uses an image whose name is already taken here by a different image. Nothing was changed."
   },
   "notice": {
     "data_restored": "Your notes file was damaged. It was kept as {file} and the latest good backup ({when}) was restored. Changes made after that backup may be missing.",
     "data_reset": "Your notes file was damaged and no usable backup was found. The damaged file was kept as {file}; NoirPad started empty.",
-    "github_imported": "Your notes from the GitHub version of NoirPad were copied here. If you no longer need that version, you can uninstall it in Windows Settings → Apps.",
-    "github_import_blocked": "The GitHub version of NoirPad is running. Close it and start NoirPad again to copy your notes here."
+    "github_imported": "Your notes from the installer version of NoirPad were copied here. If you no longer need that version, you can uninstall it in Windows Settings → Apps.",
+    "github_import_blocked": "NoirPad (installer version) is running. Close it and start NoirPad again before you add notes here, and your notes will be copied here.",
+    "github_import_skipped": "Your notes from the installer version were not copied, because NoirPad already has notes here. To add them, go to Settings → Data → Add notes from the installer version."
   },
   "language": {
     "label": "Language",
@@ -830,7 +837,8 @@
       "copyrightLine": "{copyright} · MIT",
       "showLicenses": "Licenses →",
       "privacy": "Privacy",
-      "privacyLink": "Privacy policy ↗"
+      "privacyLink": "Privacy policy ↗",
+      "addFromInstaller": "Add notes from the installer version"
     },
     "licenses": {
       "title": "Licenses",
@@ -886,7 +894,10 @@
     "serverError": "Server error {status}",
     "resetFailed": "Failed to reset settings: {error}",
     "logoutConfirm": "Log out of NoirPad?",
-    "resetOk": "Reset settings"
+    "resetOk": "Reset settings",
+    "installerFolder": "From installer version",
+    "installerAdded": "The notes from the installer version were added to the folder “{folder}”.",
+    "installerAddFailed": "The notes could not be added: {error}"
   },
   "dialog": {
     "newNoteTitle": "New note",
