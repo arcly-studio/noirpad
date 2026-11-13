@@ -90,3 +90,17 @@ def test_about_contact_is_the_studio_mail():
     assert CONTACT_EMAIL == "arclystudio.dev@gmail.com"
     html = (ROOT / "static" / "index.html").read_text(encoding="utf-8")
     assert 'id="about-contact"' in html and 'data-i18n="ui.settings.contact"' in html
+
+
+def test_changelog_has_the_current_version():
+    """N1.10: every version in __version__.py has its CHANGELOG entry and compare link."""
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert re.search(rf"^## \[{re.escape(__version__)}\] – (Unreleased|\d{{4}}-\d{{2}}-\d{{2}})$", text, re.M)
+    assert re.search(rf"^\[{re.escape(__version__)}\]: https://github\.com/arcly-studio/noirpad/compare/v", text, re.M)
+
+
+def test_changelog_1_1_0_is_truthful_about_encryption():
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    entry = text[text.index("## [1.1.0]"):text.index("## [1.0.2]")].replace("\n  ", " ")
+    assert "Only the text and the formatting are encrypted: the note's name, tags, folder and images are not." in entry
+    assert "images are not encrypted" in entry

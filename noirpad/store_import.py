@@ -6,8 +6,9 @@ is, nothing is written into it (inside MSIX a write there would land in the
 package's private copy anyway). Copies keep their file times (copy2).
 
 What is copied: notes_data.json and images/. The automatic copies
-(backups/, corrupt-* files) are not copied yet: that decision is pending
-(ROADMAP N1.9, "Kopie při importu").
+(backups/, corrupt-* files) are never copied (the user's decision, variant A
+of ROADMAP N1.9 "Kopie při importu"): readable copies of locked notes stay
+in the GitHub edition's folder and are not multiplied.
 
 Not while the GitHub edition runs: its installer mutex or its data lock
 tells. Then nothing is copied and the UI asks to close it and start again.

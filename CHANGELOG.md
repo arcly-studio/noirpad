@@ -2,6 +2,83 @@
 
 All notable changes to NoirPad. Versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] – Unreleased
+
+A Microsoft Store edition, encryption of the formatting and links of locked notes, cleaner automatic
+copies, and an easier time with a keyboard, high contrast or zoom.
+
+### Microsoft Store edition
+- NoirPad can now be packaged for the Microsoft Store (MSIX). The Store edition keeps its notes in
+  `%USERPROFILE%\NoirPad`; the GitHub edition stays in `%LOCALAPPDATA%\NoirPad`.
+- On its first start the Store edition copies the notes and images of the GitHub edition, if there
+  are any. It is a copy: the GitHub edition's folder stays as it is, and automatic copies (backups)
+  are not copied. While the GitHub edition is running nothing is copied, and NoirPad tells you to
+  close it and start again. After the copy a one-time message says that you can uninstall the
+  GitHub edition in Windows Settings → Apps if you no longer need it; NoirPad uninstalls nothing
+  itself.
+
+### Locked notes
+- The formatting of a locked note, including its links, is now encrypted together with its text.
+  Only the text and the formatting are encrypted: the note's name, tags, folder and images are
+  not.
+- A note locked with an earlier version is converted the first time you open it with its
+  password. Until then its formatting and link targets stay readable in the data file, in its
+  automatic copies and in any backup you download.
+- Locking a note with images, or adding an image to a locked note, shows a warning that images
+  are not encrypted.
+- Notes locked with the oldest format (from the original desktop app) are re-encrypted with the
+  current format after you open them with the password.
+- **Check the text before you remove the lock from such an old note.** That format has no integrity
+  check, so a wrong password can open a short note as nonsense instead of failing.
+- **Going back to 1.0.x:** a locked note opens there without its formatting and links, and saving
+  it or removing its lock in the older version drops them for good.
+
+### Automatic copies
+- When you lock a note or delete it for good, NoirPad also removes its readable text from its own
+  automatic copies (snapshots, pre-import copies and damaged files it can still read), in the
+  background and again at every start. A copy written after the lock is left alone, because its
+  text is the newer one. Backups you saved yourself are not touched, and Windows or the disk may
+  still keep an older version of a file for a while.
+- On the first start of 1.1.0, damaged data files kept aside (`notes_data.corrupt-*.json`) and
+  pre-import copies (`backups\pre-import-*.zip`) older than 30 days are deleted, and at most 3
+  damaged files are kept – but only if your data holds at least one note; otherwise the limits
+  wait.
+- Images of a note deleted for good stay inside pre-import copies until those copies reach the
+  30-day limit.
+- A damaged data file kept aside now counts its 30 days from the day it was set aside.
+
+### Keyboard, contrast and zoom
+- All drop-down lists in Settings work from the keyboard (arrows, Home, End, Enter, Space, Esc).
+- Zoom the desktop window with `Ctrl+=`, `Ctrl+-` and `Ctrl+0` (70–200 %); the web version uses the
+  browser's zoom.
+- With Windows high contrast on, rain, glow, CRT and glitch stay off (your settings are kept), and
+  toggles show their state without relying on colour.
+- Text fields that had no visible label now have one for screen readers.
+
+### Themes and effects
+- The themes have descriptive names in English and Czech (for example Phosphor Green, Lavender
+  Night, Midnight Blue). Your saved theme stays as it is, and the old `:theme` names still work.
+- The background effect is called falling-code rain, command `:rain` (`:matrix` still works).
+- Fixed: the rain was hidden behind the editor and the start page; it is now visible while it
+  runs, and the top bar and the note title stay readable.
+
+### Look
+- New green logo, in the app, the installer, the window and taskbar icons and the favicon.
+
+### Licences, privacy, contact
+- About → Licenses shows NoirPad's licence and the licences of all bundled third-party software
+  (also shipped as `THIRD-PARTY-NOTICES.txt`), including the Rust libraries inside the
+  cryptography and validation packages.
+- New privacy policy ([English](PRIVACY.md), [Czech](PRIVACY.cs.md)), linked from About and the
+  README: what NoirPad stores and where, what is and is not encrypted, and that NoirPad sends no
+  data anywhere.
+- About shows the copyright and a contact e-mail.
+
+### Security
+- Updated cryptography to 50.0.2 (OpenSSL 4.0.3).
+- Fixed: a wrong password on a note in the oldest format could overwrite it with nonsense when
+  removing its lock; removing the lock of such a note works again.
+
 ## [1.0.2] – 2026-11-05
 
 Security update of the bundled libraries. No new features; your notes and settings stay as they are.
@@ -263,6 +340,7 @@ First public release.
   `NoirPad.exe` name Arcly Studio as publisher, and the start page and About link to the project
   page ("by Arcly Studio").
 
+[1.1.0]: https://github.com/arcly-studio/noirpad/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/arcly-studio/noirpad/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/arcly-studio/noirpad/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/arcly-studio/noirpad/releases/tag/v1.0.0

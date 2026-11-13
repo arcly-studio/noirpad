@@ -68,7 +68,8 @@ def _github(tmp_path, images=("a.png", "b.png")):
         (src / "images" / name).write_bytes(b"\x89PNG" + name.encode())
     (src / "backups").mkdir()
     (src / "backups" / "notes_data-20260101-000000.json").write_text("{}", encoding="utf-8")
-    old = 1_700_000_000
+    (src / "notes_data.corrupt-20260101-000000.json").write_text("{broken", encoding="utf-8")
+    old =1_700_000_000
     for path in src.rglob("*"):
         if path.is_file():
             os.utime(path, (old, old))
@@ -100,11 +101,14 @@ def test_import_copies_notes_and_images_with_their_times(store):
     assert not list(target.rglob("*.import-tmp"))
 
 
-def test_import_leaves_the_automatic_copies_for_now(store):
-    """backups/ and corrupt-* are not copied until that is decided (ROADMAP N1.9)."""
+def test_import_never_copies_the_automatic_copies(store):
+    """backups/ and corrupt-* stay in the GitHub folder (user's decision A, ROADMAP N1.9)."""
     src, target = store
     store_import.maybe_import(target)
+    assert (target / "notes_data.json").exists()
     assert not (target / "backups").exists()
+    assert not list(target.rglob("*corrupt*"))
+    assert (src / "backups").exists() and list(src.glob("*corrupt*"))
 
 
 def test_import_runs_once(store):
@@ -287,3 +291,48 @@ def test_builds_do_not_delete_each_others_output():
     assert r'$outputs = @("build", "dist\NoirPad")' in ps
     assert 'foreach ($dir in "build", "dist")' not in ps
     assert r'"dist\msix"' not in ps.split("# ---- 3. PyInstaller", 1)[1].split("# ---- 4.", 1)[0]
+
+
+# ---- N1.11 preparation: tools/test-cert.ps1 (never run by tests) ----------------
+
+def _test_cert():
+    return (ROOT / "tools" / "test-cert.ps1").read_text(encoding="utf-8-sig")
+
+
+def test_test_cert_keeps_the_private_key_in_the_store():
+    """No .pfx anywhere: the key is non-exportable, only the public .cer is written."""
+    src = _test_cert()
+    assert "-KeyExportPolicy NonExportable" in src
+    assert "Export-PfxCertificate" not in src and ".pfx" not in src.replace("No .pfx", "").replace("no .pfx", "")
+    assert re.search(r"Export-Certificate -Cert \$cert -FilePath \$CerFile -Type CERT", src)
+    assert '-CertStoreLocation "Cert:\CurrentUser\My"' in src
+
+
+def test_test_cert_subject_is_the_manifest_publisher():
+    src = _test_cert()
+    assert "m.PUBLISHER" in src and "-Subject $Publisher" in src
+    assert "$manifest.Package.Identity.Publisher" in src and "-cne $Publisher" in src
+    assert '"2.5.29.37={text}1.3.6.1.5.5.7.3.3"' in src and '"2.5.29.19={text}"' in src
+
+
+def test_test_cert_signs_a_copy_and_trusts_nothing():
+    """The Store package stays unsigned; trusting the .cer is the user's admin step."""
+    src = _test_cert()
+    assert "dist\msix-test" in src and "Copy-Item -LiteralPath $msix -Destination $signed" in src
+    assert "sign /fd SHA256 /sha1 $cert.Thumbprint $signed" in src
+    code = "\n".join(ln for ln in src.splitlines() if not ln.lstrip().startswith(("Write-Host", "#")))
+    assert "Import-Certificate" not in code and "Import-PfxCertificate" not in code
+    assert "Add-AppxPackage" not in src and "Start-Process" not in src
+
+
+def test_test_cert_remove_looks_in_every_store():
+    src = _test_cert()
+    assert '"Cert:\CurrentUser", "Cert:\LocalMachine"' in src
+    assert "-DeleteKey" in src
+    assert "$_.Subject -eq $Publisher -and $_.Issuer -eq $Publisher" in src
+
+
+def test_signing_material_is_ignored_by_git():
+    lines = (ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
+    for pattern in ("*.pfx", "*.p12", "*.cer", "*.key", "dist/"):
+        assert pattern in lines

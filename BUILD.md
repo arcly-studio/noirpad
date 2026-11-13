@@ -59,6 +59,23 @@ the layout `dist\msix\layout` (copy of `dist\NoirPad`, `store\Assets`, `AppxMani
 edition twice (writable: no file may change; write-protected with icacls: must still pass) and
 packs `dist\msix\NoirPad-<version>.msix` + `.sha256`. Unsigned: the Store signs it.
 
+Test signing for a local install (N1.11, only after an explicit yes), in Windows PowerShell 5.1:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\test-cert.ps1 -Create   # cert + signed copy in dist\msix-test
+powershell -ExecutionPolicy Bypass -File tools\test-cert.ps1 -Remove   # remove the cert from every store
+```
+
+`-Create` makes a self-signed code-signing certificate whose Subject is exactly the manifest
+`Publisher`, keeps its private key non-exportable in `Cert:\CurrentUser\My`, signs a copy of the
+MSIX (`signtool sign /fd SHA256 /sha1 <thumbprint>`) into `dist\msix-test\` and exports only the
+public `.cer`. Trusting that `.cer` in `Cert:\LocalMachine\TrustedPeople` is a separate manual
+step as administrator. No `.pfx` is ever written.
+
+Third-party licences of the Rust crates inside `cryptography` and `pydantic_core`: after bumping
+either, run `.venv\Scripts\python.exe tools\rust_notices.py` (crate list from the wheel's SBOM,
+licence files from the `.crate` archives, SHA-256 checked), then `tools\third_party_notices.py`.
+
 ## Releasing
 
 1. Update `__version__` and add a section to `CHANGELOG.md` (`## [x.y.z] – date`).

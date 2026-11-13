@@ -93,6 +93,9 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   from `requirements.txt` (installed .venv), `static/vendor` and `tools/notices/`. Its theme palette
   section is hand-written and kept by the generator. After changing a dependency run the tool and
   commit the file; `build.ps1` and `tests/test_third_party_notices.py` fail when it is out of date.
+  Rust crates inside wheels (cryptography incl. OpenSSL, pydantic_core): the wheel's cargo SBOM must
+  match `tools/notices/rust/<dist>-<version>.json`; after bumping such a package run
+  `tools/rust_notices.py` (licence files from the .crate archives, SHA-256 checked), then the generator.
   Shipped next to the exe (installer) and in the bundle; About → Licenses (`licenses.js`,
   `/api/licenses`) shows it with LICENSE. About also shows the contact (`mailto:`).
 - Privacy: `PRIVACY.md` / `PRIVACY.cs.md` (approved wording; Store parts are placeholders until
@@ -125,13 +128,17 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   Store data folder `%USERPROFILE%\NoirPad` (MSIX virtualizes AppData). `/api/version` has `edition`.
 - `noirpad/store_import.py`: one-time COPY of the GitHub edition's `notes_data.json` + `images/`
   (copy2, never written into the source; not while the GitHub edition runs: installer mutex or
-  data lock). `backups/` / `corrupt-*` are NOT copied until the user decides. Toast notices
+  data lock). `backups/` / `corrupt-*` are never copied (user's decision A). Toast notices
   `github_imported` / `github_import_blocked` (no dialog). With `NOIRPAD_DATA_DIR` set the source
   is only `NOIRPAD_IMPORT_FROM` (tests never read real data).
 - Never write next to the exe: the MSIX install folder is read-only. `build-msix.ps1` smoke-tests
   the layout writable (no file may change) and write-protected with icacls.
 - `tools/msix_manifest.py` writes AppxManifest.xml (version X.Y.Z.0, MinVersion 10.0.17763.0 with
   the reason in its docstring). MSIX images: `tools/make_icons.py` -> `store/Assets/`.
+- `tools/test-cert.ps1 -Create` / `-Remove` (N1.11, never run without the user's yes): self-signed
+  cert with Subject = manifest Publisher, private key non-exportable in `CurrentUser\My`, signed copy
+  in `dist\msix-test\`, only the public `.cer` exported. Trusting the `.cer` in
+  `LocalMachine\TrustedPeople` is the user's manual admin step.
 - Test certificate, installing the MSIX and WACK only in N1.11 after the user's explicit yes.
 
 ## Backend notes

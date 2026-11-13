@@ -17,7 +17,7 @@
     dist\NoirPad that goes into the installer.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tools\smoke_test.ps1 -Exe dist\NoirPad\NoirPad.exe -Version 1.0.1
+    powershell -ExecutionPolicy Bypass -File tools\smoke_test.ps1 -Exe dist\NoirPad\NoirPad.exe -Version 1.1.0
 #>
 [CmdletBinding()]
 param(

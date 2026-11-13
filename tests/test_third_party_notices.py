@@ -5,6 +5,7 @@ dependencies; only its theme palette section is written by hand. build.ps1
 stops when it is missing or out of date (same check as here).
 """
 
+import json
 import re
 import sys
 
@@ -91,3 +92,73 @@ def test_api_serves_both_texts(client):
     data = client.get("/api/licenses").json()
     assert data["license"].replace("\r\n", "\n").splitlines()[2] == "Copyright (c) 2026 Arcly Studio"
     assert data["notices"].replace("\r\n", "\n") == _text()
+
+
+# ---- N1.10: Rust crates inside the wheels -------------------------------------
+
+import importlib.metadata as md  # noqa: E402
+
+import rust_notices  # noqa: E402  (tools/ is on sys.path above)
+
+RUST_DISTS = ("cryptography", "pydantic_core")
+
+
+@pytest.mark.parametrize("name", RUST_DISTS)
+def test_every_crate_of_the_sbom_is_listed(name):
+    """The wheel's own SBOM is the list of what is compiled in: every crate and its licence."""
+    dist = md.distribution(name)
+    sbom = rust_notices.sbom_path(dist)
+    assert sbom is not None
+    crates = rust_notices.crates(sbom)
+    assert len(crates) > 10
+    text = _text()
+    start = text.index(f"Rust crates in {dist.metadata['Name']} {dist.version}\n")
+    section = text[start:text.index("\n" + "-" * 79 + "\n[", start)]
+    for crate, version, expr, _sha in crates:
+        assert re.search(rf"^  {re.escape(crate)} {re.escape(version)}: {re.escape(expr)}", section, re.M), crate
+
+
+def test_every_crate_has_a_licence_text():
+    for name in RUST_DISTS:
+        dist = md.distribution(name)
+        data = json.loads(rust_notices.out_path(dist.metadata["Name"], dist.version).read_text(encoding="utf-8"))
+        for c in data["crates"]:
+            assert c["files"] and all(t.strip() for _, t in c["files"]), c["name"]
+            assert c["used"] == rust_notices.choose(c["license"]) or c["files"][0][0] == rust_notices.NO_FILE
+
+
+def test_openssl_inside_cryptography_is_listed():
+    text = _text()
+    assert re.search(r"^  OpenSSL \d+\.\d+\.\d+: Apache-2\.0", text, re.M)
+    assert re.search(r"^\[OpenSSL \d+\.\d+\.\d+\]\n\s+Apache License", text, re.M)
+
+
+@pytest.mark.parametrize("expr, used", [
+    ("MIT OR Apache-2.0", ["MIT"]),
+    ("Apache-2.0 OR GPL-2.0-only", ["Apache-2.0"]),
+    ("(MIT OR Apache-2.0) AND Unicode-3.0", ["MIT", "Unicode-3.0"]),
+    ("Apache-2.0 WITH LLVM-exception", ["Apache-2.0"]),
+    ("Unlicense OR MIT", ["MIT"]),
+    ("BSD-2-Clause OR Apache-2.0 OR MIT", ["MIT"]),
+])
+def test_licence_choice(expr, used):
+    assert rust_notices.choose(expr) == used
+
+
+def test_choice_never_takes_a_copyleft_licence_alone():
+    with pytest.raises(rust_notices.RustNoticeError):
+        rust_notices.choose("GPL-2.0-only")
+
+
+def test_a_changed_crate_list_makes_it_stale(monkeypatch):
+    """Bumping cryptography without refreshing tools/notices/rust fails the build."""
+    real = rust_notices.crates
+    monkeypatch.setattr(rust_notices, "crates", lambda sbom: [*real(sbom), ("new-crate", "1.0.0", "MIT", "0" * 64)])
+    with pytest.raises(tpn.NoticeError, match="does not match the SBOM"):
+        tpn.build(_text())
+
+
+def test_a_missing_crate_file_makes_it_fail(monkeypatch, tmp_path):
+    monkeypatch.setattr(rust_notices, "OUT_DIR", tmp_path)
+    with pytest.raises(tpn.NoticeError, match=r"is missing: run tools.rust_notices.py"):
+        tpn.build(_text())
