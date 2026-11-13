@@ -107,6 +107,27 @@ def _copy_file(src: Path, dst: Path) -> None:
     os.replace(tmp, dst)
 
 
+def _replaceable(data_file: Path) -> bool:
+    """True when the Store data file is missing or holds nothing of the user's.
+
+    A start while the GitHub edition runs postpones the import, but that
+    session already writes its own notes_data.json (settings, a theme). As
+    long as it has no note, folder or trashed note, the import still runs on
+    the next start, as the notice promised. Anything else, or a file that
+    cannot be read, is never replaced."""
+    if not data_file.exists():
+        return True
+    try:
+        data = json.loads(data_file.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return False
+    if not isinstance(data, dict):
+        return False
+    trash = data.get("trash", {})
+    return (data.get("notes") == {} and data.get("tree", []) == []
+            and isinstance(trash, dict) and not trash.get("notes") and not trash.get("tree"))
+
+
 def maybe_import(target: Path) -> Optional[dict]:
     """Run under the Store data lock, before the backend touches *target*.
 
@@ -114,7 +135,7 @@ def maybe_import(target: Path) -> Optional[dict]:
     if edition.edition() != edition.STORE:
         return None
     target = Path(target)
-    if (target / DATA_NAME).exists() or (target / IMPORT_MARKER).exists():
+    if (target / IMPORT_MARKER).exists() or not _replaceable(target / DATA_NAME):
         return None
     src = source_dir()
     if src is None or not (src / DATA_NAME).is_file():

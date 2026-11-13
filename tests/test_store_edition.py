@@ -119,12 +119,33 @@ def test_import_runs_once(store):
     assert (target / "notes_data.json").read_text(encoding="utf-8") == '{"notes": {}}'
 
 
-def test_import_never_overwrites_store_notes(store):
+@pytest.mark.parametrize("mine", [
+    '{"notes": {"n1": {"title": "mine"}}, "tree": []}',
+    '{"notes": {}, "tree": [{"id": "f1", "type": "folder"}]}',
+    '{"notes": {}, "tree": [], "trash": {"tree": [], "notes": {"n1": {}}}}',
+    '{"mine": 1}',
+    '{broken',
+])
+def test_import_never_overwrites_store_notes(store, mine):
     src, target = store
     target.mkdir()
-    (target / "notes_data.json").write_text('{"mine": 1}', encoding="utf-8")
+    (target / "notes_data.json").write_text(mine, encoding="utf-8")
     assert store_import.maybe_import(target) is None
-    assert (target / "notes_data.json").read_text(encoding="utf-8") == '{"mine": 1}'
+    assert (target / "notes_data.json").read_text(encoding="utf-8") == mine
+
+
+def test_import_after_a_blocked_start(store, monkeypatch):
+    """The blocked start wrote an empty Store data file: the next start still imports."""
+    src, target = store
+    monkeypatch.setattr(store_import, "_mutex_held", lambda name: name == store_import.APP_MUTEX)
+    assert store_import.maybe_import(target)["code"] == "github_import_blocked"
+    target.mkdir(exist_ok=True)
+    (target / "notes_data.json").write_text(
+        '{"tree": [], "notes": {}, "trash": {"tree": [], "notes": {}}, "theme": "amber"}', encoding="utf-8")
+    monkeypatch.setattr(store_import, "_mutex_held", lambda name: False)
+    assert store_import.maybe_import(target) == {"code": "github_imported", "params": {}}
+    assert (target / "notes_data.json").read_text(encoding="utf-8") == '{"notes": {}}'
+    assert (target / "imported-from-github.json").exists()
 
 
 def test_no_import_in_the_github_edition(store, monkeypatch):
