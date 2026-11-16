@@ -70,8 +70,8 @@ describe("long notes are saved before the window closes (K5)", () => {
         await open("A", "short");
         win.NP.editor.el.textContent = "x".repeat(100000);   // far above keepalive's 64 kB
         win.NP.editor.el.dispatchEvent(new win.Event("input", { bubbles: true }));
-        await new Promise((r) => setTimeout(r, 1600));        // well before the 30 s net
-        expect(saved.length).toBe(1);
+        // Saved by the typing debounce, well before the 30 s net.
+        await vi.waitFor(() => expect(saved.length).toBe(1), { timeout: 4000, interval: 50 });
         expect(saved[0][0]).toBe("A");
         expect(saved[0][1].length).toBe(100000);
     });

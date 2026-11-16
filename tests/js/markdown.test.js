@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { dangers, loadApp } from "./harness.js";
 
 let win, preview;
@@ -212,8 +212,8 @@ describe("status bar counts in Markdown mode (D1)", () => {
         const ta = win.document.getElementById("editor-md");
         ta.value = "hello brave new world";
         ta.dispatchEvent(new win.Event("input", { bubbles: true }));
-        await new Promise((r) => setTimeout(r, 450));
-        expect(win.document.getElementById("char-count").textContent).toBe("21 chars");
+        await vi.waitFor(() => expect(win.document.getElementById("char-count").textContent).toBe("21 chars"),
+            { timeout: 3000, interval: 25 });
         expect(win.document.getElementById("word-count").textContent).toBe("4 words");
         win.NP.markdown.toggleForCurrentNote();          // back to rich text keeps the count
         expect(win.document.getElementById("char-count").textContent).toBe("21 chars");

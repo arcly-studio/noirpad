@@ -1,6 +1,6 @@
 // Review 2, tree and tags: T5, T6, T7, T8, T9. Real state/tabs/editor/tree
 // (+ tags.js, topbar.js) against the in-memory server of flow.js.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { BODY, flush, startApp } from "./flow.js";
 
 const TREE = [
@@ -115,7 +115,7 @@ describe("a note shown from the trash (T9)", () => {
         await a.NP.tree.deleteSelected("A");
         await flush();
         a.win.document.querySelector('#tree-container .tree-item--trash[data-id="A"]').click();
-        await flush(10);
+        await vi.waitFor(() => expect(a.win.document.getElementById("note-title-input").value).toBe("Alpha"));
         return a;
     }
 
@@ -133,8 +133,7 @@ describe("a note shown from the trash (T9)", () => {
         const a = await trashed();
         expect(a.NP.editor.el.contentEditable).toBe("false");
         a.win.document.querySelector('.tree-item--trash[data-id="A"] .tree-trash-restore').click();
-        await flush(10);
-        expect(a.NP.editor.el.contentEditable).toBe("true");
+        await vi.waitFor(() => expect(a.NP.editor.el.contentEditable).toBe("true"));
         expect(a.win.document.getElementById("tag-input").disabled).toBe(false);
         a.type("edited after restore");
         await a.NP.editor.save(true);

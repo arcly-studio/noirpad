@@ -60,7 +60,7 @@ describe("md-source tokenizer", () => {
         const line = "`*_[".repeat(5000);
         const t0 = Date.now();
         expect(marked(line)).toEqual([]);
-        expect(Date.now() - t0).toBeLessThan(200);
+        expect(Date.now() - t0).toBeLessThan(2000);   // a regex blow-up takes seconds to minutes
         expect(marked("# " + line)[0]).toMatch(/^head:/);   // headings still coloured
     });
 

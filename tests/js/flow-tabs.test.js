@@ -1,7 +1,7 @@
 // Review 2, tab flows: E1, E2 (+R2 page side), E3, E4, T4, T2 (poll).
 // Real state/tabs/editor/tree (+ app.js / markdown.js where the bug lives)
 // against the in-memory server of flow.js. Each test fails without its fix.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { flush, startApp } from "./flow.js";
 
 const TREE = [
@@ -191,13 +191,11 @@ describe("Delete on the open tab (T4)", () => {
             new a.win.KeyboardEvent("keydown", { key: "Delete", bubbles: true, cancelable: true }));
         pill("B").focus();
         del();
-        await flush(10);
-        expect(a.tabs()).toEqual(["A"]);
+        await vi.waitFor(() => expect(a.tabs()).toEqual(["A"]));
         expect(a.win.document.activeElement).toBe(pill("A"));
         expect(a.win.document.activeElement).not.toBe(a.NP.editor.el);
         del();
-        await flush(10);
-        expect(a.tabs()).toEqual([]);
+        await vi.waitFor(() => expect(a.tabs()).toEqual([]));
         expect(a.srv.notes.A).toBe("n2");
     });
 });
