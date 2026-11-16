@@ -545,17 +545,31 @@ window.NP = window.NP || {};
             if (!NP.editor.el) return [];
 
             var formats = [];
+            /* R3: line.col of the current end, kept while walking. Converting
+               every format with NP.offsetToLineCol on the growing text missed
+               its line cache each time: thousands of formats were quadratic. */
             var offset = 0;
-            var fullText = "";
+            var line = 1;
+            var lineStart = 0;
+
+            function append(str) {
+                for (var n = str.indexOf("\n"); n !== -1; n = str.indexOf("\n", n + 1)) {
+                    line++;
+                    lineStart = offset + n + 1;
+                }
+                offset += str.length;
+            }
+
+            function here() {
+                return line + "." + (offset - lineStart);
+            }
 
             function walkNode(node) {
                 if (node.nodeType === 3) {
                     /* Text node */
-                    fullText += node.textContent;
-                    offset += node.textContent.length;
+                    append(node.textContent);
                 } else if (node.nodeName === "BR") {
-                    fullText += "\n";
-                    offset += 1;
+                    append("\n");
                 } else if (node.nodeName === "IMG") {
                     var fname = node.getAttribute("data-filename") || "";
                     if (!fname && node.src) {
@@ -563,8 +577,7 @@ window.NP = window.NP || {};
                         fname = parts[parts.length - 1];
                     }
                     var marker = "<<IMG:" + fname + NP.editor._imgWidthSuffix(node) + ">>";
-                    fullText += marker;
-                    offset += marker.length;
+                    append(marker);
                 } else if (node.nodeName === "PRE" && node.classList && node.classList.contains("np-code")) {
                     /* Code blocks contribute their raw ```lang\n...\n``` form to the
                        text stream but never produce format spans. */
@@ -577,16 +590,17 @@ window.NP = window.NP || {};
                     }
                     var codeLang = node.getAttribute("data-lang") || "";
                     var codeMarker = "```" + codeLang + "\n" + rawCode + "\n```";
-                    fullText += codeMarker;
-                    offset += codeMarker.length;
+                    append(codeMarker);
                 } else if (node.nodeType === 1) {
                     /* Element node */
                     var startOff = offset;
+                    var startPos = here();
                     var children = node.childNodes;
                     for (var i = 0; i < children.length; i++) {
                         walkNode(children[i]);
                     }
                     var endOff = offset;
+                    var endPos = here();
 
                     if (endOff > startOff) {
                         var fmt = {};
@@ -638,8 +652,8 @@ window.NP = window.NP || {};
                         }
 
                         if (hasFormat) {
-                            fmt.start = NP.offsetToLineCol(fullText, startOff);
-                            fmt.end = NP.offsetToLineCol(fullText, endOff);
+                            fmt.start = startPos;
+                            fmt.end = endPos;
                             formats.push(fmt);
                         }
                     }
@@ -648,8 +662,7 @@ window.NP = window.NP || {};
                     if ((tag === "DIV" || tag === "P") && endOff > startOff) {
                         /* Check if the next sibling exists, add newline separation */
                         if (node.nextSibling) {
-                            fullText += "\n";
-                            offset += 1;
+                            append("\n");
                         }
                     }
                 }

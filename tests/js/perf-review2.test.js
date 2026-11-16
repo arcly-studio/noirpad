@@ -37,22 +37,72 @@ describe("formats of a long note (R3)", () => {
         }
     });
 
-    it("6 000 formats render and save in well under a second each (were 4–8 s)", () => {
+    // Not a wall-clock limit (the suite runs files in parallel and a busy
+    // machine made 2.5 s flaky): the growth from 1 500 to 6 000 formats.
+    // Linear is about 4x, the old quadratic code (4-8 s) about 16x.
+    it("6 000 formats render and save in linear time (were 4–8 s, quadratic)", () => {
         const win = loadApp(["js/utils.js", "js/editor.js"]);
-        const ed = win.document.getElementById("editor");
+        const sample = (n) => {
+            // A fresh, detached editor each time: emptying 6 000 runs out of
+            // the old one is a jsdom cost, not NoirPad's.
+            const ed = win.document.createElement("div");
+            win.NP.editor.el = ed;
+            const lines = Array.from({ length: n }, (_, i) => "line number " + i + " with some words in it ok");
+            const fmts = lines.map((_, i) => ({ start: (i + 1) + ".5", end: (i + 1) + ".11", bold: true }));
+            let t = performance.now();
+            win.NP.editor.renderContent(ed, lines.join("\n"), fmts);
+            const render = performance.now() - t;
+            t = performance.now();
+            const out = win.NP.editor._extractFormats();
+            const extract = performance.now() - t;
+            expect(out.length).toBe(n);
+            expect(out[n - 1]).toMatchObject({ start: n + ".5", end: n + ".11", bold: true });
+            return { render, extract };
+        };
+        const best = { small: { render: Infinity, extract: Infinity }, big: { render: Infinity, extract: Infinity } };
+        for (let round = 0; round < 3; round++) {          // best of 3: load only ever adds time
+            for (const [key, n] of [["small", 1500], ["big", 6000]]) {
+                const r = sample(n);
+                best[key].render = Math.min(best[key].render, r.render);
+                best[key].extract = Math.min(best[key].extract, r.extract);
+            }
+        }
+        for (const step of ["render", "extract"]) {
+            const ratio = best.big[step] / Math.max(best.small[step], 1);
+            expect(ratio, step + " grows like " + ratio.toFixed(1) + "x").toBeLessThan(8);
+            expect(best.big[step], step + " got stuck").toBeLessThan(15000);
+        }
+    }, 60000);
+
+    it("each saved format points at exactly the text it covers (line.col kept while walking)", () => {
+        const win = loadApp(["js/utils.js", "js/editor.js"]);
+        const doc = win.document;
+        const ed = doc.createElement("div");
         win.NP.editor.el = ed;
-        const lines = Array.from({ length: 6000 }, (_, i) => "line number " + i + " with some words in it ok");
-        const fmts = lines.map((_, i) => ({ start: (i + 1) + ".5", end: (i + 1) + ".11", bold: true }));
-        let t = performance.now();
-        win.NP.editor.renderContent(ed, lines.join("\n"), fmts);
-        const render = performance.now() - t;
-        t = performance.now();
-        const out = win.NP.editor._extractFormats();
-        const extract = performance.now() - t;
-        expect(out.length).toBe(6000);
-        expect(out[5999]).toMatchObject({ start: "6000.5", end: "6000.11", bold: true });
-        expect(render).toBeLessThan(2500);
-        expect(extract).toBeLessThan(2500);
+        const el = (tag, ...kids) => {
+            const n = doc.createElement(tag);
+            for (const k of kids) n.append(typeof k === "string" ? doc.createTextNode(k) : k);
+            return n;
+        };
+        const code = doc.createElement("pre");
+        code.className = "np-code";
+        code.setAttribute("data-code", encodeURIComponent("x = 1\ny = 2"));
+        code.setAttribute("data-lang", "py");
+        const img = doc.createElement("img");
+        img.setAttribute("data-filename", "11111111-1111-4111-8111-111111111111.png");
+        const link = el("a", "the site");
+        link.setAttribute("href", "https://example.org/");
+        ed.append("first ", el("b", "bold ", el("i", "both")), el("br"), "second line ",
+            el("u", "under\nwith newline"), el("div", "block ", el("s", "struck")), el("div", el("em", "next block")),
+            img, " after image ", code, el("br"), el("strong", "after code"), " and ", link);
+        const { text, formats } = win.NP.editor.htmlToContent();
+        const covered = formats.map((f) => text.slice(win.NP.lineColToOffset(text, f.start), win.NP.lineColToOffset(text, f.end)));
+        expect(covered).toEqual(["both", "bold both", "under\nwith newline", "struck", "next block", "after code", "the site"]);
+        // The same positions NP.offsetToLineCol gives on the finished text.
+        for (const f of formats) {
+            expect(win.NP.offsetToLineCol(text, win.NP.lineColToOffset(text, f.start))).toBe(f.start);
+            expect(win.NP.offsetToLineCol(text, win.NP.lineColToOffset(text, f.end))).toBe(f.end);
+        }
     });
 
     it("overlapping formats still split into the right runs", () => {
