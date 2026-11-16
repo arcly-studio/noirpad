@@ -44,7 +44,10 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   BMPs, `social-preview.png`) comes from the two SVGs via `tools/make_icons.py`; never edit a
   raster by hand. After touching an SVG run it and commit the outputs and `docs/brand/icons.json`
   (`tests/test_brand.py` checks hashes and that every icon is green).
-- Windows may show the old icon from its icon cache for a while; not a bug.
+- Windows may show the old icon from its icon cache for a while; the installer asks Explorer to
+  refresh it (`ChangesAssociations=yes`). The window gets the bundled `noirpad.ico` (pywebview
+  `icon=`, `desktop._window_icon`). `build.ps1` runs `tools/check_icons.py` after PyInstaller: exe
+  icons = `noirpad.ico`, every bundled image from the script, no blue (`tests/test_window_icon.py`).
 
 ## Noir effects (glow, falling-code rain, CRT)
 - Data keys `glow_enabled`, `matrix_rain_enabled`, `crt_enabled`; all `False` in

@@ -42,7 +42,8 @@ def _static_files():
 
 
 # N8/N9: About → Licenses reads both from the bundle root (/api/licenses).
-datas = _static_files() + [(str(ROOT / "LICENSE"), "."), (str(ROOT / "THIRD-PARTY-NOTICES.txt"), ".")]
+datas = _static_files() + [(str(ROOT / "LICENSE"), "."), (str(ROOT / "THIRD-PARTY-NOTICES.txt"), "."),
+                           (str(ROOT / "noirpad.ico"), ".")]     # window icon (desktop.py)
 
 
 # ---- Hidden imports ---------------------------------------------------------

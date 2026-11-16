@@ -28,6 +28,8 @@ powershell -ExecutionPolicy Bypass -File build.ps1
 2. creates `.venv` (Python 3.14) if missing and installs `requirements-dev.txt`;
 3. `npm ci`, then `pytest` and `vitest` — any failure stops the build;
 4. PyInstaller with `noirpad.spec` → `dist\NoirPad\NoirPad.exe` (onedir; ~45 MB);
+   then `tools/check_icons.py`: the icons inside `NoirPad.exe` are exactly `noirpad.ico`, the window
+   icon `noirpad.ico` is bundled, every image comes from `tools/make_icons.py`, none is blue;
 5. smoke test (`tools/smoke_test.ps1`) of that very `dist\NoirPad`: `NoirPad.exe --smoke-test`
    with a throwaway `NOIRPAD_DATA_DIR` must import every module it loads by name at run time
    (`noirpad/runtime_imports.py`), answer `GET /api/version` with 200 within 15 s, serve LICENSE and

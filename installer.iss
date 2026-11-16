@@ -87,6 +87,10 @@ SetupIconFile=noirpad.ico
 WizardSmallImageFile=installer\wizard-small-55.bmp,installer\wizard-small-64.bmp,installer\wizard-small-69.bmp,installer\wizard-small-83.bmp,installer\wizard-small-92.bmp,installer\wizard-small-110.bmp,installer\wizard-small-138.bmp
 WizardImageAlphaFormat=defined
 UninstallDisplayIcon={app}\{#AppExeName}
+; N1.11: tell Explorer to refresh its icons at the end of (un)install
+; (SHChangeNotify SHCNE_ASSOCCHANGED). Otherwise an upgrade over 1.0.x at the
+; same path can keep showing the old blue icon from the shell's icon cache.
+ChangesAssociations=yes
 ; I5: Apps & features shows the version in its own column.
 UninstallDisplayName={#AppName}
 

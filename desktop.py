@@ -456,6 +456,9 @@ def _show_window(port: int, token: str, data_dir: Path) -> None:
     RUNTIME.save_dialog = lambda name: _ask_save_path(window, name)
     RUNTIME.toggle_fullscreen = window.toggle_fullscreen
     _save_before_close(window)
+    # One zoom only (settings.js ui_zoom): WebView2's own Ctrl+wheel zoom of
+    # older versions may still be stored in its profile; back to 100 %.
+    window.events.loaded += lambda: _reset_webview_zoom(window)
     # Persistent WebView2 profile so localStorage (open folders, CRT
     # toggle) survives restarts; it lives next to the notes.
     storage_path = data_dir / "webview"
@@ -463,7 +466,46 @@ def _show_window(port: int, token: str, data_dir: Path) -> None:
     # gui="edgechromium" forces WebView2 on Windows, which is what we
     # ship for. On other platforms pywebview picks the system default.
     gui = "edgechromium" if sys.platform == "win32" else None
-    webview.start(gui=gui, private_mode=False, storage_path=str(storage_path))
+    webview.start(gui=gui, private_mode=False, storage_path=str(storage_path), icon=_window_icon())
+
+
+def _window_icon() -> Optional[str]:
+    """The green noirpad.ico bundled next to the app (noirpad.spec datas).
+
+    pywebview's WinForms window loads it with all its sizes (System.Drawing
+    Icon from the file, platforms/winforms.py); without it the window takes
+    only the 32 px icon out of NoirPad.exe. None: pywebview's default."""
+    path = config.resource_path("noirpad.ico")
+    return str(path) if path.is_file() else None
+
+
+def _reset_webview_zoom(window, invoke=None) -> None:
+    """WebView2's own zoom factor to 1.0 (NoirPad zooms with CSS, ui_zoom).
+
+    Up to 1.0.x, Ctrl+wheel zoomed WebView2 itself, which keeps that zoom in
+    its profile (data folder webview\\). settings.js now takes Ctrl+wheel; this
+    resets a zoom left over from before. window.native is pywebview's WinForms
+    form, .webview its WebView2 control; set on the UI thread like pywebview."""
+    form = getattr(window, "native", None)
+    control = getattr(form, "webview", None)
+    if control is None or not hasattr(control, "ZoomFactor"):
+        return
+
+    def reset():
+        try:
+            if abs(float(control.ZoomFactor) - 1.0) > 1e-9:
+                log.info("WebView2 zoom %.2f reset to 1.0", float(control.ZoomFactor))
+                control.ZoomFactor = 1.0
+        except Exception as exc:          # never let the window fail over this
+            log.warning("Could not reset the WebView2 zoom: %s", type(exc).__name__)
+
+    if invoke is None:
+        from System import Func, Type      # pythonnet, as pywebview's winforms.py
+        invoke = lambda fn: form.Invoke(Func[Type](fn))  # noqa: E731
+    try:
+        invoke(reset)
+    except Exception as exc:
+        log.warning("Could not reset the WebView2 zoom: %s", type(exc).__name__)
 
 
 def _page_close_state(window, timeout: float = 2.0) -> Optional[str]:

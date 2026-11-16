@@ -9,6 +9,7 @@
          must exist and match the pinned dependencies (tools\third_party_notices.py --check)
       2. npm ci (vitest) and the full test suite (pytest + vitest)
       3. PyInstaller onedir  → dist\NoirPad\NoirPad.exe
+         + tools\check_icons.py: only the green logo in the exe and the bundle
       4. Smoke test          → that NoirPad.exe must start and answer /api/version
                                (tools\smoke_test.ps1); otherwise no installer
       5. Inno Setup          → dist\installer\NoirPad-Setup-<version>.exe + .sha256
@@ -90,6 +91,13 @@ foreach ($dir in $outputs) {
 Run $py -m PyInstaller --clean --noconfirm --log-level WARN noirpad.spec
 if (-not (Test-Path "dist\NoirPad\NoirPad.exe")) { Fail "dist\NoirPad\NoirPad.exe was not created" }
 Write-Host "dist\NoirPad: $(SizeMB 'dist\NoirPad')"
+
+# ---- 3b. Icons --------------------------------------------------------------
+# N1.11: exe icons = noirpad.ico, the window icon is bundled, every image is
+# made by tools\make_icons.py and nothing has the old blue logo.
+Step "Icons (tools\check_icons.py)"
+& $py tools\check_icons.py "dist\NoirPad"
+if ($LASTEXITCODE -ne 0) { Fail "icons of dist\NoirPad (tools\check_icons.py)" }
 
 # ---- 4. Smoke test ----------------------------------------------------------
 # On the exact dist\NoirPad that Inno Setup packs next.

@@ -246,13 +246,14 @@ def test_webview_profile_lives_in_the_data_dir(tmp_path, monkeypatch):
     fake = types.SimpleNamespace(
         settings={},
         create_window=lambda *a, **kw: types.SimpleNamespace(
-            events=types.SimpleNamespace(closing=_Handlers()), toggle_fullscreen=lambda: None),
+            events=types.SimpleNamespace(closing=_Handlers(), loaded=_Handlers()), toggle_fullscreen=lambda: None),
         start=lambda **kw: calls.update(kw),
     )
     monkeypatch.setitem(sys.modules, "webview", fake)
     desktop._show_window(1234, "tok", tmp_path)
     assert Path(calls["storage_path"]) == tmp_path / "webview"
     assert calls["private_mode"] is False
+    assert Path(calls["icon"]).read_bytes() == (ROOT / "noirpad.ico").read_bytes()   # N1.11: green window icon
 
 
 def _installer_section(name):
