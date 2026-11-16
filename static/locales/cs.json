@@ -93,7 +93,9 @@
     "installer_import_nothing": "Verze z instalátoru nemá žádné poznámky k přidání.",
     "installer_import_running": "Běží NoirPad z instalátoru. Zavřete ho a zkuste to znovu.",
     "installer_import_unreadable": "Soubor s poznámkami verze z instalátoru nejde přečíst. Nic se nezměnilo.",
-    "installer_import_conflict": "Zamčená poznámka verze z instalátoru používá obrázek, jehož název tu už má jiný obrázek. Nic se nezměnilo."
+    "installer_import_conflict": "Zamčená poznámka verze z instalátoru používá obrázek, jehož název tu už má jiný obrázek. Nic se nezměnilo.",
+    "installer_import_locked_image": "Poznámku „{name}“ nejde přidat: je zamčená a používá obrázek, jehož název tu už má jiný obrázek. Nic se nezměnilo. V NoirPadu z instalátoru ji otevřete heslem, zvolte Odstranit zámek, NoirPad z instalátoru zavřete a zkuste to znovu. Pak ji tady znovu zamkněte a v NoirPadu z instalátoru ji zamkněte také, nebo ji tam smažte.",
+    "installer_import_locked_images": "Poznámku „{name}“ (a další: {n}) nejde přidat: je zamčená a používá obrázek, jehož název tu už má jiný obrázek. Nic se nezměnilo. V NoirPadu z instalátoru ji otevřete heslem, zvolte Odstranit zámek, NoirPad z instalátoru zavřete a zkuste to znovu. Pak ji tady znovu zamkněte a v NoirPadu z instalátoru ji zamkněte také, nebo ji tam smažte."
   },
   "notice": {
     "data_restored": "Soubor s poznámkami byl poškozený. Zůstal uložený jako {file} a obnovila se poslední dobrá záloha ({when}). Změny provedené po této záloze mohou chybět.",

@@ -205,22 +205,76 @@ def test_same_image_name_with_other_bytes_gets_a_new_name(store):
     assert json.loads(backend.storage.DATA_FILE.read_text(encoding="utf-8"))["note_images"][nid] == [new]
 
 
-def test_locked_note_needing_a_renamed_image_adds_nothing(store):
-    client, backend, src = store
-    name = "22222222-2222-4222-8222-222222222222.png"
+def _locked_with_taken_images(src, backend, notes):
+    """Installer notes [(id, name, locked?)], each using its own image whose
+    name is taken here by a different image."""
     from noirpad.crypto import encrypt_content
-    envelope = encrypt_content(f"secret <<IMG:{name}>>", "pw-1234")
-    _write_source(src, {"tree": [{"id": "n1", "name": "Locked", "type": "note"}],
-                        "notes": {"n1": envelope}, "note_images": {"n1": [name]}},
-                  images={name: make_png(3, 3)})
-    images = backend.storage.DATA_DIR / "images"
-    images.mkdir(exist_ok=True)
-    (images / name).write_bytes(make_png(2, 2))
+    tree, contents, listed, images = [], {}, {}, {}
+    here = backend.storage.DATA_DIR / "images"
+    here.mkdir(exist_ok=True)
+    for i, (nid, name, locked) in enumerate(notes):
+        img = f"2222222{i}-2222-4222-8222-222222222222.png"
+        text = f"secret <<IMG:{img}>>"
+        tree.append({"id": nid, "name": name, "type": "note"})
+        contents[nid] = encrypt_content(text, "pw-1234") if locked else text
+        listed[nid] = [img]
+        images[img] = make_png(3, 3)
+        (here / img).write_bytes(make_png(2, 2))
+    _write_source(src, {"tree": tree, "notes": contents, "note_images": listed}, images=images)
+
+
+def test_locked_note_needing_a_renamed_image_adds_nothing(store):
+    """The error names the note (names are not encrypted) and adds nothing."""
+    client, backend, src = store
+    _locked_with_taken_images(src, backend, [("n0", "Plain one", False), ("n1", "Deník 2026", True)])
     new_note(client, "Mine", content="x")
     before = _state(backend.storage.DATA_DIR)
     r = _add(client)
-    assert r.status_code == 409 and r.json()["detail"]["code"] == "installer_import_conflict"
+    assert r.status_code == 409
+    assert r.json()["detail"] == {"code": "installer_import_locked_image", "params": {"name": "Deník 2026"}}
     assert _state(backend.storage.DATA_DIR) == before
+
+
+def test_several_locked_notes_name_the_first_and_count_the_rest(store):
+    client, backend, src = store
+    _locked_with_taken_images(src, backend, [("a", "First", True), ("b", "Second", True), ("c", "Third", True)])
+    new_note(client, "Mine", content="x")
+    before = _state(backend.storage.DATA_DIR)
+    r = _add(client)
+    assert r.status_code == 409
+    assert r.json()["detail"] == {"code": "installer_import_locked_images", "params": {"name": "First", "n": 2}}
+    assert _state(backend.storage.DATA_DIR) == before
+
+
+LOCKED_IMAGE = {
+    "cs": "Poznámku „{name}“{more} nejde přidat: je zamčená a používá obrázek, jehož název tu už má jiný obrázek. "
+          "Nic se nezměnilo. V NoirPadu z instalátoru ji otevřete heslem, zvolte Odstranit zámek, NoirPad "
+          "z instalátoru zavřete a zkuste to znovu. Pak ji tady znovu zamkněte a v NoirPadu z instalátoru ji "
+          "zamkněte také, nebo ji tam smažte.",
+    "en": "The note “{name}”{more} cannot be added: it is locked and uses an image whose name is already taken "
+          "here by a different image. Nothing was changed. In the installer version of NoirPad, open it with its "
+          "password, choose Remove the lock, close that version and try again. Then lock it again here, and also "
+          "lock it again in the installer version or delete it there.",
+}
+MORE = {"cs": " (a další: {n})", "en": " (and {n} more)"}
+
+
+@pytest.mark.parametrize("lang", ["cs", "en"])
+def test_locked_image_message_is_the_approved_one(lang):
+    errors = json.loads((Path(__file__).resolve().parent.parent / "static" / "locales" / f"{lang}.json")
+                        .read_text(encoding="utf-8"))["errors"]
+    assert errors["installer_import_locked_image"] == LOCKED_IMAGE[lang].replace("{more}", "")
+    assert errors["installer_import_locked_images"] == LOCKED_IMAGE[lang].replace("{more}", MORE[lang])
+
+
+@pytest.mark.parametrize("lang", ["cs", "en"])
+def test_locked_image_message_names_the_real_button(lang):
+    """"Odstranit zámek" / "Remove the lock" is the label of the top-bar button."""
+    loc = json.loads((Path(__file__).resolve().parent.parent / "static" / "locales" / f"{lang}.json")
+                     .read_text(encoding="utf-8"))
+    label = loc["ui"]["topBar"]["removeLock"]
+    for key in ("installer_import_locked_image", "installer_import_locked_images"):
+        assert f"zvolte {label}," in loc["errors"][key] or f"choose {label}," in loc["errors"][key]
 
 
 # ---- all or nothing ---------------------------------------------------------

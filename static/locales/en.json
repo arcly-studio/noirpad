@@ -85,7 +85,9 @@
     "installer_import_nothing": "The installer version has no notes to add.",
     "installer_import_running": "NoirPad (installer version) is running. Close it and try again.",
     "installer_import_unreadable": "The notes file of the installer version cannot be read. Nothing was changed.",
-    "installer_import_conflict": "A locked note of the installer version uses an image whose name is already taken here by a different image. Nothing was changed."
+    "installer_import_conflict": "A locked note of the installer version uses an image whose name is already taken here by a different image. Nothing was changed.",
+    "installer_import_locked_image": "The note “{name}” cannot be added: it is locked and uses an image whose name is already taken here by a different image. Nothing was changed. In the installer version of NoirPad, open it with its password, choose Remove the lock, close that version and try again. Then lock it again here, and also lock it again in the installer version or delete it there.",
+    "installer_import_locked_images": "The note “{name}” (and {n} more) cannot be added: it is locked and uses an image whose name is already taken here by a different image. Nothing was changed. In the installer version of NoirPad, open it with its password, choose Remove the lock, close that version and try again. Then lock it again here, and also lock it again in the installer version or delete it there."
   },
   "notice": {
     "data_restored": "Your notes file was damaged. It was kept as {file} and the latest good backup ({when}) was restored. Changes made after that backup may be missing.",

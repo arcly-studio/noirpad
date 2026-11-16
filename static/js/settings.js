@@ -677,7 +677,11 @@ window.NP = window.NP || {};
                         NP.toast(NP.t("settings.installerAdded", { folder: res.folder }), { timeout: 10000 });
                     });
                 }).catch(function (err) {
-                    NP.dialog.alert(NP.t("settings.installerAddFailed", {
+                    /* installer_import_* answers are whole sentences (what
+                       happened, what to do): shown as they are. Anything
+                       else gets "The notes could not be added: …". */
+                    var own = err && typeof err.code === "string" && err.code.indexOf("installer_import_") === 0;
+                    NP.dialog.alert(own ? err.message : NP.t("settings.installerAddFailed", {
                         error: err && err.message ? err.message : err
                     }));
                     refreshInstallerNotes();

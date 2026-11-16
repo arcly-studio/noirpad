@@ -136,6 +136,15 @@ def _remap_tree(items: list, mapping: dict, used: set) -> list:
     return out
 
 
+def _names(items: list, out: dict = None) -> dict:
+    """id -> name of every item in a tree (in tree order)."""
+    out = {} if out is None else out
+    for item in items:
+        out[item["id"]] = item.get("name", "")
+        _names(item.get("children") or [], out)
+    return out
+
+
 def _free_name(tree: list, base: str) -> str:
     names = {i.get("name") for i in tree if i.get("type") == "folder"}
     if base not in names:
@@ -187,12 +196,20 @@ def add_installer_notes(folder_name: str) -> dict:
     with storage.file_lock:
         current = storage.read_data_unlocked()
     renames, copies = _plan_images(src, _source_images(src_data, note_ids), _taken_names(current))
+    # A locked note's text cannot be rewritten without its password. Name the
+    # note (names are not encrypted) and say what to do; nothing is added.
+    stuck = []
     for nid in note_ids:
         content = src_data["notes"][nid]
         if is_encrypted_content(content):
             listed = set((src_data.get("note_images") or {}).get(nid) or [])
             if listed & set(renames):
-                raise ApiError(409, "installer_import_conflict")
+                stuck.append(nid)
+    if stuck:
+        name = _names(src_tree).get(stuck[0], "")
+        if len(stuck) == 1:
+            raise ApiError(409, "installer_import_locked_image", name=name)
+        raise ApiError(409, "installer_import_locked_images", name=name, n=len(stuck) - 1)
 
     def _mut(data: dict) -> dict:
         used = set(data.get("notes") or {}) | set((data.get("trash") or {}).get("notes") or {})

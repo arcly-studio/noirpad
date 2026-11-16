@@ -95,10 +95,32 @@ describe("Settings → Data → Add notes from the installer version (N1.11)", (
         btn.click();
         await vi.waitFor(() => expect(btn.disabled).toBe(false));
         await vi.waitFor(() => expect(win.NP.api.installerNotesStatus).toHaveBeenCalledTimes(2));
-        expect(win.NP.dialog.alert).toHaveBeenCalledWith(
-            "The notes could not be added: NoirPad (installer version) is running. Close it and try again.");
+        // installer_import_* answers are whole sentences: no "could not be added:" wrapper.
+        expect(win.NP.dialog.alert).toHaveBeenCalledWith("NoirPad (installer version) is running. Close it and try again.");
         expect(win.NP.state.init).not.toHaveBeenCalled();
         expect(btn.hidden).toBe(false);
         expect(btn.disabled).toBe(false);
+    });
+
+    it("a locked note with a taken image name: names the note and the real button, nothing else", async () => {
+        const { win, btn } = boot({ add: () => Promise.reject(Object.assign(
+            new Error(win.NP.t("errors.installer_import_locked_images", { name: "Deník 2026", n: 2 })),
+            { status: 409, code: "installer_import_locked_images" })) });
+        await flush();
+        btn.click();
+        await vi.waitFor(() => expect(win.NP.dialog.alert).toHaveBeenCalled());
+        const text = win.NP.dialog.alert.mock.calls[0][0];
+        expect(text.startsWith("The note “Deník 2026” (and 2 more) cannot be added: it is locked")).toBe(true);
+        expect(text).toContain("choose " + win.NP.t("ui.topBar.removeLock") + ",");
+        expect(text).not.toContain("could not be added:");
+        await vi.waitFor(() => expect(btn.disabled).toBe(false));
+        expect(btn.hidden).toBe(false);
+    });
+
+    it("any other error keeps the wrapper", async () => {
+        const { win, btn } = boot({ add: () => Promise.reject(Object.assign(new Error("Disk full"), { status: 507, code: "data_write_failed" })) });
+        await flush();
+        btn.click();
+        await vi.waitFor(() => expect(win.NP.dialog.alert).toHaveBeenCalledWith("The notes could not be added: Disk full"));
     });
 });
