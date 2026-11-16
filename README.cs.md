@@ -51,6 +51,8 @@
   v záložkách, k dispozici je i režim soustředění.
 - **Obrázky**: vložte, přetáhněte nebo přidejte tlačítkem; `Ctrl`+kolečko mění velikost obrázku
   v poznámce.
+- **Přiblížení** okna desktopové aplikace: `Ctrl`+kolečko nebo `Ctrl+=` / `Ctrl+-` (`Ctrl+0` vrátí
+  100 %).
 - Ukládání `Ctrl+S`, nebo zapněte automatické ukládání v Nastavení.
 - Kontrola pravopisu je ve výchozím stavu zapnutá (Nastavení → Editor).
 

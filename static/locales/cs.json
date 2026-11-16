@@ -331,7 +331,9 @@
       "fullscreen": "Celá obrazovka",
       "delete": "Smazat položku",
       "closeOverlay": "Zavřít dialog nebo překryvné okno",
-      "findAll": "Hledat ve všech poznámkách"
+      "findAll": "Hledat ve všech poznámkách",
+      "wheelKey": "Ctrl+kolečko",
+      "zoomWheel": "Přiblížení okna (nad obrázkem v poznámce: velikost obrázku)"
     },
     "commands": {
       "title": "Příkazová lišta",

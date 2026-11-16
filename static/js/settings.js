@@ -383,6 +383,32 @@ window.NP = window.NP || {};
         });
     }
 
+    /* N1.11: Ctrl+wheel is the same zoom as Ctrl+= / Ctrl+- (one step per
+       mouse notch; a touchpad's small steps and pinch add up to WHEEL_STEP_PX).
+       preventDefault keeps WebView2 from zooming on its own, so there is only
+       one zoom (desktop.py also resets WebView2's to 100 % at start). Over an
+       image in a note, images.js resizes the image and stops the event first.
+       The web version leaves Ctrl+wheel to the browser, like the keys. */
+    var WHEEL_STEP_PX = 50;
+    var wheelSum = 0;
+    var wheelBound = false;
+
+    function bindZoomWheel() {
+        if (wheelBound) return;
+        wheelBound = true;
+        window.addEventListener("wheel", function (e) {
+            if (!e.ctrlKey || e.defaultPrevented || !zoomInUse()) return;
+            e.preventDefault();
+            var dy = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1);
+            if (!dy) return;
+            if (wheelSum && (wheelSum < 0) !== (dy < 0)) wheelSum = 0;    /* turned around */
+            wheelSum += dy;
+            if (Math.abs(wheelSum) < WHEEL_STEP_PX) return;
+            wheelSum = 0;
+            changeZoom(cleanZoom(sget("ui_zoom", ZOOM_DEFAULT)) + (dy < 0 ? ZOOM_STEP : -ZOOM_STEP));
+        }, { passive: false });
+    }
+
     /* CRT used to live only in this browser (localStorage). Data that has
        no crt_enabled yet takes that old value over, once. */
     function migrateCrt() {
@@ -878,6 +904,7 @@ window.NP = window.NP || {};
             if (!NP.settings._inited) {
                 NP.settings._inited = true;
                 bindZoomKeys();
+                bindZoomWheel();
                 /* High contrast switched on or off while NoirPad runs. */
                 if (window.matchMedia) {
                     var contrast = window.matchMedia("(forced-colors: active)");

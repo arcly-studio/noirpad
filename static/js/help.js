@@ -47,6 +47,7 @@ window.NP = window.NP || {};
                     ["Ctrl+=", "shortcuts.labels.zoomIn", "zoom-in"],
                     ["Ctrl+-", "shortcuts.labels.zoomOut", "zoom-out"],
                     ["Ctrl+0", "shortcuts.labels.zoomReset", "zoom-reset"],
+                    ["help.keys.wheelKey", "help.keys.zoomWheel"],
                     ["Ctrl+Tab", "help.keys.nextTab", "next-tab"],
                     ["Ctrl+Shift+Tab", "help.keys.prevTab", "prev-tab"],
                     ["Ctrl+W", "help.keys.closeTab", "close-tab"]
@@ -257,6 +258,8 @@ window.NP = window.NP || {};
             var current = NP.shortcuts.getCurrent(row[2]);
             if (current !== null && current !== undefined) return current || "—";
         }
+        /* A key that has words in it ("Ctrl+wheel") is translated. */
+        if (row[0].indexOf("help.") === 0) return NP.t(row[0]);
         return row[0];
     }
 

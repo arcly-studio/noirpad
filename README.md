@@ -49,6 +49,7 @@
 
 - Each note is **rich text** or **Markdown** (`Ctrl+M`), with tabs for open notes and a focus mode.
 - **Images**: paste, drag & drop or insert them; `Ctrl`+wheel resizes an image in the note.
+- **Zoom** the desktop window with `Ctrl`+wheel or `Ctrl+=` / `Ctrl+-` (`Ctrl+0` back to 100 %).
 - Save with `Ctrl+S`, or turn on autosave in Settings.
 - Spellcheck is on by default (Settings → Editor).
 

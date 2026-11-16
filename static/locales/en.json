@@ -309,7 +309,9 @@
       "fullscreen": "Fullscreen",
       "delete": "Delete item",
       "closeOverlay": "Close dialog or overlay",
-      "findAll": "Search all notes"
+      "findAll": "Search all notes",
+      "wheelKey": "Ctrl+Wheel",
+      "zoomWheel": "Zoom the window (over an image in a note: resize the image)"
     },
     "commands": {
       "title": "Command bar",

@@ -53,6 +53,7 @@ copies, and an easier time with a keyboard, high contrast or zoom.
 - All drop-down lists in Settings work from the keyboard (arrows, Home, End, Enter, Space, Esc).
 - Zoom the desktop window with `Ctrl+=`, `Ctrl+-` and `Ctrl+0` (70–200 %); the web version uses the
   browser's zoom.
+- Ctrl+mouse wheel zooms the desktop window the same way as Ctrl+= and Ctrl+-.
 - With Windows high contrast on, rain, glow, CRT and glitch stay off (your settings are kept), and
   toggles show their state without relying on colour.
 - Text fields that had no visible label now have one for screen readers.
