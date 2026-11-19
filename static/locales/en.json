@@ -288,9 +288,9 @@
       "function": "Function keys",
       "save": "Save note",
       "find": "Find in note",
-      "focus": "Sidebar / focus mode (in Markdown mode: bold)",
+      "focus": "Focus mode (hides the sidebar)",
       "orientation": "Toggle page orientation",
-      "italic": "Italic (rich text)",
+      "italic": "Italic",
       "underline": "Underline (rich text)",
       "undo": "Undo",
       "redo": "Redo",
@@ -311,7 +311,11 @@
       "closeOverlay": "Close dialog or overlay",
       "findAll": "Search all notes",
       "wheelKey": "Ctrl+Wheel",
-      "zoomWheel": "Zoom the window (over an image in a note: resize the image)"
+      "zoomWheel": "Zoom the window (over an image in a note: resize the image)",
+      "formatting": "Formatting (rich text and Markdown)",
+      "bold": "Bold",
+      "strike": "Strikethrough",
+      "link": "Link (rich text: a window for the address)"
     },
     "commands": {
       "title": "Command bar",
@@ -352,7 +356,7 @@
     "editor": {
       "title": "Editor",
       "monospace": "Each note is either rich text (formatting) or Markdown (Ctrl+M)",
-      "formatting": "Italic (Ctrl+I) and underline (Ctrl+U)",
+      "formatting": "Bold, italic, underline, strikethrough and links: the shortcuts are under Keyboard shortcuts",
       "undo": "Undo/redo history (Ctrl+Z / Ctrl+Y)",
       "orientation": "Ctrl+L toggles page orientation (landscape/portrait)"
     },
@@ -398,7 +402,7 @@
       "title": "Effects",
       "matrix": ":rain — Turn the falling-code rain on/off",
       "splash": "Splash screen with an ASCII art logo on startup",
-      "focus": "Focus mode (Ctrl+B) — hides the sidebar",
+      "focus": "Focus mode ({keys}) — hides the sidebar",
       "crt": ":crt — Turn the CRT scanlines on/off"
     },
     "md": {
@@ -477,7 +481,8 @@
         "bold": "**bold**",
         "italic": "*italic*",
         "code": "`code`",
-        "link": "[link](url)"
+        "link": "[link](url)",
+        "strike": "~~strikethrough~~"
       },
       "task": {
         "syntax": "- [ ] Task",
@@ -505,7 +510,7 @@
     "continue": "[ Press any key or click to continue ]"
   },
   "focus": {
-    "exitTitle": "Exit focus mode (Ctrl+B)"
+    "exitTitle": "Exit focus mode ({keys})"
   },
   "commands": {
     "placeholder": "Type a command (e.g. :search, :theme amber)",
@@ -549,6 +554,7 @@
   },
   "shortcuts": {
     "categories": {
+      "formatting": "Formatting",
       "markdown": "Markdown",
       "editor": "Editor",
       "notes": "Notes",
@@ -556,19 +562,20 @@
       "tabs": "Tabs"
     },
     "labels": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strikethrough": "Strikethrough",
+      "link": "Link…",
       "mdH1": "Markdown: H1 heading",
       "mdH2": "Markdown: H2 heading",
       "mdH3": "Markdown: H3 heading",
-      "mdBold": "Markdown: Bold",
-      "mdItalic": "Markdown: Italic",
       "mdCodeInline": "Markdown: Inline code",
-      "mdStrikethrough": "Markdown: Strikethrough",
       "mdCodeBlock": "Markdown: Code block",
       "mdQuote": "Markdown: Quote",
       "mdListBullet": "Markdown: Bullet list",
       "mdListNumbered": "Markdown: Numbered list",
       "mdHorizontalRule": "Markdown: Horizontal rule",
-      "mdLink": "Markdown: Link",
       "mdImage": "Markdown: Image",
       "save": "Save note",
       "find": "Find in note",
@@ -583,7 +590,7 @@
       "rename": "Rename selected",
       "toggleFavorite": "Toggle favorite",
       "toggleLock": "Lock/unlock note",
-      "toggleSidebar": "Toggle sidebar/focus",
+      "toggleSidebar": "Focus mode (hide the sidebar)",
       "toggleOrientation": "Toggle page orientation",
       "openSettings": "Open settings",
       "openHelp": "Open help",
@@ -597,7 +604,8 @@
       "nextTab": "Next tab",
       "prevTab": "Previous tab",
       "closeTab": "Close tab",
-      "findAll": "Search all notes"
+      "findAll": "Search all notes",
+      "mdTask": "Markdown: Task"
     },
     "errors": {
       "empty": "Empty keystroke",
@@ -945,5 +953,21 @@
     "nord": "Slate",
     "gruvbox": "Warm Retro",
     "tokyo-night": "Midnight Blue"
+  },
+  "format": {
+    "link": {
+      "title": "Link",
+      "editTitle": "Edit link",
+      "address": "Address",
+      "save": "Save",
+      "remove": "Remove link",
+      "errorEmpty": "Enter the address.",
+      "errorTooLong": "The address is too long (at most {n} characters).",
+      "errorInvalid": "This is not a valid address.",
+      "errorScheme": "The address must start with https://, http:// or mailto:.",
+      "useFix": "Use {url}",
+      "noSelection": "Select the text for the link first.",
+      "placeholder": "https://…"
+    }
   }
 }

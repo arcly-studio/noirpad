@@ -9,17 +9,15 @@
  *   - On a keystroke match the registered handler is called.
  *   - If the handler returns `false`, the dispatcher CONTINUES iterating
  *     to find the next matching binding. This enables context-aware
- *     bindings (e.g. md-bold's Ctrl+B consumes only in MD mode; in
- *     rich-text it returns false so toggle-sidebar — also Ctrl+B — can
- *     fire). When all matching handlers passthrough, the event falls
+ *     bindings (e.g. Ctrl+B is bold only while a note's editor has the
+ *     focus). When all matching handlers passthrough, the event falls
  *     through to browser default (e.g. Delete in a focused input still
  *     deletes the character).
  *   - Otherwise the event is consumed (preventDefault + stopPropagation).
  *
  * Iteration order is for...in (insertion order). Place higher-priority
- * (more specific) bindings earlier in the registry — Markdown actions
- * are listed first so they get the first chance to claim conflicting
- * keystrokes like Ctrl+B.
+ * (more specific) bindings earlier in the registry. By default no two
+ * actions share a key (tests/js/flow-shortcuts-all.test.js).
  */
 window.NP = window.NP || {};
 
@@ -96,11 +94,13 @@ window.NP = window.NP || {};
         );
     }
 
-    /* Browser-reserved combos that must not be rebound. */
+    /* Browser-reserved combos that must not be rebound. Not Ctrl+U: a
+       page gets it before "view source", and NoirPad uses it for
+       underline (in the editor it always did). */
     var BLACKLIST = [
         "Ctrl+T", "Ctrl+Shift+T", "Ctrl+N", "Ctrl+Shift+N",
         "Ctrl+R", "F5", "Ctrl+Q", "F11", "F12", "Ctrl+Shift+I",
-        "Ctrl+Shift+J", "Ctrl+U", "Ctrl+Shift+C"
+        "Ctrl+Shift+J", "Ctrl+Shift+C"
     ];
 
     /* U11: the desktop window has no browser around it, so NoirPad's own
@@ -141,24 +141,25 @@ window.NP = window.NP || {};
     /* ============== Registry ============== */
 
     var registry = {
-        /* Markdown — listed FIRST so for...in dispatch order gives these
-           priority over conflicting bindings (e.g. md-bold's Ctrl+B vs
-           toggle-sidebar's Ctrl+B). MD handlers return false when the MD
-           textarea isn't focused, and the dispatcher's "continue on
-           passthrough" semantics let the next matching binding fire. */
+        /* Formatting (format.js): the same key in a rich-text note and in
+           the Markdown source. The ids keep their old "md-" names so saved
+           custom keys stay valid. Markdown-only actions (markdown.js)
+           follow. Both return false while no note editor has the focus. */
         "md-h1":                { default: "",              current: "",              labelKey: "shortcuts.labels.mdH1",        categoryKey: "shortcuts.categories.markdown" },
         "md-h2":                { default: "",              current: "",              labelKey: "shortcuts.labels.mdH2",        categoryKey: "shortcuts.categories.markdown" },
         "md-h3":                { default: "",              current: "",              labelKey: "shortcuts.labels.mdH3",        categoryKey: "shortcuts.categories.markdown" },
-        "md-bold":              { default: "Ctrl+B",        current: "Ctrl+B",        labelKey: "shortcuts.labels.mdBold",              categoryKey: "shortcuts.categories.markdown" },
-        "md-italic":            { default: "Ctrl+I",        current: "Ctrl+I",        labelKey: "shortcuts.labels.mdItalic",            categoryKey: "shortcuts.categories.markdown" },
+        "md-bold":              { default: "Ctrl+B",        current: "Ctrl+B",        labelKey: "shortcuts.labels.bold",              categoryKey: "shortcuts.categories.formatting" },
+        "md-italic":            { default: "Ctrl+I",        current: "Ctrl+I",        labelKey: "shortcuts.labels.italic",            categoryKey: "shortcuts.categories.formatting" },
+        "fmt-underline":        { default: "Ctrl+U",        current: "Ctrl+U",        labelKey: "shortcuts.labels.underline",         categoryKey: "shortcuts.categories.formatting" },
+        "md-strikethrough":     { default: "Ctrl+Shift+X",  current: "Ctrl+Shift+X",  labelKey: "shortcuts.labels.strikethrough",     categoryKey: "shortcuts.categories.formatting" },
+        "md-link":              { default: "Ctrl+K",        current: "Ctrl+K",        labelKey: "shortcuts.labels.link",              categoryKey: "shortcuts.categories.formatting" },
         "md-code-inline":       { default: "Ctrl+E",        current: "Ctrl+E",        labelKey: "shortcuts.labels.mdCodeInline",       categoryKey: "shortcuts.categories.markdown" },
-        "md-strikethrough":     { default: "",              current: "",              labelKey: "shortcuts.labels.mdStrikethrough",     categoryKey: "shortcuts.categories.markdown" },
         "md-code-block":        { default: "Ctrl+Shift+E",  current: "Ctrl+Shift+E",  labelKey: "shortcuts.labels.mdCodeBlock",        categoryKey: "shortcuts.categories.markdown" },
         "md-quote":             { default: "",              current: "",              labelKey: "shortcuts.labels.mdQuote",             categoryKey: "shortcuts.categories.markdown" },
         "md-list-bullet":       { default: "",              current: "",              labelKey: "shortcuts.labels.mdListBullet",       categoryKey: "shortcuts.categories.markdown" },
         "md-list-numbered":     { default: "",              current: "",              labelKey: "shortcuts.labels.mdListNumbered",     categoryKey: "shortcuts.categories.markdown" },
+        "md-task":              { default: "",              current: "",              labelKey: "shortcuts.labels.mdTask",             categoryKey: "shortcuts.categories.markdown" },
         "md-horizontal-rule":   { default: "",              current: "",              labelKey: "shortcuts.labels.mdHorizontalRule",   categoryKey: "shortcuts.categories.markdown" },
-        "md-link":              { default: "Ctrl+K",        current: "Ctrl+K",        labelKey: "shortcuts.labels.mdLink",              categoryKey: "shortcuts.categories.markdown" },
         "md-image":             { default: "",              current: "",              labelKey: "shortcuts.labels.mdImage",             categoryKey: "shortcuts.categories.markdown" },
 
         /* Editor */
@@ -179,7 +180,7 @@ window.NP = window.NP || {};
         "toggle-lock":          { default: "Ctrl+Shift+L",  current: "Ctrl+Shift+L",  labelKey: "shortcuts.labels.toggleLock",       categoryKey: "shortcuts.categories.notes" },
 
         /* UI */
-        "toggle-sidebar":       { default: "Ctrl+B",        current: "Ctrl+B",        labelKey: "shortcuts.labels.toggleSidebar",   categoryKey: "shortcuts.categories.ui" },
+        "toggle-sidebar":       { default: "Ctrl+Shift+B",  current: "Ctrl+Shift+B",      labelKey: "shortcuts.labels.toggleSidebar",   categoryKey: "shortcuts.categories.ui" },
         "toggle-orientation":   { default: "Ctrl+L",        current: "Ctrl+L",        labelKey: "shortcuts.labels.toggleOrientation",categoryKey: "shortcuts.categories.ui" },
         "open-settings":        { default: "Ctrl+,",        current: "Ctrl+,",        labelKey: "shortcuts.labels.openSettings",          categoryKey: "shortcuts.categories.ui" },
         "open-help":            { default: "F1",            current: "F1",            labelKey: "shortcuts.labels.openHelp",              categoryKey: "shortcuts.categories.ui" },
@@ -276,6 +277,20 @@ window.NP = window.NP || {};
                 for (var id in mapping) {
                     if (registry[id]) {
                         registry[id].current = mapping[id];
+                    }
+                }
+                /* A key the user gave an action wins over a newer default
+                   (since N1.11: Ctrl+Shift+B focus mode, Ctrl+Shift+X strike,
+                   Ctrl+U underline): the default action stays without a
+                   key until the user picks one. */
+                for (var own in mapping) {
+                    var ks = registry[own] && normKs(mapping[own]);
+                    if (!ks) continue;
+                    for (var other in registry) {
+                        if (other === own || Object.prototype.hasOwnProperty.call(mapping, other)) continue;
+                        if (registry[other].current && normKs(registry[other].current) === ks) {
+                            registry[other].current = "";
+                        }
                     }
                 }
             }

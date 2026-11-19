@@ -59,6 +59,12 @@ copies, and an easier time with a keyboard, high contrast or zoom.
 - With Windows high contrast on, rain, glow, CRT and glitch stay off (your settings are kept), and
   toggles show their state without relying on colour.
 - Text fields that had no visible label now have one for screen readers.
+- Formatting keys work the same in rich-text and Markdown notes: `Ctrl+B` bold, `Ctrl+I` italic,
+  `Ctrl+U` underline (rich text), `Ctrl+Shift+X` strikethrough, `Ctrl+K` link. In a rich-text note
+  `Ctrl+K` opens a small window for the address (https://, http:// or mailto:) that also edits or
+  removes a link. Before, `Ctrl+B` there turned on focus mode and `Ctrl+K` did nothing.
+- Focus mode moved to `Ctrl+Shift+B`. If you had already given that key to another action, it stays
+  there and focus mode has no key until you pick one.
 
 ### Themes and effects
 - The themes have descriptive names in English and Czech (for example Phosphor Green, Lavender

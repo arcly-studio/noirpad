@@ -128,6 +128,8 @@ PAIRS += [
     ("--accent", "--bg-entry", 4.5), ("--accent", "--code-bg", 4.5),
     # switch "off" knob on its track
     ("--control-off", "--bg-entry", 3.0),
+    # link window (format.js): "Use https://…" offer and the error, in a G7 window
+    ("--accent", "--bg-light", 4.5), ("--danger", "--bg-light", 4.5),
 ]
 
 

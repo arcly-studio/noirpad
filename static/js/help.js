@@ -20,14 +20,20 @@ window.NP = window.NP || {};
         {
             title: "help.keys.title",
             content: [
+                { type: "header", value: "help.keys.formatting" },
+                { type: "shortcuts", value: [
+                    ["Ctrl+B", "help.keys.bold", "md-bold"],
+                    ["Ctrl+I", "help.keys.italic", "md-italic"],
+                    ["Ctrl+U", "help.keys.underline", "fmt-underline"],
+                    ["Ctrl+Shift+X", "help.keys.strike", "md-strikethrough"],
+                    ["Ctrl+K", "help.keys.link", "md-link"]
+                ]},
                 { type: "header", value: "help.keys.basic" },
                 { type: "shortcuts", value: [
                     ["Ctrl+S", "help.keys.save", "save"],
                     ["Ctrl+F", "help.keys.find", "find"],
-                    ["Ctrl+B", "help.keys.focus", "toggle-sidebar"],
+                    ["Ctrl+Shift+B", "help.keys.focus", "toggle-sidebar"],
                     ["Ctrl+L", "help.keys.orientation", "toggle-orientation"],
-                    ["Ctrl+I", "help.keys.italic"],
-                    ["Ctrl+U", "help.keys.underline"],
                     ["Ctrl+Z", "help.keys.undo"],
                     ["Ctrl+Y", "help.keys.redo"],
                     ["Ctrl+V", "help.keys.paste"],
@@ -242,6 +248,7 @@ window.NP = window.NP || {};
                 { type: "md-shortcuts", title: "help.md.shortcuts", items: [
                     ["Ctrl+B", "help.md.wrap.bold", "md-bold"],
                     ["Ctrl+I", "help.md.wrap.italic", "md-italic"],
+                    ["Ctrl+Shift+X", "help.md.wrap.strike", "md-strikethrough"],
                     ["Ctrl+E", "help.md.wrap.code", "md-code-inline"],
                     ["Ctrl+K", "help.md.wrap.link", "md-link"]
                 ]}
@@ -261,6 +268,11 @@ window.NP = window.NP || {};
         /* A key that has words in it ("Ctrl+wheel") is translated. */
         if (row[0].indexOf("help.") === 0) return NP.t(row[0]);
         return row[0];
+    }
+
+    /* Keys named inside running text ("Focus mode ({keys})"). */
+    function textParams() {
+        return { keys: keyOf(["—", "", "toggle-sidebar"]) };
     }
 
     function el(tag, attrs, text) {
@@ -318,7 +330,7 @@ window.NP = window.NP || {};
                     html += '<ul style="margin:0 0 10px 0;padding-left:20px;">';
                     for (var b = 0; b < block.value.length; b++) {
                         html += '<li style="margin:2px 0;color:var(--fg, #00ff41);">' +
-                            NP.escapeHtml(block.raw ? block.value[b] : NP.t(block.value[b])) + '</li>';
+                            NP.escapeHtml(block.raw ? block.value[b] : NP.t(block.value[b], textParams())) + '</li>';
                     }
                     html += '</ul>';
                     break;

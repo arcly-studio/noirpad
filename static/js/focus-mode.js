@@ -6,6 +6,11 @@ window.NP = window.NP || {};
 
     var EXIT_BTN_ID = "focus-mode-exit-btn";
 
+    /* The key currently set for focus mode ("—" when none). */
+    function focusKeys() {
+        return (NP.shortcuts && NP.shortcuts.getCurrent && NP.shortcuts.getCurrent("toggle-sidebar")) || "—";
+    }
+
     NP.focusMode = {
         active: false,
 
@@ -61,7 +66,7 @@ window.NP = window.NP || {};
 
             var btn = document.createElement("button");
             btn.id = EXIT_BTN_ID;
-            btn.title = NP.t("focus.exitTitle");
+            btn.title = NP.t("focus.exitTitle", { keys: focusKeys() });
             btn.innerHTML = "&#9654;"; /* Right-pointing triangle */
             btn.style.cssText =
                 "position:fixed;left:-20px;top:50%;transform:translateY(-50%);" +

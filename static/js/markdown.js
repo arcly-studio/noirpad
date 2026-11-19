@@ -329,8 +329,7 @@ window.NP = window.NP || {};
 
        All MD shortcut handlers return `false` when the textarea isn't
        focused / MD mode isn't active. The shortcuts dispatcher treats
-       that as passthrough and tries the next matching binding (so e.g.
-       Ctrl+B in rich-text mode falls through to toggle-sidebar).
+       that as passthrough and tries the next matching binding.
 
        Edits go through setRangeText so the textarea's native undo stack
        is preserved, then dispatch an `input` event so the preview pane
@@ -431,40 +430,51 @@ window.NP = window.NP || {};
         fireInput(ta);
     }
 
+    /* What each Markdown action writes into the source, by shortcut id.
+       The keys of the Markdown-only actions are registered here; bold,
+       italic, strikethrough and link are shared with rich-text notes and
+       registered by format.js, which also uses this table for the Format
+       menu and the context menu. */
+    var EDITS = {
+        "md-h1": function (ta) { insertLinePrefix(ta, "# "); },
+        "md-h2": function (ta) { insertLinePrefix(ta, "## "); },
+        "md-h3": function (ta) { insertLinePrefix(ta, "### "); },
+        "md-bold": function (ta) { wrapSel(ta, "**", "**"); },
+        "md-italic": function (ta) { wrapSel(ta, "*", "*"); },
+        "md-strikethrough": function (ta) { wrapSel(ta, "~~", "~~"); },
+        "md-code-inline": function (ta) { wrapSel(ta, "`", "`"); },
+        "md-code-block": insertCodeBlock,
+        "md-quote": function (ta) { insertLinePrefix(ta, "> "); },
+        "md-list-bullet": function (ta) { insertLinePrefix(ta, "- "); },
+        "md-list-numbered": function (ta) { insertLinePrefix(ta, "1. "); },
+        "md-task": function (ta) { insertLinePrefix(ta, "- [ ] "); },
+        "md-horizontal-rule": function (ta) { insertAtCaret(ta, "---\n", true); },
+        "md-link": insertLink,
+        "md-image": insertImage
+    };
+    var SHARED = ["md-bold", "md-italic", "md-strikethrough", "md-link"];
+
+    NP.markdown.edit = EDITS;
+    /* The source textarea while a Markdown note is open (focused or not). */
+    NP.markdown.textarea = function () {
+        if (!isMdMode()) return null;
+        var ta = document.getElementById("editor-md");
+        return ta && !ta.readOnly && !ta.disabled ? ta : null;
+    };
+
     function registerMarkdownShortcuts() {
         if (!NP.shortcuts || !NP.shortcuts.register) return;
-        var R = NP.shortcuts.register;
-
-        function mdAction(fn) {
-            return function () {
+        Object.keys(EDITS).forEach(function (id) {
+            if (SHARED.indexOf(id) !== -1) return;
+            NP.shortcuts.register(id, function () {
                 var ta = activeTa();
                 if (!ta) return false;  /* passthrough — try next binding */
-                fn(ta);
-            };
-        }
-
-        R("md-h1", mdAction(function (ta) { insertLinePrefix(ta, "# "); }));
-        R("md-h2", mdAction(function (ta) { insertLinePrefix(ta, "## "); }));
-        R("md-h3", mdAction(function (ta) { insertLinePrefix(ta, "### "); }));
-
-        R("md-bold",          mdAction(function (ta) { wrapSel(ta, "**", "**"); }));
-        R("md-italic",        mdAction(function (ta) { wrapSel(ta, "*", "*"); }));
-        R("md-code-inline",   mdAction(function (ta) { wrapSel(ta, "`", "`"); }));
-        R("md-strikethrough", mdAction(function (ta) { wrapSel(ta, "~~", "~~"); }));
-
-        R("md-code-block", mdAction(insertCodeBlock));
-
-        R("md-quote",         mdAction(function (ta) { insertLinePrefix(ta, "> "); }));
-        R("md-list-bullet",   mdAction(function (ta) { insertLinePrefix(ta, "- "); }));
-        R("md-list-numbered", mdAction(function (ta) { insertLinePrefix(ta, "1. "); }));
-
-        R("md-horizontal-rule", mdAction(function (ta) {
-            insertAtCaret(ta, "---\n", true);
-        }));
-
-        R("md-link",  mdAction(insertLink));
-        R("md-image", mdAction(insertImage));
+                EDITS[id](ta);
+            });
+        });
     }
+
+    NP.markdown.registerShortcuts = registerMarkdownShortcuts;
 
     /* ---- Wiring ---- */
 

@@ -59,8 +59,8 @@
 
 - Source on the left, **live preview** on the right.
 - **Tables, task lists, quotes** and fenced **code blocks with syntax highlighting**.
-- Shortcuts for bold, italic, inline code, code blocks and links (`Ctrl+B`, `Ctrl+I`, `Ctrl+E`,
-  `Ctrl+Shift+E`, `Ctrl+K`).
+- Shortcuts for bold, italic, strikethrough, inline code, code blocks and links (`Ctrl+B`, `Ctrl+I`,
+  `Ctrl+Shift+X`, `Ctrl+E`, `Ctrl+Shift+E`, `Ctrl+K`).
 
 ### Encryption
 
@@ -111,7 +111,10 @@
 | `Ctrl+Shift+P` | Command bar |
 | `Ctrl+D` | Add to / remove from favorites |
 | `F2` / `Delete` | Rename / move to trash |
-| `Ctrl+B` | Sidebar (in the Markdown editor: bold) |
+| `Ctrl+B` / `Ctrl+I` / `Ctrl+U` | Bold / italic / underline (underline: rich text only) |
+| `Ctrl+Shift+X` | Strikethrough |
+| `Ctrl+K` | Link (rich text: a window for the address, also to edit or remove a link) |
+| `Ctrl+Shift+B` | Focus mode (hides the sidebar) |
 | `Ctrl+Shift+V` / `Ctrl+Space` | Paste as plain text / clear formatting of the selection |
 | `Ctrl+Tab` / `Ctrl+W` | Next tab / close tab |
 | `Ctrl+,` / `F1` | Settings / help |

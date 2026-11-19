@@ -62,8 +62,8 @@
 
 - Vlevo zdroj, vpravo **živý náhled**.
 - **Tabulky, úkoly, citace** a **bloky kódu se zvýrazněním syntaxe**.
-- Zkratky pro tučné písmo, kurzívu, kód, bloky kódu a odkazy (`Ctrl+B`, `Ctrl+I`, `Ctrl+E`,
-  `Ctrl+Shift+E`, `Ctrl+K`).
+- Zkratky pro tučné písmo, kurzívu, přeškrtnutí, kód, bloky kódu a odkazy (`Ctrl+B`, `Ctrl+I`,
+  `Ctrl+Shift+X`, `Ctrl+E`, `Ctrl+Shift+E`, `Ctrl+K`).
 
 ### Šifrování
 
@@ -114,7 +114,10 @@
 | `Ctrl+Shift+P` | Příkazová lišta |
 | `Ctrl+D` | Přidat do oblíbených / odebrat |
 | `F2` / `Delete` | Přejmenovat / přesunout do koše |
-| `Ctrl+B` | Postranní panel (v editoru Markdownu: tučné písmo) |
+| `Ctrl+B` / `Ctrl+I` / `Ctrl+U` | Tučné / kurzíva / podtržené (podtržené jen ve formátovaném textu) |
+| `Ctrl+Shift+X` | Přeškrtnuté |
+| `Ctrl+K` | Odkaz (formátovaný text: okno pro adresu, i pro úpravu a odebrání odkazu) |
+| `Ctrl+Shift+B` | Režim soustředění (skryje postranní panel) |
 | `Ctrl+Shift+V` / `Ctrl+Mezerník` | Vložit jako prostý text / vymazat formátování označeného textu |
 | `Ctrl+Tab` / `Ctrl+W` | Další záložka / zavřít záložku |
 | `Ctrl+,` / `F1` | Nastavení / nápověda |

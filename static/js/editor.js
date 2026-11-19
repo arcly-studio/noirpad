@@ -897,16 +897,6 @@ window.NP = window.NP || {};
             return { text: text };
         },
 
-        /* ---- Formatting commands ---- */
-
-        toggleItalic: function () {
-            document.execCommand("italic", false, null);
-        },
-
-        toggleUnderline: function () {
-            document.execCommand("underline", false, null);
-        },
-
         /* ---- Save ---- */
 
         /* One save at a time: two overlapping ones (autosave + a tab click,

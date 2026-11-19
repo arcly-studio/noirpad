@@ -77,6 +77,9 @@ window.NP = window.NP || {};
                `false` (passthrough) — used by `delete` so typing still
                deletes text in the editor. */
             var S = NP.shortcuts;
+            /* Bold, italic, underline, strikethrough, link: one key for
+               rich-text and Markdown notes (format.js). */
+            if (NP.format && NP.format.init) NP.format.init();
             if (S && S.register) {
                 S.register("save", function () {
                     if (NP.editor && NP.editor.save) NP.editor.save();
@@ -192,7 +195,7 @@ window.NP = window.NP || {};
             }
 
             /* NOT migrated (per spec): Escape overlay-close priority +
-               contentEditable formatting/undo/redo. These are not in the
+               undo/redo. These are not in the
                registry, so the central dispatcher ignores them and this
                (bubble-phase) listener handles them exactly as before. */
             document.addEventListener("keydown", function (e) {
@@ -205,22 +208,6 @@ window.NP = window.NP || {};
                         NP.commandBar.close();
                     } else if (NP.search && NP.search.visible && NP.search.hide) {
                         NP.search.hide();
-                    }
-                    return;
-                }
-
-                if (ctrl && !shift && key === "i") {
-                    e.preventDefault();
-                    if (NP.editor && NP.editor.toggleItalic) {
-                        NP.editor.toggleItalic();
-                    }
-                    return;
-                }
-
-                if (ctrl && !shift && key === "u") {
-                    e.preventDefault();
-                    if (NP.editor && NP.editor.toggleUnderline) {
-                        NP.editor.toggleUnderline();
                     }
                     return;
                 }

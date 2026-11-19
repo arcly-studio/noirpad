@@ -310,9 +310,9 @@
       "function": "Funkční klávesy",
       "save": "Uložit poznámku",
       "find": "Hledat v poznámce",
-      "focus": "Postranní panel / režim soustředění (v režimu Markdown: tučné)",
+      "focus": "Režim soustředění (skryje postranní panel)",
       "orientation": "Přepnout orientaci stránky",
-      "italic": "Kurzíva (formátovaný text)",
+      "italic": "Kurzíva",
       "underline": "Podtržené (formátovaný text)",
       "undo": "Zpět",
       "redo": "Znovu",
@@ -333,7 +333,11 @@
       "closeOverlay": "Zavřít dialog nebo překryvné okno",
       "findAll": "Hledat ve všech poznámkách",
       "wheelKey": "Ctrl+kolečko",
-      "zoomWheel": "Přiblížení okna (nad obrázkem v poznámce: velikost obrázku)"
+      "zoomWheel": "Přiblížení okna (nad obrázkem v poznámce: velikost obrázku)",
+      "formatting": "Formátování (formátovaný text i Markdown)",
+      "bold": "Tučné",
+      "strike": "Přeškrtnuté",
+      "link": "Odkaz (formátovaný text: okno pro adresu)"
     },
     "commands": {
       "title": "Příkazová lišta",
@@ -374,7 +378,7 @@
     "editor": {
       "title": "Editor",
       "monospace": "Každá poznámka je buď formátovaný text, nebo Markdown (Ctrl+M)",
-      "formatting": "Kurzíva (Ctrl+I) a podtržení (Ctrl+U)",
+      "formatting": "Tučné písmo, kurzíva, podtržení, přeškrtnutí a odkazy: zkratky najdete v části Klávesové zkratky",
       "undo": "Historie změn – zpět/znovu (Ctrl+Z / Ctrl+Y)",
       "orientation": "Ctrl+L přepíná orientaci stránky (na šířku / na výšku)"
     },
@@ -420,7 +424,7 @@
       "title": "Efekty",
       "matrix": ":rain — zapnout/vypnout déšť padajícího kódu",
       "splash": "Úvodní obrazovka s ASCII art logem při spuštění",
-      "focus": "Režim soustředění (Ctrl+B) — skryje postranní panel",
+      "focus": "Režim soustředění ({keys}) — skryje postranní panel",
       "crt": ":crt — zapnout/vypnout CRT řádkování"
     },
     "md": {
@@ -499,7 +503,8 @@
         "bold": "**tučné**",
         "italic": "*kurzíva*",
         "code": "`kód`",
-        "link": "[odkaz](url)"
+        "link": "[odkaz](url)",
+        "strike": "~~přeškrtnuté~~"
       },
       "task": {
         "syntax": "- [ ] Úkol",
@@ -531,7 +536,7 @@
     "continue": "[ Pokračujte libovolnou klávesou nebo kliknutím ]"
   },
   "focus": {
-    "exitTitle": "Ukončit režim soustředění (Ctrl+B)"
+    "exitTitle": "Ukončit režim soustředění ({keys})"
   },
   "commands": {
     "placeholder": "Zadejte příkaz (např. :search, :theme amber)",
@@ -575,6 +580,7 @@
   },
   "shortcuts": {
     "categories": {
+      "formatting": "Formátování",
       "markdown": "Markdown",
       "editor": "Editor",
       "notes": "Poznámky",
@@ -582,19 +588,20 @@
       "tabs": "Karty"
     },
     "labels": {
+      "bold": "Tučné",
+      "italic": "Kurzíva",
+      "underline": "Podtržené",
+      "strikethrough": "Přeškrtnuté",
+      "link": "Odkaz…",
       "mdH1": "Markdown: nadpis H1",
       "mdH2": "Markdown: nadpis H2",
       "mdH3": "Markdown: nadpis H3",
-      "mdBold": "Markdown: tučné",
-      "mdItalic": "Markdown: kurzíva",
       "mdCodeInline": "Markdown: kód v řádku",
-      "mdStrikethrough": "Markdown: přeškrtnuté",
       "mdCodeBlock": "Markdown: blok kódu",
       "mdQuote": "Markdown: citace",
       "mdListBullet": "Markdown: odrážkový seznam",
       "mdListNumbered": "Markdown: číslovaný seznam",
       "mdHorizontalRule": "Markdown: vodorovná čára",
-      "mdLink": "Markdown: odkaz",
       "mdImage": "Markdown: obrázek",
       "save": "Uložit poznámku",
       "find": "Hledat v poznámce",
@@ -609,7 +616,7 @@
       "rename": "Přejmenovat vybranou položku",
       "toggleFavorite": "Oblíbená poznámka – přidat, nebo odebrat",
       "toggleLock": "Zamknout/odemknout poznámku",
-      "toggleSidebar": "Skrýt/zobrazit postranní panel (režim soustředění)",
+      "toggleSidebar": "Režim soustředění (skrýt postranní panel)",
       "toggleOrientation": "Přepnout orientaci stránky",
       "openSettings": "Otevřít nastavení",
       "openHelp": "Otevřít nápovědu",
@@ -623,7 +630,8 @@
       "nextTab": "Další karta",
       "prevTab": "Předchozí karta",
       "closeTab": "Zavřít kartu",
-      "findAll": "Hledat ve všech poznámkách"
+      "findAll": "Hledat ve všech poznámkách",
+      "mdTask": "Markdown: úkol"
     },
     "errors": {
       "empty": "Nebyla stisknuta žádná klávesa",
@@ -985,5 +993,21 @@
     "nord": "Břidlice",
     "gruvbox": "Teplé retro",
     "tokyo-night": "Půlnoční modrá"
+  },
+  "format": {
+    "link": {
+      "title": "Odkaz",
+      "editTitle": "Upravit odkaz",
+      "address": "Adresa",
+      "save": "Uložit",
+      "remove": "Odebrat odkaz",
+      "errorEmpty": "Zadejte adresu.",
+      "errorTooLong": "Adresa je příliš dlouhá (nejvýš {n} znaků).",
+      "errorInvalid": "Tohle není platná adresa.",
+      "errorScheme": "Adresa musí začínat https://, http:// nebo mailto:.",
+      "useFix": "Použít {url}",
+      "noSelection": "Nejdřív označte text, ze kterého má být odkaz.",
+      "placeholder": "https://…"
+    }
   }
 }
