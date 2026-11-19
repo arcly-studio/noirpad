@@ -481,6 +481,7 @@
         "bold": "**bold**",
         "italic": "*italic*",
         "code": "`code`",
+        "codeBlock": "```code block```",
         "link": "[link](url)",
         "strike": "~~strikethrough~~"
       },

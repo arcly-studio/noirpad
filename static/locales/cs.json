@@ -503,6 +503,7 @@
         "bold": "**tučné**",
         "italic": "*kurzíva*",
         "code": "`kód`",
+        "codeBlock": "```blok kódu```",
         "link": "[odkaz](url)",
         "strike": "~~přeškrtnuté~~"
       },

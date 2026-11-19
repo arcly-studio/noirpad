@@ -250,6 +250,7 @@ window.NP = window.NP || {};
                     ["Ctrl+I", "help.md.wrap.italic", "md-italic"],
                     ["Ctrl+Shift+X", "help.md.wrap.strike", "md-strikethrough"],
                     ["Ctrl+E", "help.md.wrap.code", "md-code-inline"],
+                    ["Ctrl+Shift+E", "help.md.wrap.codeBlock", "md-code-block"],
                     ["Ctrl+K", "help.md.wrap.link", "md-link"]
                 ]}
             ]

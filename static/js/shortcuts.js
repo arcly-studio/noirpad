@@ -145,14 +145,14 @@ window.NP = window.NP || {};
            the Markdown source. The ids keep their old "md-" names so saved
            custom keys stay valid. Markdown-only actions (markdown.js)
            follow. Both return false while no note editor has the focus. */
-        "md-h1":                { default: "",              current: "",              labelKey: "shortcuts.labels.mdH1",        categoryKey: "shortcuts.categories.markdown" },
-        "md-h2":                { default: "",              current: "",              labelKey: "shortcuts.labels.mdH2",        categoryKey: "shortcuts.categories.markdown" },
-        "md-h3":                { default: "",              current: "",              labelKey: "shortcuts.labels.mdH3",        categoryKey: "shortcuts.categories.markdown" },
         "md-bold":              { default: "Ctrl+B",        current: "Ctrl+B",        labelKey: "shortcuts.labels.bold",              categoryKey: "shortcuts.categories.formatting" },
         "md-italic":            { default: "Ctrl+I",        current: "Ctrl+I",        labelKey: "shortcuts.labels.italic",            categoryKey: "shortcuts.categories.formatting" },
         "fmt-underline":        { default: "Ctrl+U",        current: "Ctrl+U",        labelKey: "shortcuts.labels.underline",         categoryKey: "shortcuts.categories.formatting" },
         "md-strikethrough":     { default: "Ctrl+Shift+X",  current: "Ctrl+Shift+X",  labelKey: "shortcuts.labels.strikethrough",     categoryKey: "shortcuts.categories.formatting" },
         "md-link":              { default: "Ctrl+K",        current: "Ctrl+K",        labelKey: "shortcuts.labels.link",              categoryKey: "shortcuts.categories.formatting" },
+        "md-h1":                { default: "",              current: "",              labelKey: "shortcuts.labels.mdH1",        categoryKey: "shortcuts.categories.markdown" },
+        "md-h2":                { default: "",              current: "",              labelKey: "shortcuts.labels.mdH2",        categoryKey: "shortcuts.categories.markdown" },
+        "md-h3":                { default: "",              current: "",              labelKey: "shortcuts.labels.mdH3",        categoryKey: "shortcuts.categories.markdown" },
         "md-code-inline":       { default: "Ctrl+E",        current: "Ctrl+E",        labelKey: "shortcuts.labels.mdCodeInline",       categoryKey: "shortcuts.categories.markdown" },
         "md-code-block":        { default: "Ctrl+Shift+E",  current: "Ctrl+Shift+E",  labelKey: "shortcuts.labels.mdCodeBlock",        categoryKey: "shortcuts.categories.markdown" },
         "md-quote":             { default: "",              current: "",              labelKey: "shortcuts.labels.mdQuote",             categoryKey: "shortcuts.categories.markdown" },
