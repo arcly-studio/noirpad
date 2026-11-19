@@ -378,7 +378,7 @@
     "editor": {
       "title": "Editor",
       "monospace": "Každá poznámka je buď formátovaný text, nebo Markdown (Ctrl+M)",
-      "formatting": "Tučné písmo, kurzíva, podtržení, přeškrtnutí a odkazy: zkratky najdete v části Klávesové zkratky",
+      "formatting": "Formátování: nabídka Formátování v horní liště (vedle Markdownu) nebo pravé tlačítko na označeném textu; zkratky najdete v části Klávesové zkratky",
       "undo": "Historie změn – zpět/znovu (Ctrl+Z / Ctrl+Y)",
       "orientation": "Ctrl+L přepíná orientaci stránky (na šířku / na výšku)"
     },
@@ -754,6 +754,7 @@
       "openNotes": "Otevřené poznámky",
       "tools": "Nástroje poznámky",
       "markdown": "Markdown",
+      "format": "Formátování",
       "split": "Náhled vedle zdroje",
       "splitMdOnly": "Náhled vedle zdroje (poznámky v Markdownu)",
       "favorite": "Oblíbená",
@@ -995,6 +996,26 @@
     "tokyo-night": "Půlnoční modrá"
   },
   "format": {
+    "menu": "Formátování",
+    "items": {
+      "bold": "Tučné",
+      "italic": "Kurzíva",
+      "underline": "Podtržené",
+      "strike": "Přeškrtnuté",
+      "link": "Odkaz…",
+      "clear": "Vymazat formátování",
+      "code": "Kód v řádku",
+      "image": "Obrázek",
+      "h1": "Nadpis 1",
+      "h2": "Nadpis 2",
+      "h3": "Nadpis 3",
+      "quote": "Citace",
+      "bullets": "Odrážkový seznam",
+      "numbered": "Číslovaný seznam",
+      "task": "Úkol",
+      "codeBlock": "Blok kódu",
+      "rule": "Vodorovná čára"
+    },
     "link": {
       "title": "Odkaz",
       "editTitle": "Upravit odkaz",

@@ -505,11 +505,12 @@ window.NP = window.NP || {};
                     run: function () { pasteFromClipboard(false); } },
                 { id: "paste-plain", label: NP.t("editor.menu.pastePlain"), keys: "Ctrl+Shift+V",
                     run: function () { pasteFromClipboard(true); } },
-                "-",
+                "-"
+            ].concat(NP.format ? NP.format.contextItems().concat(["-"]) : [], [
                 { id: "clear", label: NP.t("editor.clearFormatting.label"),
                     keys: (NP.shortcuts && NP.shortcuts.getCurrent("clear-formatting")) || "",
                     run: NP.paste.clearFormatting }
-            ], { keepFocus: true, footer: NP.t("editor.menu.systemHint") });
+            ]), { keepFocus: true, footer: NP.t("editor.menu.systemHint") });
         }
     };
 

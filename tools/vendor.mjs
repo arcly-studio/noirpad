@@ -56,6 +56,10 @@ const ICONS = [
     "circle-question-mark", "maximize-2", "type", "archive", "x", "file-text",
     "pencil", "trash-2", "chevron-right", "chevron-down", "folder", "panel-left",
     "keyboard", "upload", "terminal",
+    // Format menu (format.js)
+    "baseline", "bold", "italic", "underline", "strikethrough", "link", "eraser", "code",
+    "square-code", "heading-1", "heading-2", "heading-3", "text-quote", "list", "list-ordered",
+    "list-todo", "minus",
 ];
 {
     const pkg = "lucide-static";

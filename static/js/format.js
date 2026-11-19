@@ -9,7 +9,11 @@
 
    The link window (NP.format.linkWindow) is NoirPad's own: address with
    https://, http:// or mailto: only, an offer to add https:// to a bare
-   address, edit and remove an existing link. */
+   address, edit and remove an existing link.
+
+   The same actions fill the Format menu (top bar, #btn-format, with the
+   current keys) and the formatting part of the context menus: rich text
+   in paste.js, the Markdown source here. */
 window.NP = window.NP || {};
 
 (function (NP) {
@@ -389,6 +393,176 @@ window.NP = window.NP || {};
         });
     }
 
+    /* ---------------- Format menu and context menus ---------------- */
+
+    /* [id, icon, label key]; "-" = separator. The key shown next to an
+       item is the one set in the shortcut list (none = nothing shown). */
+    var RICH_ITEMS = [
+        ["md-bold", "bold", "format.items.bold"],
+        ["md-italic", "italic", "format.items.italic"],
+        ["fmt-underline", "underline", "format.items.underline"],
+        ["md-strikethrough", "strikethrough", "format.items.strike"],
+        "-",
+        ["md-link", "link", "format.items.link"],
+        "-",
+        ["clear-formatting", "eraser", "format.items.clear"]
+    ];
+    var MD_ITEMS = [
+        ["md-bold", "bold", "format.items.bold"],
+        ["md-italic", "italic", "format.items.italic"],
+        ["md-strikethrough", "strikethrough", "format.items.strike"],
+        ["md-code-inline", "code", "format.items.code"],
+        "-",
+        ["md-link", "link", "format.items.link"],
+        ["md-image", "image", "format.items.image"],
+        "-",
+        ["md-h1", "heading-1", "format.items.h1"],
+        ["md-h2", "heading-2", "format.items.h2"],
+        ["md-h3", "heading-3", "format.items.h3"],
+        ["md-quote", "text-quote", "format.items.quote"],
+        ["md-list-bullet", "list", "format.items.bullets"],
+        ["md-list-numbered", "list-ordered", "format.items.numbered"],
+        ["md-task", "list-todo", "format.items.task"],
+        ["md-code-block", "square-code", "format.items.codeBlock"],
+        ["md-horizontal-rule", "minus", "format.items.rule"]
+    ];
+    /* Context menus: the inline formats only (lines and blocks stay in
+       the Format menu). */
+    var MD_CONTEXT = ["md-bold", "md-italic", "md-strikethrough", "md-code-inline", "-", "md-link"];
+    var RICH_CONTEXT = ["md-bold", "md-italic", "fmt-underline", "md-strikethrough", "-", "md-link"];
+
+    function keysOf(id) {
+        return (NP.shortcuts && NP.shortcuts.getCurrent && NP.shortcuts.getCurrent(id)) || "";
+    }
+
+    /* Menu items for the open note; *only* limits them to those ids.
+       Rich text: a format needs selected text (a link also works with the
+       caret in a link); the formats the selection has are checked. */
+    function buildItems(only, range) {
+        var md = !!mdTextarea();
+        var list = md ? MD_ITEMS : RICH_ITEMS;
+        if (only) {
+            list = only.map(function (id) {
+                if (id === "-") return "-";
+                return list.filter(function (it) { return it !== "-" && it[0] === id; })[0];
+            }).filter(Boolean);
+        }
+        var r = md ? null : (range || richRange());
+        var state = md ? {} : richState(r);
+        var selected = !!(r && !r.collapsed);
+        return list.map(function (it) {
+            if (it === "-") return "-";
+            var id = it[0];
+            var item = { id: id, icon: it[1], label: NP.t(it[2]), keys: keysOf(id),
+                run: function () { apply(id); } };
+            if (!md) {
+                if (RICH[id] || id === "md-link") item.checked = !!state[id];
+                item.disabled = id === "md-link" ? !(selected || state["md-link"]) : !selected;
+            }
+            return item;
+        });
+    }
+
+    /* The selection to give back to the editor when the menu closes
+       (Escape, Tab or an item): the menu takes the focus meanwhile. */
+    function rememberSelection(range) {
+        var ta = mdTextarea();
+        if (ta) {
+            var s = ta.selectionStart, e = ta.selectionEnd;
+            return function () {
+                try { ta.focus({ preventScroll: true }); } catch (err) { ta.focus(); }
+                ta.setSelectionRange(s, e);
+            };
+        }
+        var saved = range ? range.cloneRange() : null;
+        return function () {
+            if (saved) selectRange(saved);
+            else if (richEditor()) richEditor().focus();
+        };
+    }
+
+    function canFormat() {
+        return !!(mdTextarea() || richEditor());
+    }
+
+    /* The editor's last selection: a click or Tab onto the Format button
+       may take it from the document before the menu opens. */
+    var lastRange = null;
+
+    function trackSelection() {
+        var r = richRange();
+        if (r) lastRange = r.cloneRange();
+    }
+
+    function menuRange() {
+        var r = richRange();
+        if (r) return r;
+        var ed = richEditor();
+        return lastRange && ed && ed.contains(lastRange.commonAncestorContainer) ? lastRange : null;
+    }
+
+    /* The Format button in the top bar. */
+    function openMenu(anchor) {
+        if (!NP.menu || !canFormat()) return null;
+        var r = mdTextarea() ? null : menuRange();
+        return NP.menu.open(anchor, buildItems(null, r), {
+            label: NP.t("format.menu"),
+            returnFocus: rememberSelection(r)
+        });
+    }
+
+    /* Right-click on selected Markdown source: cut / copy / paste and the
+       inline formats. Shift+right-click: the system menu. */
+    function onSourceContextMenu(e) {
+        var ta = mdTextarea();
+        if (!ta || e.target !== ta || e.shiftKey || !NP.menu) return;
+        if (ta.selectionStart === ta.selectionEnd) return;
+        e.preventDefault();
+        var items = [
+            { id: "cut", label: NP.t("editor.menu.cut"), keys: "Ctrl+X",
+                run: function () { document.execCommand("cut"); } },
+            { id: "copy", label: NP.t("editor.menu.copy"), keys: "Ctrl+C",
+                run: function () { document.execCommand("copy"); } },
+            { id: "paste", label: NP.t("editor.menu.paste"), keys: "Ctrl+V",
+                run: function () { pasteIntoSource(ta); } },
+            "-"
+        ].concat(buildItems(MD_CONTEXT));
+        NP.menu.open({ x: e.clientX, y: e.clientY }, items,
+            { keepFocus: true, label: NP.t("format.menu"), footer: NP.t("editor.menu.systemHint") });
+    }
+
+    function pasteIntoSource(ta) {
+        var s = ta.selectionStart, e = ta.selectionEnd;
+        var cb = navigator.clipboard;
+        function fail() {
+            if (NP.toast) NP.toast(NP.t("editor.menu.pasteBlocked"), { timeout: 4000 });
+        }
+        if (!cb || !cb.readText) { fail(); return; }
+        cb.readText().then(function (text) {
+            if (!text) return;
+            ta.focus();
+            ta.setRangeText(text, s, e, "end");
+            ta.dispatchEvent(new Event("input", { bubbles: true }));
+        }).catch(fail);
+    }
+
+    function init() {
+        registerShortcuts();
+        var ed = editorEl();
+        if (ed && !ed._npFormatTrack) {
+            ed._npFormatTrack = true;
+            document.addEventListener("selectionchange", trackSelection);
+            ed.addEventListener("focusout", trackSelection);
+            ed.addEventListener("keyup", trackSelection);
+            ed.addEventListener("mouseup", trackSelection);
+        }
+        var ta = document.getElementById("editor-md");
+        if (ta && !ta._npFormatMenu) {
+            ta._npFormatMenu = true;
+            ta.addEventListener("contextmenu", onSourceContextMenu);
+        }
+    }
+
     NP.format = {
         RICH: RICH,
         apply: apply,
@@ -397,7 +571,12 @@ window.NP = window.NP || {};
         richState: function () { return richState(richRange()); },
         richRange: richRange,
         selectRange: selectRange,
-        init: registerShortcuts
+        canFormat: canFormat,
+        menuItems: buildItems,
+        /* The formats for the rich-text context menu (paste.js). */
+        contextItems: function () { return buildItems(mdTextarea() ? MD_CONTEXT : RICH_CONTEXT); },
+        openMenu: openMenu,
+        init: init
     };
 
 })(window.NP);

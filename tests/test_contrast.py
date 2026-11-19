@@ -130,6 +130,9 @@ PAIRS += [
     ("--control-off", "--bg-entry", 3.0),
     # link window (format.js): "Use https://…" offer and the error, in a G7 window
     ("--accent", "--bg-light", 4.5), ("--danger", "--bg-light", 4.5),
+    # Format menu: a checked format is accent text on the menu; focused or
+    # hovered its text turns --fg-bright and the icon stays accent (3:1)
+    ("--fg-bright", "--hover-bg", 4.5), ("--accent", "--hover-bg", 3.0),
 ]
 
 

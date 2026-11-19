@@ -356,7 +356,7 @@
     "editor": {
       "title": "Editor",
       "monospace": "Each note is either rich text (formatting) or Markdown (Ctrl+M)",
-      "formatting": "Bold, italic, underline, strikethrough and links: the shortcuts are under Keyboard shortcuts",
+      "formatting": "Formatting: the Formatting menu in the top bar (next to Markdown) or right-click on selected text; the shortcuts are under Keyboard shortcuts",
       "undo": "Undo/redo history (Ctrl+Z / Ctrl+Y)",
       "orientation": "Ctrl+L toggles page orientation (landscape/portrait)"
     },
@@ -722,6 +722,7 @@
       "openNotes": "Open notes",
       "tools": "Note tools",
       "markdown": "Markdown",
+      "format": "Formatting",
       "split": "Preview next to the source",
       "splitMdOnly": "Preview next to the source (Markdown notes)",
       "favorite": "Favorite",
@@ -955,6 +956,26 @@
     "tokyo-night": "Midnight Blue"
   },
   "format": {
+    "menu": "Formatting",
+    "items": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strike": "Strikethrough",
+      "link": "Link…",
+      "clear": "Clear formatting",
+      "code": "Inline code",
+      "image": "Image",
+      "h1": "Heading 1",
+      "h2": "Heading 2",
+      "h3": "Heading 3",
+      "quote": "Quote",
+      "bullets": "Bullet list",
+      "numbered": "Numbered list",
+      "task": "Task",
+      "codeBlock": "Code block",
+      "rule": "Horizontal rule"
+    },
     "link": {
       "title": "Link",
       "editTitle": "Edit link",

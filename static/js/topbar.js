@@ -58,7 +58,8 @@ window.NP = window.NP || {};
         window.removeEventListener("blur", m.blur);
         window.removeEventListener("resize", m.blur);
         if (m.anchor && m.anchor.setAttribute) m.anchor.setAttribute("aria-expanded", "false");
-        if (restoreFocus && m.anchor && m.anchor.focus) m.anchor.focus();
+        if (restoreFocus && m.returnFocus) m.returnFocus();
+        else if (restoreFocus && m.anchor && m.anchor.focus) m.anchor.focus();
         if (m.onClose) m.onClose();
     }
 
@@ -70,7 +71,9 @@ window.NP = window.NP || {};
         /* anchor: an element (the menu opens under it, right-aligned when
            it would leave the window) or {x, y} (context menus).
            items: [{label, keys, icon, run, danger, disabled, checked}] or
-           "-" for a separator. opts: {keepFocus, onClose, label, footer}. */
+           "-" for a separator. opts: {keepFocus, onClose, label, footer,
+           returnFocus}: returnFocus() replaces "focus back to the anchor"
+           (the Format menu gives the editor its selection back). */
         open: function (anchor, items, opts) {
             opts = opts || {};
             closeMenu(false);
@@ -172,6 +175,7 @@ window.NP = window.NP || {};
                 el: el,
                 anchor: anchor && anchor.setAttribute ? anchor : null,
                 onClose: opts.onClose,
+                returnFocus: opts.returnFocus,
                 away: function (e) {
                     if (el.contains(e.target)) return;
                     /* A click on the anchor itself closes (and the anchor's
@@ -316,6 +320,13 @@ window.NP = window.NP || {};
             });
             var split = document.getElementById("btn-split");
             if (split) split.addEventListener("click", NP.topbar.toggleSplit);
+            /* Format menu (format.js): every format the open note's editor has. */
+            var fmt = document.getElementById("btn-format");
+            if (fmt) fmt.addEventListener("click", function () {
+                if (fmt._npJustClosed) { fmt._npJustClosed = false; return; }
+                if (openMenu && openMenu.anchor === fmt) { closeMenu(true); return; }
+                if (NP.format) NP.format.openMenu(fmt);
+            });
 
             /* The tab strip scrolls sideways with the mouse wheel. */
             var strip = document.getElementById("tab-bar");
@@ -353,6 +364,9 @@ window.NP = window.NP || {};
             var id = NP.state && NP.state.currentNoteId;
             var md = mdActive();
             setPressed(document.getElementById("btn-md-toggle"), md);
+
+            var fmt = document.getElementById("btn-format");
+            if (fmt) fmt.disabled = !(NP.format && NP.format.canFormat());
 
             var split = document.getElementById("btn-split");
             if (split) {

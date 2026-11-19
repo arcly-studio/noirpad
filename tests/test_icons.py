@@ -22,6 +22,8 @@ def _used():
         # setIcon(btn, "a") / setIcon(btn, cond ? "a" : "b")
         for args in re.findall(r"setIcon\([^,]+,([^)]*)\)", text):
             used |= set(re.findall(r'"([\w-]+)"', args))
+        # Format menu tables (format.js): [id, "icon", "format.items.…"]
+        used |= set(re.findall(r'\["[\w-]+", "([\w-]+)", "format\.items\.', text))
     return used
 
 

@@ -63,6 +63,10 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   `Ctrl+U` underline (rich text), `Ctrl+Shift+X` strikethrough, `Ctrl+K` link. In a rich-text note
   `Ctrl+K` opens a small window for the address (https://, http:// or mailto:) that also edits or
   removes a link. Before, `Ctrl+B` there turned on focus mode and `Ctrl+K` did nothing.
+- Formatting without shortcuts: the Formatting menu in the top bar (next to Markdown) lists every
+  format the note's editor has, with its current key; in a rich-text note the formats the
+  selection already has are ticked. Right-click on selected text adds the inline formats and
+  Link… to the menu (cut, copy and paste stay; Shift+right-click still gives the system menu).
 - Focus mode moved to `Ctrl+Shift+B`. If you had already given that key to another action, it stays
   there and focus mode has no key until you pick one.
 

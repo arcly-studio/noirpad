@@ -5156,3 +5156,26 @@ body.np-no-note #note-header {
 .np-link-remove {
     margin-right: auto;
 }
+
+/* ---- Format menu (format.js): formats the selection already has ---- */
+.np-menu-item[aria-checked="true"] {
+    color: var(--accent);
+    font-weight: 600;
+}
+.np-menu-item[aria-checked="true"] .np-icon {
+    color: var(--accent);
+}
+/* A mark that does not rely on colour (also in green on green themes). */
+.np-menu-item[aria-checked="true"] .np-menu-label::after {
+    content: " \2713";
+}
+.np-menu-item[aria-checked="true"]:focus,
+.np-menu-item[aria-checked="true"]:hover:not(:disabled) {
+    color: var(--fg-bright);
+}
+@media (forced-colors: active) {
+    .np-menu-item[aria-checked="true"] {
+        outline: 1px solid CanvasText;
+        outline-offset: -1px;
+    }
+}
