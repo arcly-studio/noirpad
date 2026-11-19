@@ -18,6 +18,8 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   itself.
 - If the Store edition already has notes of its own, nothing is copied over them: Settings → Data →
   Add notes from the installer version adds the GitHub edition's notes into a new folder instead.
+- The Store package's logo sits on a dark plate in the install window and on Windows 10 tiles
+  instead of the Windows accent colour.
 
 ### Locked notes
 - The formatting of a locked note, including its links, is now encrypted together with its text.

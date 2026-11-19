@@ -293,6 +293,17 @@ def test_manifest():
     assert not re.search(r"encrypt|šifr", msix_manifest.DESCRIPTION, re.I)
 
 
+def test_tile_background_is_dark_not_transparent():
+    """"transparent" lets Windows draw the plate in the accent colour (blue
+    square around the logo in the App Installer window, Windows 10 tiles)."""
+    root = ET.fromstring(msix_manifest.manifest("1.0.0").encode("utf-8"))
+    ve = root.find("m:Applications/m:Application/uap:VisualElements", NS).attrib
+    assert ve["BackgroundColor"].lower() != "transparent"
+    assert ve["BackgroundColor"] == "#0e0e10"
+    splash = root.find("m:Applications/m:Application/uap:VisualElements/uap:SplashScreen", NS).attrib
+    assert splash["BackgroundColor"] == ve["BackgroundColor"]
+
+
 def test_every_image_the_manifest_names_exists_in_all_scales():
     text = msix_manifest.manifest("1.0.0")
     names = set(re.findall(r'Assets\\(\w+)\.png', text))

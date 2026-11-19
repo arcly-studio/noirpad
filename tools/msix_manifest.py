@@ -32,7 +32,10 @@ PUBLISHER = "CN=7A230D16-A4F0-44D2-9725-8DF77823543E"
 PUBLISHER_DISPLAY_NAME = "Arcly Studio"
 MIN_VERSION = "10.0.17763.0"
 MAX_VERSION_TESTED = "10.0.26100.0"
-TILE_BACKGROUND = "transparent"
+# Plate behind the logos (App Installer window, Windows 10 tiles and app list).
+# "transparent" made Windows fill it with the accent colour (a blue square
+# around the logo); the dark tone of the splash screen blends with the logo.
+TILE_BACKGROUND = "#0e0e10"
 SPLASH_BACKGROUND = "#0e0e10"
 DESCRIPTION = "Markdown notes you can lock with a password."
 LANGUAGES = ("en-us", "cs-cz")
