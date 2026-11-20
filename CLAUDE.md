@@ -20,8 +20,8 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   rename / "Move to…" (`_openMoveMenu`) / delete.
 - Formatting: `static/js/format.js` = the actions behind Ctrl+B/I/U/Shift+X/K for rich text
   (browser editing commands -> `<b>/<i>/<u>/<strike>/<a>`, saved by `_extractFormats` as before) and
-  Markdown (`NP.markdown.edit`), the link window, the Format menu (`#btn-format`, next to
-  `#btn-md-toggle`) and the formats in the context menus (rich: `paste.js`, source: format.js).
+  Markdown (`NP.markdown.edit`), the link window, the Format menu (`#btn-format`, first in
+  `#top-tools`, before `#btn-md-toggle`) and the formats in the context menus (rich: `paste.js`, source: format.js).
   Menu keys come from `NP.shortcuts`, never hard-coded.
 - Note header `#note-header`: `#note-title-row` (rename in place -> `NP.app.renameNote`) and
   `#tag-bar` (rendered by `tags.js`).

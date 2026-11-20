@@ -2,6 +2,8 @@
 // (next to Markdown) lists every format the open note's editor has, with the
 // current keys; the context menu over selected text has the inline formats.
 // Rich text: on the selection, saved as formats; Markdown: the syntax.
+import fs from "node:fs";
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { BODY, flush, startApp } from "./flow.js";
 
@@ -9,8 +11,8 @@ const SCRIPTS = ["vendor/markdown-it/markdown-it.min.js", "vendor/dompurify/puri
     "js/dialog.js", "js/shortcuts.js", "js/markdown.js", "js/paste.js", "js/format.js",
     "js/focus-mode.js", "js/encryption.js", "js/app.js"];
 const TOOLS = `<div id="top-tools">
-  <button class="tb-btn" id="btn-md-toggle" type="button" data-label="ui.topBar.markdown"></button>
   <button class="tb-btn" id="btn-format" type="button" data-label="ui.topBar.format" aria-haspopup="menu" aria-expanded="false" disabled></button>
+  <button class="tb-btn" id="btn-md-toggle" type="button" data-label="ui.topBar.markdown"></button>
   <button class="tb-btn" id="btn-lock" type="button" data-label="ui.topBar.lock"></button>
 </div>`;
 const ENVELOPE = JSON.stringify({ encrypted: true, data: "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" });
@@ -243,5 +245,14 @@ describe("context menu over selected text", () => {
         expect(rightClick(win, ta).defaultPrevented).toBe(false);
         ta.setSelectionRange(0, 5);
         expect(rightClick(win, ta, { shiftKey: true }).defaultPrevented).toBe(false);
+    });
+});
+
+describe("top bar order", () => {
+    it("Formatting comes first, then Markdown", () => {
+        const html = fs.readFileSync(path.resolve(import.meta.dirname, "../../static/index.html"), "utf8");
+        const tools = html.match(/<div id="top-tools"[\s\S]*?<\/div>/)[0];
+        const order = [...tools.matchAll(/<button[^>]*\bid="([\w-]+)"/g)].map((m) => m[1]);
+        expect(order.slice(0, 3)).toEqual(["btn-format", "btn-md-toggle", "btn-split"]);
     });
 });
