@@ -75,6 +75,9 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   "Ctrl+click opens the link"; while `Ctrl` is held the pointer turns into a hand. Right-click on a
   link offers Open link, Edit link… and Remove link. Links have their own colour in every theme (in
   the note and in the Markdown preview), so they no longer look like underlined text.
+- Switching a note to Markdown and back (button or `Ctrl+M`) has a short transition: the preview
+  slides in from the right and the Markdown icon lights up briefly; the source and the cursor do not
+  move. Off with "reduce motion" in Windows and in high contrast.
 - Focus mode moved to `Ctrl+Shift+B`. If you had already given that key to another action, it stays
   there and focus mode has no key until you pick one.
 

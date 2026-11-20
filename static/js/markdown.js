@@ -129,6 +129,61 @@ window.NP = window.NP || {};
         return document.body.classList.contains("editor-md-active");
     }
 
+    /* Switch animation (button / Ctrl+M only, never when a note loads).
+       The switch is already done when it starts: the source shows at once,
+       the preview slides in from the right, back to rich text the editor
+       fades in, and the Markdown icon lights up. Only opacity and transform
+       move (noirpad.css); the source and its caret never do. Nothing with
+       prefers-reduced-motion or forced colours. */
+    var ANIM_FALLBACK_MS = 400;
+
+    function mediaOn(q) {
+        return !!(window.matchMedia && window.matchMedia(q).matches);
+    }
+
+    function play(el, cls) {
+        if (!el) return;
+        clearTimeout(el._npAnimTimer);
+        ["np-md-anim-slide", "np-md-anim-fade", "np-md-flash"].forEach(function (c) {
+            if (c !== cls) el.classList.remove(c);
+        });
+        if (el.classList.contains(cls)) {
+            /* Quick second switch: start over. */
+            el.classList.remove(cls);
+            void el.offsetWidth;
+        }
+        el.classList.add(cls);
+        function done() {
+            clearTimeout(el._npAnimTimer);
+            el.classList.remove(cls);
+            el.removeEventListener("animationend", done);
+        }
+        el.addEventListener("animationend", done);
+        el._npAnimTimer = setTimeout(done, ANIM_FALLBACK_MS);
+    }
+
+    function stop(el) {
+        if (!el) return;
+        clearTimeout(el._npAnimTimer);
+        el.classList.remove("np-md-anim-slide", "np-md-anim-fade");
+    }
+
+    function animateSwitch(toMd) {
+        if (mediaOn("(prefers-reduced-motion: reduce)") || mediaOn("(forced-colors: active)")) return;
+        var els = getEls();
+        if (toMd) {
+            stop(els.editor);
+            var preview = !document.body.classList.contains("md-no-preview");
+            if (preview) play(els.preview, "np-md-anim-slide");
+            else play(els.stack, "np-md-anim-fade");
+        } else {
+            stop(els.preview);
+            stop(els.stack);
+            play(els.editor, "np-md-anim-fade");
+        }
+        play(els.btn, "np-md-flash");
+    }
+
     function scheduleRender() {
         if (renderTimer) clearTimeout(renderTimer);
         renderTimer = setTimeout(function () {
@@ -257,6 +312,7 @@ window.NP = window.NP || {};
                 delete modes[id];
                 NP.markdown.disableForEditor();
             }
+            animateSwitch(nextMode === "markdown");
 
             var content;
             if (nextMode === "markdown") {
