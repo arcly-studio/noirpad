@@ -76,8 +76,9 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   `tests/test_theme_names.py` scans every file in the repo.
 - `static/css/themes.css` (17 themes). Tokens added in the redesign: `--font-brand`, `--bg-panel`,
   `--folder-color`, `--code-bg`, `--accent-soft`, `--danger`; later `--control-off`,
-  `--control-off-track` (grey off state of toggles) and `--md-src-text` (plain text in the
-  Markdown source). Use tokens, not hard-coded colours.
+  `--control-off-track` (grey off state of toggles), `--md-src-text` (plain text in the
+  Markdown source) and `--link` (links in a note and the preview; set in each of the 17 themes,
+  never the text colour, `test_contrast.py`). Use tokens, not hard-coded colours.
 - Markdown source colouring: `static/js/md-source.js` renders the underlay `#md-highlight` beneath
   the textarea `#editor-md` (drawn transparent while in sync); keep font metrics and scrolling identical.
 - `tests/test_contrast.py` checks all 17 themes: text incl. `--fg-muted` and `--danger` >= 4.5:1 (muted is text), icons / toggle outline >= 3:1. Run it after

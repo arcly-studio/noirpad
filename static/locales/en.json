@@ -989,7 +989,11 @@
       "errorScheme": "The address must start with https://, http:// or mailto:.",
       "useFix": "Use {url}",
       "noSelection": "Select the text for the link first.",
-      "placeholder": "https://…"
+      "placeholder": "https://…",
+      "tipHint": "Ctrl+click opens the link",
+      "open": "Open link",
+      "openKeys": "Ctrl+click",
+      "edit": "Edit link…"
     }
   }
 }

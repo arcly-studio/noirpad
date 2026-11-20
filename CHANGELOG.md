@@ -71,6 +71,10 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   of the selection, links included: bold, italic, underline, strike-through, links, colour,
   background, font and size, also when the selection starts or ends inside a formatted word.
   Before, it removed only colour, background, font and size. Code blocks stay as they are.
+- Links in a rich-text note: the pointer over a link (or the cursor in it) shows the address and
+  "Ctrl+click opens the link"; while `Ctrl` is held the pointer turns into a hand. Right-click on a
+  link offers Open link, Edit link… and Remove link. Links have their own colour in every theme (in
+  the note and in the Markdown preview), so they no longer look like underlined text.
 - Focus mode moved to `Ctrl+Shift+B`. If you had already given that key to another action, it stays
   there and focus mode has no key until you pick one.
 

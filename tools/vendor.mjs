@@ -62,6 +62,8 @@ const ICONS = [
     "list-todo", "minus",
     // NP.menu: the mark of a checked item, in its own column
     "check",
+    // links in a rich-text note: context menu (format.js)
+    "external-link", "unlink",
 ];
 {
     const pkg = "lucide-static";

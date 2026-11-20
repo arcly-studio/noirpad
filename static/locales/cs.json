@@ -1029,7 +1029,11 @@
       "errorScheme": "Adresa musí začínat https://, http:// nebo mailto:.",
       "useFix": "Použít {url}",
       "noSelection": "Nejdřív označte text, ze kterého má být odkaz.",
-      "placeholder": "https://…"
+      "placeholder": "https://…",
+      "tipHint": "Ctrl+klik otevře odkaz",
+      "open": "Otevřít odkaz",
+      "openKeys": "Ctrl+klik",
+      "edit": "Upravit odkaz…"
     }
   }
 }

@@ -13,7 +13,12 @@
 
    The same actions fill the Format menu (top bar, #btn-format, with the
    current keys) and the formatting part of the context menus: rich text
-   in paste.js, the Markdown source here. */
+   in paste.js, the Markdown source here.
+
+   Links in a rich-text note: a tooltip with the address and "Ctrl+click
+   opens the link" (pointer over the link, or the caret in it), the hand
+   cursor while Ctrl is held, and Open / Edit / Remove in the context menu.
+   Ctrl+click itself is links.js (https, http and mailto only). */
 window.NP = window.NP || {};
 
 (function (NP) {
@@ -482,6 +487,152 @@ window.NP = window.NP || {};
         return true;
     }
 
+    /* ---------------- Links in a rich-text note ---------------- */
+
+    /* The external link around *node* in the editable note, or null. */
+    function linkFrom(node) {
+        var ed = richEditor();
+        if (!ed || !node) return null;
+        for (var n = node; n && n !== ed; n = n.parentNode) {
+            if (n.nodeName === "A" && NP.linkKind(n.getAttribute("href")) === "external") {
+                return ed.contains(n) ? n : null;
+            }
+        }
+        return null;
+    }
+
+    function hrefOf(a) { return (a.getAttribute("href") || "").trim(); }
+
+    /* Only https, http and mailto (NP.linkKind), never in the app window. */
+    function openLink(a) {
+        hideTip();
+        var href = hrefOf(a);
+        if (NP.linkKind(href) !== "external") return false;
+        window.open(href, "_blank", "noopener,noreferrer");
+        return true;
+    }
+
+    function editLink(a) {
+        hideTip();
+        if (!selectContents(a)) return Promise.resolve(false);
+        return richLink();
+    }
+
+    function removeLink(a) {
+        hideTip();
+        if (!selectContents(a)) return false;
+        if (!exec("unlink")) { unwrap(a); fireInput(); }
+        return true;
+    }
+
+    /* Context menu over a link (paste.js). */
+    function linkItems(a) {
+        return [
+            { id: "link-open", icon: "external-link", label: NP.t("format.link.open"),
+                keys: NP.t("format.link.openKeys"), run: function () { openLink(a); } },
+            { id: "link-edit", icon: "pencil", label: NP.t("format.link.edit"),
+                keys: (NP.shortcuts && NP.shortcuts.getCurrent("md-link")) || "",
+                run: function () { editLink(a); } },
+            { id: "link-remove", icon: "unlink", label: NP.t("format.link.remove"),
+                run: function () { removeLink(a); } }
+        ];
+    }
+
+    /* Tooltip: the address (as text) and how to open it. */
+    var TIP_DELAY = 400;
+    var tip = null, tipLink = null, tipTimer = null;
+
+    function shortUrl(u) {
+        return u.length > 64 ? u.slice(0, 44) + "\u2026" + u.slice(-16) : u;
+    }
+
+    function hideTip() {
+        clearTimeout(tipTimer);
+        tipTimer = null;
+        tipLink = null;
+        if (tip && tip.parentNode) tip.parentNode.removeChild(tip);
+        tip = null;
+    }
+
+    function showTip(a) {
+        hideTip();
+        /* Never under an open menu (a right-click also moves the caret in). */
+        if (!a || !a.isConnected || (NP.menu && NP.menu.isOpen && NP.menu.isOpen())) return;
+        tipLink = a;
+        tip = document.createElement("div");
+        tip.className = "np-link-tip";
+        tip.id = "np-link-tip";
+        tip.setAttribute("role", "tooltip");
+        var url = document.createElement("div");
+        url.className = "np-link-tip-url";
+        url.textContent = shortUrl(hrefOf(a));
+        var hint = document.createElement("div");
+        hint.className = "np-link-tip-hint";
+        hint.textContent = NP.t("format.link.tipHint");
+        tip.appendChild(url);
+        tip.appendChild(hint);
+        document.body.appendChild(tip);
+        var r = a.getBoundingClientRect();
+        var box = tip.getBoundingClientRect();
+        var x = Math.max(4, Math.min(r.left, window.innerWidth - box.width - 4));
+        var y = r.bottom + 6;
+        if (y + box.height > window.innerHeight - 4) y = Math.max(4, r.top - box.height - 6);
+        tip.style.left = x + "px";
+        tip.style.top = y + "px";
+    }
+
+    function tipLater(a) {
+        if (a === tipLink && tip) return;
+        clearTimeout(tipTimer);
+        tipTimer = setTimeout(function () { showTip(a); }, TIP_DELAY);
+    }
+
+    function onLinkOver(e) {
+        var a = linkFrom(e.target);
+        if (a) tipLater(a);
+    }
+
+    function onLinkOut(e) {
+        var a = linkFrom(e.target);
+        if (!a || (e.relatedTarget && a.contains(e.relatedTarget))) return;
+        /* The caret may still be in this link: then the tip stays. */
+        var r = richRange();
+        if (r && r.collapsed && linkFrom(r.startContainer) === a) return;
+        hideTip();
+    }
+
+    /* The caret moved: a tip for the link it is in (keyboard users). */
+    function onCaret() {
+        var r = richRange();
+        var a = r && r.collapsed && document.activeElement === editorEl() ? linkFrom(r.startContainer) : null;
+        if (a) tipLater(a);
+        else if (tip || tipTimer) hideTip();
+    }
+
+    /* Hand cursor over links while Ctrl is held. */
+    function onCtrl(e) {
+        var on = e.type === "keydown" ? (e.key === "Control" || e.ctrlKey) : (e.ctrlKey && e.key !== "Control");
+        if (e.type === "blur") on = false;
+        document.body.classList.toggle("np-ctrl-down", !!on);
+    }
+
+    function bindLinks(ed) {
+        if (ed._npLinkTips) return;
+        ed._npLinkTips = true;
+        ed.addEventListener("mouseover", onLinkOver);
+        ed.addEventListener("mouseout", onLinkOut);
+        ed.addEventListener("mousedown", hideTip);
+        ed.addEventListener("input", hideTip);
+        document.addEventListener("selectionchange", onCaret);
+        document.addEventListener("scroll", hideTip, true);
+        document.addEventListener("keydown", onCtrl, true);
+        document.addEventListener("keyup", onCtrl, true);
+        window.addEventListener("blur", function (e) { hideTip(); onCtrl(e); });
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && tip) hideTip();
+        }, true);
+    }
+
     /* ---------------- Actions ---------------- */
 
     var SHARED = ["md-bold", "md-italic", "fmt-underline", "md-strikethrough", "md-link"];
@@ -690,6 +841,7 @@ window.NP = window.NP || {};
             ed.addEventListener("keyup", trackSelection);
             ed.addEventListener("mouseup", trackSelection);
         }
+        if (ed) bindLinks(ed);
         var ta = document.getElementById("editor-md");
         if (ta && !ta._npFormatMenu) {
             ta._npFormatMenu = true;
@@ -705,6 +857,11 @@ window.NP = window.NP || {};
         richState: function () { return richState(richRange()); },
         richRange: richRange,
         clearRange: clearRange,
+        /* Links in a rich-text note (paste.js context menu). */
+        linkFrom: linkFrom,
+        linkItems: linkItems,
+        openLink: openLink,
+        hideTip: hideTip,
         selectRange: selectRange,
         canFormat: canFormat,
         menuItems: buildItems,

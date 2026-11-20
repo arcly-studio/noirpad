@@ -491,11 +491,24 @@ window.NP = window.NP || {};
 
         _onContextMenu: function (e) {
             var r = editorRange();
-            /* No selection, or Shift+right-click: the system menu (spelling
-               suggestions, Select all). */
-            if (!r || r.collapsed || e.shiftKey || !richEditorActive() || !NP.menu) return;
+            if (e.shiftKey || !richEditorActive() || !NP.menu) return;
+            /* Over a link: Open / Edit… / Remove first, also without a
+               selection. */
+            var link = NP.format && NP.format.linkFrom ? NP.format.linkFrom(e.target) : null;
+            var linkPart = link ? NP.format.linkItems(link) : [];
+            /* No selection and no link, or Shift+right-click: the system
+               menu (spelling suggestions, Select all). */
+            if (!r || r.collapsed) {
+                if (!link) return;
+                e.preventDefault();
+                if (NP.format.hideTip) NP.format.hideTip();
+                NP.menu.open({ x: e.clientX, y: e.clientY }, linkPart,
+                    { keepFocus: true, footer: NP.t("editor.menu.systemHint") });
+                return;
+            }
             e.preventDefault();
-            NP.menu.open({ x: e.clientX, y: e.clientY }, [
+            if (link && NP.format.hideTip) NP.format.hideTip();
+            NP.menu.open({ x: e.clientX, y: e.clientY }, (link ? linkPart.concat(["-"]) : []).concat([
                 { id: "cut", label: NP.t("editor.menu.cut"), keys: "Ctrl+X",
                     run: function () { document.execCommand("cut"); } },
                 { id: "copy", label: NP.t("editor.menu.copy"), keys: "Ctrl+C",
@@ -509,7 +522,7 @@ window.NP = window.NP || {};
                 { id: "clear", label: NP.t("editor.clearFormatting.label"),
                     keys: (NP.shortcuts && NP.shortcuts.getCurrent("clear-formatting")) || "",
                     run: NP.paste.clearFormatting }
-            ]), { keepFocus: true, footer: NP.t("editor.menu.systemHint") });
+            ])), { keepFocus: true, footer: NP.t("editor.menu.systemHint") });
         }
     };
 

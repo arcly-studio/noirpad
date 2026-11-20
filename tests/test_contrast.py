@@ -136,6 +136,42 @@ PAIRS += [
 ]
 
 
+# 1.1.0: links have their own colour (--link) in every theme, set in the
+# theme's own rules: readable on the note, the code blocks and the windows,
+# and clearly another colour than the text and the accent (in the neon themes
+# the text IS the accent, so a link looked like underlined text).
+LINK_BGS = ("--bg", "--bg-entry", "--bg-light", "--code-bg")
+
+
+def _rgb_distance(a, b):
+    return sum((x - y) ** 2 for x, y in zip(a, b)) ** 0.5
+
+
+@pytest.mark.parametrize("theme", THEMES)
+def test_link_colour_is_its_own_and_readable(theme):
+    own = {}
+    for sel, body in re.findall(r"([^{}]+)\{([^{}]*)\}", CSS):
+        if re.fullmatch(rf'\s*\[data-theme="{theme}"\]\s*', sel):
+            own.update(dict(re.findall(r"(--[\w-]+)\s*:\s*([^;]+);", body)))
+    assert "--link" in own, f"{theme}: no --link of its own"
+    env = _theme_env(theme)
+    link = _resolve_any(env["--link"], env)
+    for bg in LINK_BGS:
+        ratio = contrast(link, _resolve_any(env[bg], env))
+        assert ratio >= 4.5, f"{theme}: --link on {bg} = {ratio:.2f}"
+    for other in ("--fg", "--accent"):
+        d = _rgb_distance(link, _resolve_any(env[other], env))
+        assert d >= 90, f"{theme}: --link too close to {other} ({d:.0f})"
+
+
+def test_links_use_the_link_token():
+    css = re.sub(r"/\*.*?\*/", "", (ROOT / "static" / "css" / "noirpad.css").read_text(encoding="utf-8"),
+                 flags=re.S)
+    for sel in (r"#editor a\[href\]", r"#md-preview \.md-link", r"\.np-link-tip-url"):
+        body = re.search(rf"(?m)^{sel}\s*\{{([^}}]*)\}}", css).group(1)
+        assert re.search(r"(?<![-\w])color\s*:\s*var\(--link\)", body), sel
+
+
 @pytest.mark.parametrize("theme", THEMES)
 @pytest.mark.parametrize("fg,bg,need", PAIRS)
 def test_g8_redesign_contrast(theme, fg, bg, need):
