@@ -67,7 +67,7 @@ describe("leaving a Markdown note empties the coloured source copy (E6)", () => 
 describe("Clear formatting next to a code block (E7, E11)", () => {
     function setup() {
         const win = loadApp(["vendor/dompurify/purify.min.js", "vendor/highlight/highlight.min.js", "js/utils.js",
-            "js/syntax-highlight.js", "js/editor.js", "js/paste.js", "js/shortcuts.js"]);
+            "js/syntax-highlight.js", "js/editor.js", "js/paste.js", "js/format.js", "js/shortcuts.js"]);
         const ed = win.document.getElementById("editor");
         win.NP.editor.el = ed;
         win.NP.editor.renderContent(ed, "intro\n```js\nx=1\n```\nafter more\nend", []);

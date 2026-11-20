@@ -318,7 +318,7 @@
       "redo": "Znovu",
       "paste": "Vložit (včetně obrázků)",
       "pastePlain": "Vložit jako prostý text",
-      "clearFormatting": "Vymazat formátování označeného textu (barva, pozadí, písmo, velikost)",
+      "clearFormatting": "Vymazat veškeré formátování označeného textu včetně odkazů",
       "linkOpen": "Otevřít odkaz v poznámce",
       "commandBar": "Příkazová lišta",
       "nextTab": "Další karta",

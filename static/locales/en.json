@@ -296,7 +296,7 @@
       "redo": "Redo",
       "paste": "Paste (including images)",
       "pastePlain": "Paste as plain text",
-      "clearFormatting": "Clear formatting of the selection (colour, background, font, size)",
+      "clearFormatting": "Clear all formatting of the selection, links included",
       "linkOpen": "Open a link in the note",
       "commandBar": "Command bar",
       "nextTab": "Next tab",

@@ -470,8 +470,9 @@ window.NP = window.NP || {};
             insertPasted(frag);
         },
 
-        /* Colours, background, font and size off the selection; bold,
-           italic, underline, strike and links stay. */
+        /* Every format off the selection: bold, italic, underline, strike,
+           links, colour, background, font and size (format.js clearRange).
+           Code blocks are taken whole and stay as they are. */
         clearFormatting: function () {
             if (!richEditorActive()) return false;
             var r = editorRange();
@@ -484,9 +485,7 @@ window.NP = window.NP || {};
             var sel = window.getSelection();
             sel.removeAllRanges();
             sel.addRange(r);
-            var box = document.createElement("div");
-            box.appendChild(r.cloneContents());
-            insertFragment(clean(box, true));
+            if (NP.format && NP.format.clearRange) NP.format.clearRange(r);
             return true;
         },
 

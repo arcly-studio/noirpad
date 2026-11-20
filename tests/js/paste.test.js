@@ -11,7 +11,7 @@ let win, editor;
 
 beforeEach(() => {
     win = loadApp(["vendor/dompurify/purify.min.js", "vendor/highlight/highlight.min.js", "js/utils.js",
-        "js/syntax-highlight.js", "js/editor.js", "js/paste.js", "js/shortcuts.js"]);
+        "js/syntax-highlight.js", "js/editor.js", "js/paste.js", "js/format.js", "js/shortcuts.js"]);
     editor = win.document.getElementById("editor");
     win.NP.editor.el = editor;
 });
@@ -193,7 +193,8 @@ describe("paste event", () => {
 });
 
 describe("clear formatting", () => {
-    it("removes colour, font and size from the selection, keeps bold and italic", () => {
+    // 1.1.0: every format of the selection goes (before: bold and italic stayed)
+    it("removes colour, font, size, bold and italic from the selection, nothing outside it", () => {
         win.NP.editor.renderContent(editor, "ahoj světe konec", [
             { start: "1.0", end: "1.10", color: "#000000", font: "Arial", size: 20 },
             { start: "1.0", end: "1.4", bold: true },
@@ -209,8 +210,6 @@ describe("clear formatting", () => {
         const { text, runs } = stored();
         expect(text).toBe("ahoj světe konec");
         expect(runs).toEqual([
-            { text: "ahoj", bold: true },
-            { text: "světe", italic: true },
             { text: "konec", color: "rgb(255, 0, 0)" },
         ]);
     });

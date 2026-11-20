@@ -348,6 +348,140 @@ window.NP = window.NP || {};
             });
     }
 
+    /* ---------------- Clear formatting ---------------- */
+
+    /* Everything "Clear formatting" removes: the text formats, links and
+       styled runs (colour, background, font, size). A span with a class
+       belongs to something else (code block, image) and stays. */
+    var CLEAR_TAGS = /^(B|STRONG|I|EM|U|S|STRIKE|DEL|INS|A|FONT|SPAN|SUB|SUP|MARK)$/;
+
+    function inCode(n) {
+        var el = n.nodeType === 1 ? n : n.parentNode;
+        return !!(el && el.closest && el.closest("pre"));
+    }
+
+    function isFormatEl(n) {
+        return n.nodeType === 1 && CLEAR_TAGS.test(n.nodeName) && !inCode(n) &&
+            !(n.nodeName === "SPAN" && n.className);
+    }
+
+    /* The outermost formatting element around *node* inside the editor. */
+    function topFormat(node) {
+        var ed = editorEl(), top = null;
+        for (var n = node; n && n !== ed; n = n.parentNode) {
+            if (isFormatEl(n)) top = n;
+        }
+        return top;
+    }
+
+    function hasContent(n) {
+        return n.textContent !== "" || !!(n.querySelector && n.querySelector("img,br,pre"));
+    }
+
+    /* Text nodes with at least one character inside *r*. */
+    function selectedTexts(r) {
+        var root = r.commonAncestorContainer;
+        if (root.nodeType === 3) return r.collapsed ? [] : [root];
+        var out = [];
+        var walker = document.createTreeWalker(root, 4);
+        for (var t = walker.nextNode(); t; t = walker.nextNode()) {
+            if (!r.intersectsNode(t)) continue;
+            if (t === r.startContainer && r.startOffset >= t.length) continue;
+            if (t === r.endContainer && r.endOffset === 0) continue;
+            if (t.length) out.push(t);
+        }
+        return out;
+    }
+
+    function formattedText(r) {
+        return selectedTexts(r).some(function (t) { return !inCode(t) && !!topFormat(t.parentNode); });
+    }
+
+    /* Unwrap every formatting element under *root* (code blocks untouched). */
+    function stripFormats(root) {
+        var all = root.querySelectorAll ? root.querySelectorAll("*") : [];
+        for (var i = all.length - 1; i >= 0; i--) {
+            if (isFormatEl(all[i])) unwrap(all[i]);
+        }
+    }
+
+    /* Formatting elements left empty by splitting a run at the edges. */
+    function dropEmpty(root) {
+        var all = root.querySelectorAll("*");
+        for (var i = all.length - 1; i >= 0; i--) {
+            if (isFormatEl(all[i]) && !hasContent(all[i]) && all[i].parentNode) {
+                all[i].parentNode.removeChild(all[i]);
+            }
+        }
+    }
+
+    /* Without the browser's editing commands (tests) or where they left a
+       format: split the runs at the selection's edges, unwrap everything
+       in between, select the same text again. */
+    function clearDom(r) {
+        var ed = editorEl();
+        var first, last;
+        var outer = topFormat(r.commonAncestorContainer);
+        if (outer) {
+            /* The selection is inside one run: cut off the parts before and
+               after it as copies of the run, then unwrap the run. */
+            var before = document.createRange();
+            before.setStart(outer, 0);
+            before.setEnd(r.startContainer, r.startOffset);
+            var head = before.extractContents();
+            if (hasContent(head)) {
+                var h = outer.cloneNode(false);
+                h.appendChild(head);
+                outer.parentNode.insertBefore(h, outer);
+            }
+            var after = document.createRange();
+            after.setStart(r.endContainer, r.endOffset);
+            after.setEnd(outer, outer.childNodes.length);
+            var tail = after.extractContents();
+            if (hasContent(tail)) {
+                var t = outer.cloneNode(false);
+                t.appendChild(tail);
+                outer.parentNode.insertBefore(t, outer.nextSibling);
+            }
+            stripFormats(outer);
+            first = outer.firstChild;
+            last = outer.lastChild;
+            unwrap(outer);
+        } else {
+            /* Partly selected runs are split by extractContents. */
+            var box = document.createElement("div");
+            box.appendChild(r.extractContents());
+            stripFormats(box);
+            first = box.firstChild;
+            last = box.lastChild;
+            var frag = document.createDocumentFragment();
+            while (box.firstChild) frag.appendChild(box.firstChild);
+            r.insertNode(frag);
+        }
+        dropEmpty(ed);
+        if (first && last && ed.contains(first) && ed.contains(last)) {
+            var nr = document.createRange();
+            nr.setStartBefore(first);
+            nr.setEndAfter(last);
+            selectRange(nr);
+        }
+        fireInput();
+    }
+
+    /* Clear formatting of *r* (already the editor's selection): bold,
+       italic, underline, strike, links, colour, background, font and size.
+       The browser's commands first (Ctrl+Z undoes them), the DOM for what
+       they leave. */
+    function clearRange(r) {
+        if (!r || r.collapsed) return false;
+        selectRange(r);
+        var done = exec("removeFormat");
+        if (done) exec("unlink");
+        var cur = richRange() || r;
+        if (!cur.collapsed && formattedText(cur)) clearDom(cur);
+        return true;
+    }
+
     /* ---------------- Actions ---------------- */
 
     var SHARED = ["md-bold", "md-italic", "fmt-underline", "md-strikethrough", "md-link"];
@@ -570,6 +704,7 @@ window.NP = window.NP || {};
         linkWindow: linkWindow,
         richState: function () { return richState(richRange()); },
         richRange: richRange,
+        clearRange: clearRange,
         selectRange: selectRange,
         canFormat: canFormat,
         menuItems: buildItems,

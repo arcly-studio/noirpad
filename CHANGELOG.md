@@ -67,6 +67,10 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   format the note's editor has, with its current key; in a rich-text note the formats the
   selection already has are ticked. Right-click on selected text adds the inline formats and
   Link… to the menu (cut, copy and paste stay; Shift+right-click still gives the system menu).
+- "Clear formatting" (`Ctrl+Space`, the Formatting menu, right-click) now removes all formatting
+  of the selection, links included: bold, italic, underline, strike-through, links, colour,
+  background, font and size, also when the selection starts or ends inside a formatted word.
+  Before, it removed only colour, background, font and size. Code blocks stay as they are.
 - Focus mode moved to `Ctrl+Shift+B`. If you had already given that key to another action, it stays
   there and focus mode has no key until you pick one.
 
