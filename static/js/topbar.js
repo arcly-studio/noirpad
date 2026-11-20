@@ -67,13 +67,28 @@ window.NP = window.NP || {};
         return Array.prototype.slice.call(el.querySelectorAll(".np-menu-item:not([disabled])"));
     }
 
+    /* How the user acts right now: a menu opened by the mouse shows no
+       highlighted item (a focused first item looked like an active format);
+       opened from the keyboard, the first item takes the focus. Until the
+       first mouse press, as from the keyboard. */
+    var lastInput = "key";
+    function trackInput(e) { lastInput = e.type === "keydown" ? "key" : "pointer"; }
+    document.addEventListener("keydown", trackInput, true);
+    document.addEventListener("mousedown", trackInput, true);
+    document.addEventListener("pointerdown", trackInput, true);
+    document.addEventListener("touchstart", trackInput, { capture: true, passive: true });
+
     NP.menu = {
         /* anchor: an element (the menu opens under it, right-aligned when
            it would leave the window) or {x, y} (context menus).
            items: [{label, keys, icon, run, danger, disabled, checked}] or
            "-" for a separator. opts: {keepFocus, onClose, label, footer,
-           returnFocus}: returnFocus() replaces "focus back to the anchor"
-           (the Format menu gives the editor its selection back). */
+           returnFocus, keyboard}: returnFocus() replaces "focus back to the
+           anchor" (the Format menu gives the editor its selection back);
+           keyboard (default: the last input was a key) puts the focus on the
+           first item, otherwise on the menu itself (arrows still work).
+           An item with `checked` gets a ✓ in its own column at the start;
+           a menu with such items keeps that column on every row. */
         open: function (anchor, items, opts) {
             opts = opts || {};
             closeMenu(false);
@@ -81,7 +96,12 @@ window.NP = window.NP || {};
             var el = document.createElement("div");
             el.className = "np-menu";
             el.setAttribute("role", "menu");
+            el.tabIndex = -1;
             if (opts.label) el.setAttribute("aria-label", opts.label);
+            var byKeyboard = opts.keyboard !== undefined ? !!opts.keyboard : lastInput === "key";
+            if (byKeyboard) el.classList.add("np-menu--keyboard");
+            var checks = items.some(function (it) { return it !== "-" && it.checked !== undefined; });
+            if (checks) el.classList.add("np-menu--checks");
 
             items.forEach(function (it) {
                 if (it === "-") {
@@ -99,6 +119,13 @@ window.NP = window.NP || {};
                 if (it.disabled) b.disabled = true;
                 if (it.id) b.setAttribute("data-id", it.id);
                 b.tabIndex = -1;
+                if (checks) {
+                    var mark = document.createElement("span");
+                    mark.className = "np-menu-check";
+                    mark.setAttribute("aria-hidden", "true");
+                    if (it.checked) mark.appendChild(NP.icon("check"));
+                    b.appendChild(mark);
+                }
                 var icon = it.icon ? NP.icon(it.icon) : document.createElement("span");
                 if (!it.icon) icon.className = "np-icon np-icon--blank";
                 b.appendChild(icon);
@@ -135,8 +162,10 @@ window.NP = window.NP || {};
                 var list = menuItems(el);
                 var i = list.indexOf(document.activeElement);
                 var to = null;
+                /* The keys mean the keyboard: from now on the focus shows. */
+                if (/^(ArrowDown|ArrowUp|Home|End)$/.test(e.key)) el.classList.add("np-menu--keyboard");
                 if (e.key === "ArrowDown") to = list[(i + 1) % list.length];
-                else if (e.key === "ArrowUp") to = list[(i - 1 + list.length) % list.length];
+                else if (e.key === "ArrowUp") to = list[i < 0 ? list.length - 1 : (i - 1 + list.length) % list.length];
                 else if (e.key === "Home") to = list[0];
                 else if (e.key === "End") to = list[list.length - 1];
                 else if (e.key === "Tab") { e.preventDefault(); closeMenu(true); return; }
@@ -213,7 +242,8 @@ window.NP = window.NP || {};
             }, 0);
             if (!opts.keepFocus) {
                 var first = menuItems(el)[0];
-                if (first) first.focus();
+                if (first && byKeyboard) first.focus();
+                else el.focus();
             }
             return el;
         },

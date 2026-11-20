@@ -14,6 +14,8 @@ const TOOLS = `<div id="top-tools">
   <button class="tb-btn" id="btn-format" type="button" data-label="ui.topBar.format" aria-haspopup="menu" aria-expanded="false" disabled></button>
   <button class="tb-btn" id="btn-md-toggle" type="button" data-label="ui.topBar.markdown"></button>
   <button class="tb-btn" id="btn-lock" type="button" data-label="ui.topBar.lock"></button>
+  <button class="tb-btn" id="btn-export" type="button" data-label="ui.topBar.export" aria-haspopup="menu" aria-expanded="false"></button>
+  <button class="tb-btn" id="btn-more" type="button" data-label="ui.topBar.more" aria-haspopup="menu" aria-expanded="false"></button>
 </div>`;
 const ENVELOPE = JSON.stringify({ encrypted: true, data: "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" });
 const TREE = [{ id: "r", name: "Rich", type: "note" }, { id: "m", name: "Md", type: "note" },
@@ -254,5 +256,114 @@ describe("top bar order", () => {
         const tools = html.match(/<div id="top-tools"[\s\S]*?<\/div>/)[0];
         const order = [...tools.matchAll(/<button[^>]*\bid="([\w-]+)"/g)].map((m) => m[1]);
         expect(order.slice(0, 3)).toEqual(["btn-format", "btn-md-toggle", "btn-split"]);
+    });
+});
+
+// Opened by the mouse no item may look highlighted (a focused Bold looked
+// like an active format); from the keyboard the first item has the focus,
+// drawn as a frame. An active format is a ✓ in its own column. Every menu
+// of NP.menu behaves the same.
+const CSS = fs.readFileSync(path.resolve(import.meta.dirname, "../../static/css/noirpad.css"), "utf8");
+
+function mouseClick(win, el, button = 0) {
+    el.dispatchEvent(new win.MouseEvent("mousedown", { bubbles: true, cancelable: true, button }));
+    el.dispatchEvent(new win.MouseEvent("mouseup", { bubbles: true, cancelable: true, button }));
+    el.dispatchEvent(new win.MouseEvent("click", { bubbles: true, cancelable: true, button, detail: 1 }));
+}
+
+function keyClick(win, el) {
+    el.focus();
+    el.dispatchEvent(new win.KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    el.click();                                   // Enter on a <button> = click
+}
+
+const focusedItem = (win) => win.document.activeElement.closest(".np-menu-item");
+
+describe("menus: mouse versus keyboard, the ✓ column", () => {
+    it("Formatting by the mouse: no item highlighted, the arrows still reach the items", async () => {
+        const { win } = await boot("r");
+        selectText(win, "world");
+        mouseClick(win, btn(win));
+        const m = menu(win);
+        expect(m).not.toBeNull();
+        expect(focusedItem(win)).toBeNull();
+        expect(win.document.activeElement).toBe(m);
+        expect(m.classList.contains("np-menu--keyboard")).toBe(false);
+        m.dispatchEvent(new win.KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }));
+        expect(focusedItem(win).getAttribute("data-id")).toBe("md-bold");
+        expect(m.classList.contains("np-menu--keyboard")).toBe(true);
+        // ArrowUp from the menu itself: the last item
+        menu(win).remove();
+        mouseClick(win, btn(win));
+        mouseClick(win, btn(win));
+        expect(menu(win)).not.toBeNull();
+        win.document.activeElement.dispatchEvent(
+            new win.KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true, cancelable: true }));
+        expect(focusedItem(win).getAttribute("data-id")).toBe("clear-formatting");
+        // Escape from the menu itself: the editor with its selection
+        press(win, "Escape");
+        expect(menu(win)).toBeNull();
+        expect(win.document.activeElement.id).toBe("editor");
+        expect(win.getSelection().toString()).toBe("world");
+    });
+
+    it("Formatting by the keyboard: the first item has the focus, shown as a frame", async () => {
+        const { win } = await boot("r");
+        selectText(win, "world");
+        keyClick(win, btn(win));
+        expect(focusedItem(win).getAttribute("data-id")).toBe("md-bold");
+        expect(menu(win).classList.contains("np-menu--keyboard")).toBe(true);
+        expect(CSS).toMatch(/\.np-menu--keyboard \.np-menu-item:focus \{\s*outline: 2px solid var\(--accent\)/);
+    });
+
+    it("an active format: ✓ in its own column at the start, not after the label", async () => {
+        const { win } = await boot("r");
+        selectText(win, "world");
+        keyClick(win, btn(win));
+        item(win, "md-bold").click();
+        selectText(win, "world");
+        mouseClick(win, btn(win));
+        for (const b of menu(win).querySelectorAll(".np-menu-item")) {
+            const first = b.firstElementChild;
+            expect(first.classList.contains("np-menu-check")).toBe(true);
+            expect(first.getAttribute("aria-hidden")).toBe("true");
+            const on = b.getAttribute("aria-checked") === "true";
+            expect(!!first.querySelector('use[href$="#i-check"]')).toBe(on);
+        }
+        expect(item(win, "md-bold").getAttribute("aria-checked")).toBe("true");
+        expect(item(win, "md-italic").getAttribute("aria-checked")).toBe("false");
+        expect(CSS).not.toMatch(/\.np-menu-label::after/);
+        expect(CSS).not.toMatch(/\[aria-checked="true"\][^{]*\{[^}]*color: var\(--accent\)/);
+    });
+
+    for (const [id, first] of [["btn-export", "txt"], ["btn-more", "commands"]]) {
+        it(`${id}: the same rule, no ✓ column without checkable items`, async () => {
+            const { win } = await boot("r");
+            const b = win.document.getElementById(id);
+            mouseClick(win, b);
+            expect(menu(win)).not.toBeNull();
+            expect(focusedItem(win)).toBeNull();
+            expect(win.document.activeElement).toBe(menu(win));
+            expect(menu(win).querySelector(".np-menu-check")).toBeNull();
+            press(win, "Escape");
+            expect(menu(win)).toBeNull();
+            expect(win.document.activeElement).toBe(b);
+            keyClick(win, b);
+            expect(focusedItem(win).getAttribute("data-id")).toBe(first);
+            expect(menu(win).classList.contains("np-menu--keyboard")).toBe(true);
+        });
+    }
+
+    it("tree context menu: right-click highlights nothing, the context-menu key focuses the first item", async () => {
+        const { win, NP } = await boot("r");
+        const row = NP.tree._row("m");
+        row.dispatchEvent(new win.MouseEvent("mousedown", { bubbles: true, cancelable: true, button: 2 }));
+        row.dispatchEvent(new win.MouseEvent("contextmenu", { bubbles: true, cancelable: true, button: 2, clientX: 5, clientY: 5 }));
+        expect(menu(win)).not.toBeNull();
+        expect(focusedItem(win)).toBeNull();
+        NP.menu.close();
+        row.focus();
+        row.dispatchEvent(new win.KeyboardEvent("keydown", { key: "ContextMenu", bubbles: true, cancelable: true }));
+        expect(focusedItem(win).getAttribute("data-id")).toBe("rename");
     });
 });

@@ -60,6 +60,8 @@ const ICONS = [
     "baseline", "bold", "italic", "underline", "strikethrough", "link", "eraser", "code",
     "square-code", "heading-1", "heading-2", "heading-3", "text-quote", "list", "list-ordered",
     "list-todo", "minus",
+    // NP.menu: the mark of a checked item, in its own column
+    "check",
 ];
 {
     const pkg = "lucide-static";

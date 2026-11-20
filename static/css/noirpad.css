@@ -293,11 +293,37 @@ input, textarea {
     color: var(--fg-muted);
 }
 
+/* Hover: the background only. The keyboard focus has a frame on top, so
+   it never looks like the ✓ of an active item. A menu opened by the mouse
+   focuses the menu itself, no item (topbar.js). */
+.np-menu:focus {
+    outline: none;
+}
+
 .np-menu-item:hover:not(:disabled),
 .np-menu-item:focus {
     background: var(--hover-bg);
     color: var(--fg-bright);
     outline: none;
+}
+
+.np-menu-item:focus-visible,
+.np-menu--keyboard .np-menu-item:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+/* ✓ of a checked item (format menu): its own column at the start. */
+.np-menu-check {
+    display: inline-flex;
+    width: 14px;
+    flex-shrink: 0;
+}
+
+.np-menu-check .np-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--accent);
 }
 
 .np-menu-item:disabled {
@@ -5157,25 +5183,16 @@ body.np-no-note #note-header {
     margin-right: auto;
 }
 
-/* ---- Format menu (format.js): formats the selection already has ---- */
-.np-menu-item[aria-checked="true"] {
-    color: var(--accent);
-    font-weight: 600;
-}
-.np-menu-item[aria-checked="true"] .np-icon {
-    color: var(--accent);
-}
-/* A mark that does not rely on colour (also in green on green themes). */
-.np-menu-item[aria-checked="true"] .np-menu-label::after {
-    content: " \2713";
-}
-.np-menu-item[aria-checked="true"]:focus,
-.np-menu-item[aria-checked="true"]:hover:not(:disabled) {
-    color: var(--fg-bright);
-}
+/* ---- Format menu (format.js): formats the selection already has ----
+   Only the ✓ in its own column (NP.menu, .np-menu-check) marks them: the
+   label keeps its colour, so an active item and a focused one never look
+   alike. */
 @media (forced-colors: active) {
-    .np-menu-item[aria-checked="true"] {
-        outline: 1px solid CanvasText;
-        outline-offset: -1px;
+    .np-menu-check .np-icon {
+        color: CanvasText;
+    }
+    .np-menu-item:focus-visible,
+    .np-menu--keyboard .np-menu-item:focus {
+        outline-color: Highlight;
     }
 }
