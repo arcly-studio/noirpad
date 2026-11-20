@@ -3,7 +3,13 @@
 Starts `desktop.py` (WebView2) on a fresh temp NOIRPAD_DATA_DIR seeded by
 tools/demo_data.py — real notes are never read or touched — with
 WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=<port>, and
-drives it over the Chrome DevTools Protocol. The page is emulated at
+drives it over the Chrome DevTools Protocol.
+
+The debugging port belongs to this NoirPad only: a random port that nothing
+listens on is picked, and before anything is sent over CDP the port must list
+a page of the started instance (its backend port, read from that instance's
+log). Anything else on that port gets nothing: the instance is stopped and the
+tool ends with an error. The page is emulated at
 1280×800, scale 1, whatever the screen's DPI. Dev-only requirements (not in
 requirements*.txt): `pip install playwright`; ffmpeg and oxipng on PATH
 (e.g. `winget install Gyan.FFmpeg oxipng`).
@@ -17,16 +23,17 @@ A NoirPad window appears while it runs; don't type into it.
 
 import argparse
 import base64
+import json
 import os
+import re
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
-
-from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -42,31 +49,94 @@ HERO_THEME = "matrix"
 # The Markdown split view: a calmer theme where the syntax colours stand out.
 SPLIT_THEME = "tokyo-night"
 COLLAGE_THEMES = ["matrix", "tokyo-night", "amber", "dracula"]
-CDP_PORT = 9333
+OWN_PAGE_TIMEOUT = 40.0
+
+
+def port_in_use(port: int) -> bool:
+    """Something accepts connections on *port* (IPv4 or IPv6 loopback)."""
+    for family, host in ((socket.AF_INET, "127.0.0.1"), (socket.AF_INET6, "::1")):
+        with socket.socket(family) as s:
+            s.settimeout(0.3)
+            try:
+                if s.connect_ex((host, port)) == 0:
+                    return True
+            except OSError:
+                pass
+    return False
+
+
+def free_port() -> int:
+    """A random loopback port that nothing listens on."""
+    for _ in range(50):
+        with socket.socket() as s:
+            s.bind(("127.0.0.1", 0))
+            port = s.getsockname()[1]
+        if not port_in_use(port):
+            return port
+    raise RuntimeError("no free port for the WebView2 debugging port")
+
+
+def backend_port(data_dir: Path, timeout: float = 40.0):
+    """The started instance's own server port, from its log."""
+    log = Path(data_dir) / "logs" / "noirpad.log"
+    deadline = time.time() + timeout
+    while True:
+        try:
+            m = re.search(r"Backend ready on 127\.0\.0\.1:(\d+)", log.read_text(encoding="utf-8"))
+            if m:
+                return int(m.group(1))
+        except OSError:
+            pass
+        if time.time() > deadline:
+            return None
+        time.sleep(0.3)
+
+
+def own_target(targets, backend: int):
+    """The page target of this NoirPad (served by *backend*), else None."""
+    prefix = f"http://127.0.0.1:{backend}/"
+    for t in targets:
+        if t.get("type") == "page" and str(t.get("url", "")).startswith(prefix):
+            return t
+    return None
 
 
 class App:
     """desktop.py with a demo data dir, driven over CDP."""
 
-    def __init__(self, pw, lang: str, port: int = CDP_PORT):
+    def __init__(self, pw, lang: str):
+        self.browser = None
         self.tmp = tempfile.TemporaryDirectory(prefix="noirpad-shots-", ignore_cleanup_errors=True)
         data_dir = Path(self.tmp.name) / "data"
         demo_data.write_demo(data_dir, lang)
+        port = free_port()
         env = dict(os.environ, NOIRPAD_DATA_DIR=str(data_dir),
                    WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=f"--remote-debugging-port={port}")
         env.pop("NOIRPAD_PASSWORD", None)
         self.proc = subprocess.Popen([sys.executable, "desktop.py"], cwd=str(ROOT), env=env)
         endpoint = f"http://127.0.0.1:{port}"
-        deadline = time.time() + 40
+        backend = backend_port(data_dir, OWN_PAGE_TIMEOUT)
+        if backend is None:
+            self.close()
+            raise RuntimeError("NoirPad did not start its server (see its log)")
+        self.backend = backend
+        # Read-only target list until the port shows this NoirPad's page;
+        # nothing is sent over CDP before that.
+        deadline = time.time() + OWN_PAGE_TIMEOUT
         while True:
             try:
-                urllib.request.urlopen(endpoint + "/json/version", timeout=1).read()
+                targets = json.loads(urllib.request.urlopen(endpoint + "/json/list", timeout=1).read())
+            except (OSError, ValueError):
+                targets = None
+            if targets is not None and own_target(targets, backend):
                 break
-            except OSError:
-                if time.time() > deadline or self.proc.poll() is not None:
-                    self.close()
+            if time.time() > deadline or self.proc.poll() is not None:
+                self.close()
+                if targets is None:
                     raise RuntimeError("NoirPad's WebView2 did not open the debugging port")
-                time.sleep(0.3)
+                raise RuntimeError(f"port {port} shows pages that are not this NoirPad "
+                                   f"(backend {backend}); nothing was sent")
+            time.sleep(0.3)
         self.browser = pw.chromium.connect_over_cdp(endpoint)
         self.page = self._app_page()
         self.cdp = self.page.context.new_cdp_session(self.page)
@@ -83,7 +153,7 @@ class App:
             for ctx in self.browser.contexts:
                 for page in ctx.pages:
                     try:
-                        if page.evaluate("location.href").startswith("http://127.0.0.1"):
+                        if page.evaluate("location.href").startswith(f"http://127.0.0.1:{self.backend}/"):
                             return page
                     except Exception:
                         pass
@@ -92,7 +162,8 @@ class App:
 
     def close(self) -> None:
         try:
-            self.browser.close()
+            if self.browser is not None:
+                self.browser.close()
         except Exception:
             pass
         # The venv's python.exe is a launcher with a child: stop the tree.
@@ -330,6 +401,7 @@ def main() -> None:
     parser.add_argument("--gif", action="store_true", help="also record docs/demo.gif")
     parser.add_argument("--only", choices=["shots", "gif"], help="just one of them")
     args = parser.parse_args()
+    from playwright.sync_api import sync_playwright   # dev-only extra
     with sync_playwright() as pw:
         if args.only != "gif":
             screenshots(pw)
