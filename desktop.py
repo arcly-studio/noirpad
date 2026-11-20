@@ -16,6 +16,13 @@ window: it imports the modules NoirPad loads by name at run time, starts
 the server, writes its port and token to <data dir>/smoke-test.json and
 runs until that file is deleted (at most SMOKE_MAX_SECONDS). Problems go to
 the log and the exit code, never to a message box.
+
+A start never hangs on "Loading" (N1.11 test, finding 6): the page reports when it
+has started (POST /api/session/ready); without that within STARTUP_TIMEOUT the
+log gets the stage and every thread's stack, one message box explains it and
+the process ends. A start while the previous NoirPad is still closing waits
+for it and then starts normally. At most one error box per data folder.
+The release build never opens a WebView2 debugging port.
 """
 
 from __future__ import annotations
@@ -29,6 +36,8 @@ if sys.stdout is None:
 if sys.stderr is None:
     sys.stderr = open(os.devnull, "w")
 
+import faulthandler
+import hashlib
 import importlib
 import json
 import logging
@@ -36,6 +45,7 @@ import secrets
 import socket
 import threading
 import time
+import traceback
 import webbrowser
 from pathlib import Path
 from typing import Optional
@@ -68,9 +78,18 @@ SERVER_START_TIMEOUT = 15.0
 # as it is on screen.
 CLOSE_SAVE_TIMEOUT = 5.0
 CLOSE_BUSY_LIMIT = 120.0
-# A second launch right after the first may find no window yet: wait this
-# long for it before saying "already running".
-FOCUS_WAIT_SECONDS = 6.0
+# A second launch while another NoirPad holds the data folder: it waits up to
+# LOCK_WAIT_SECONDS for that one to finish closing (then starts normally) or
+# to show its window (then brings it to the front; a window that vanishes
+# within FOCUS_GRACE_SECONDS was closing).
+LOCK_WAIT_SECONDS = 15.0
+FOCUS_GRACE_SECONDS = 2.0
+# The page has this long to report that it started (finding 6: "Loading"
+# forever). A hang that even keeps Python's own threads from running ends
+# the process after STARTUP_BACKSTOP; the next start logs where it hung.
+STARTUP_TIMEOUT = 15.0
+STARTUP_BACKSTOP = 30.0
+HANG_FILE = "startup-hang.txt"
 
 SMOKE_FLAG = "--smoke-test"
 SMOKE_FILE = "smoke-test.json"
@@ -90,6 +109,8 @@ MESSAGES = {
                     "Details are in the log:\n{log}",
         "no_server": "NoirPad could not start its local server.\n\nDetails are in the log:\n{log}",
         "crash": "NoirPad could not start: {error}\n\nDetails are in the log:\n{log}",
+        "start_timeout": "NoirPad did not finish starting and will close now.\n\n"
+                         "Please start it again. Details are in the log:\n{log}",
     },
     "cs": {
         "running": "NoirPad už běží (možná jako webová verze v terminálu).\n\n"
@@ -101,6 +122,8 @@ MESSAGES = {
         "no_server": "NoirPadu se nepodařilo spustit místní server.\n\n"
                      "Podrobnosti jsou v logu:\n{log}",
         "crash": "NoirPad se nepodařilo spustit: {error}\n\nPodrobnosti jsou v logu:\n{log}",
+        "start_timeout": "NoirPad se nepodařilo dokončit spuštění a teď se zavře.\n\n"
+                         "Spusťte ho prosím znovu. Podrobnosti jsou v logu:\n{log}",
     },
 }
 
@@ -140,6 +163,53 @@ def _message_box(text: str, flags: int) -> int:
         return 0
     import ctypes
     return ctypes.windll.user32.MessageBoxW(None, text, WINDOW_TITLE, flags | 0x10000)  # MB_SETFOREGROUND
+
+
+# Named mutexes per data folder (both editions have their own): "Starting"
+# while a NoirPad starts (until its page is ready), "ErrorBox" while one shows
+# an error. A second NoirPad never adds its own error box to either.
+SYNCHRONIZE = 0x00100000
+
+
+def _mutex_name(kind: str, data_dir: Path) -> str:
+    key = os.path.normcase(str(Path(data_dir).resolve()))
+    return f"NoirPad-{kind}-{hashlib.sha1(key.encode('utf-8')).hexdigest()[:16]}"
+
+
+def _hold_mutex(kind: str, data_dir: Path):
+    if sys.platform != "win32":
+        return None
+    import ctypes
+    return ctypes.windll.kernel32.CreateMutexW(None, False, _mutex_name(kind, data_dir)) or None
+
+
+def _release_mutex(handle) -> None:
+    if handle and sys.platform == "win32":
+        import ctypes
+        ctypes.windll.kernel32.CloseHandle(handle)
+
+
+def _mutex_exists(kind: str, data_dir: Path) -> bool:
+    if sys.platform != "win32":
+        return False
+    import ctypes
+    handle = ctypes.windll.kernel32.OpenMutexW(SYNCHRONIZE, False, _mutex_name(kind, data_dir))
+    if handle:
+        ctypes.windll.kernel32.CloseHandle(handle)
+    return bool(handle)
+
+
+def _error_box(text: str, flags: int, data_dir: Path) -> int:
+    """An error box, unless another NoirPad on this data folder already
+    shows one (then only the log)."""
+    if _mutex_exists("ErrorBox", data_dir):
+        log.info("Another NoirPad already shows an error; no second message box")
+        return 0
+    held = _hold_mutex("ErrorBox", data_dir)
+    try:
+        return _message_box(text, flags)
+    finally:
+        _release_mutex(held)
 
 
 def _webview2_version() -> Optional[str]:
@@ -204,34 +274,53 @@ def _find_app_window() -> int:
     return found[0] if found else 0
 
 
-def _focus_running_instance(lang: str) -> None:
-    """Bring the already-open NoirPad window to front, or explain why not.
+def _bring_to_front(hwnd: int) -> None:
+    import ctypes
+    user32 = ctypes.windll.user32
+    user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+    user32.SetForegroundWindow(hwnd)
 
-    The other NoirPad may have been launched a moment ago and have no
-    window yet, so wait for one. If it exits meanwhile (it failed to start
-    and has told the user why), stay quiet: one error box, not two.
+
+def _focus_running_instance(lang: str, data_dir: Path):
+    """Another NoirPad holds the data folder. Returns the data lock when it
+    finishes closing meanwhile (this one then starts normally), else None.
+
+    - Its window shows and stays: brought to the front, this one ends.
+    - It lets go of the folder (it was closing, or failed and said why):
+      this one takes over and starts.
+    - Neither within LOCK_WAIT_SECONDS: "already running" (e.g. the web
+      version), unless it is still starting or shows an error box itself;
+      then only the log, so there is never a second box.
     """
     from noirpad import storage
 
-    deadline = time.monotonic() + FOCUS_WAIT_SECONDS
+    deadline = time.monotonic() + LOCK_WAIT_SECONDS
+    first_seen = None
     while True:
-        if sys.platform == "win32":
-            import ctypes
-            hwnd = _find_app_window()
-            if hwnd:
-                user32 = ctypes.windll.user32
-                user32.ShowWindow(hwnd, 9)  # SW_RESTORE
-                user32.SetForegroundWindow(hwnd)
-                return
-        free = storage.acquire_instance_lock()
-        if free is not None:
-            free.close()
-            log.info("The other NoirPad exited; nothing to focus")
-            return
-        if time.monotonic() >= deadline:
+        lock = storage.acquire_instance_lock(data_dir)
+        if lock is not None:
+            log.info("The other NoirPad has closed; starting")
+            return lock
+        hwnd = _find_app_window() if sys.platform == "win32" else 0
+        now = time.monotonic()
+        if hwnd:
+            if first_seen is None:
+                first_seen = now
+                _bring_to_front(hwnd)
+            elif now - first_seen >= FOCUS_GRACE_SECONDS:
+                log.info("Brought the running NoirPad to the front")
+                return None
+        if now >= deadline:
             break
         time.sleep(0.25)
-    _message_box(MESSAGES[lang]["running"], MB_OK | MB_ICONINFORMATION)
+    if _mutex_exists("Starting", data_dir) or _mutex_exists("ErrorBox", data_dir):
+        log.warning("The other NoirPad is still starting or shows an error after %.0f s; "
+                    "this one ends without a message", LOCK_WAIT_SECONDS)
+        return None
+    log.warning("Another NoirPad has used the data folder for %.0f s and shows no window",
+                LOCK_WAIT_SECONDS)
+    _error_box(MESSAGES[lang]["running"], MB_OK | MB_ICONINFORMATION, data_dir)
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -340,11 +429,14 @@ def _run(data_dir: Path, log_file: Path, lang: str, smoke: bool = False) -> int:
     Path(data_dir).mkdir(parents=True, exist_ok=True)
     instance_lock = storage.acquire_instance_lock(data_dir)
     if instance_lock is None:
-        log.info("Another NoirPad uses the same data directory; focusing it")
+        log.info("Another NoirPad uses the same data directory; waiting for it")
         if smoke:
             return 3
-        _focus_running_instance(lang)
-        return 0
+        instance_lock = _focus_running_instance(lang, data_dir)
+        if instance_lock is None:
+            return 0
+    _report_previous_hang(data_dir)
+    starting = None if smoke else _hold_mutex("Starting", data_dir)
     from noirpad import edition, store_import
     store = edition.edition() == edition.STORE
     # Store edition: copy the GitHub edition's notes once, before the
@@ -364,12 +456,13 @@ def _run(data_dir: Path, log_file: Path, lang: str, smoke: bool = False) -> int:
     # The data lock is released before main() shows an error box, so a
     # NoirPad started meanwhile doesn't report "already running" on top of it.
     try:
-        return _serve(lang, smoke)
+        return _serve(lang, smoke, starting)
     finally:
+        _release_mutex(starting)
         instance_lock.close()
 
 
-def _serve(lang: str, smoke: bool) -> int:
+def _serve(lang: str, smoke: bool, starting=None) -> int:
     from noirpad import storage
 
     webview2 = _webview2_version()
@@ -404,7 +497,7 @@ def _serve(lang: str, smoke: bool) -> int:
     try:
         if smoke:
             return _smoke_wait(handle, port, token, storage.DATA_DIR)
-        _show_window(port, token, storage.DATA_DIR)
+        _show_window(port, token, storage.DATA_DIR, lang=lang, starting=starting)
     finally:
         handle.stop()
     log.info("NoirPad closed")
@@ -429,12 +522,119 @@ def _smoke_wait(handle: _ServerHandle, port: int, token: str, data_dir: Path) ->
     return 0
 
 
-def _show_window(port: int, token: str, data_dir: Path) -> None:
+def _no_remote_debugging(webview) -> None:
+    """The release build never opens a WebView2 DevTools port: pywebview's
+    own setting stays off, and in the built exe the WebView2 overrides from
+    the environment (extra browser arguments such as a debugging port, another
+    runtime or profile folder) are dropped before WebView2 starts. Only the
+    variable's name is logged. Dev runs (python desktop.py) keep them for
+    tools/take_screenshots.py."""
+    if "REMOTE_DEBUGGING_PORT" in getattr(webview, "settings", {}):
+        webview.settings["REMOTE_DEBUGGING_PORT"] = None
+    if not config.is_frozen():
+        return
+    for key in list(os.environ):
+        if key.upper().startswith("WEBVIEW2_"):
+            log.warning("Ignoring %s from the environment (not used by the release build)", key)
+            del os.environ[key]
+
+
+def _thread_stacks() -> str:
+    names = {t.ident: t.name for t in threading.enumerate()}
+    out = []
+    for ident, frame in sys._current_frames().items():
+        out.append(f"Thread {names.get(ident, ident)}:\n" + "".join(traceback.format_stack(frame)))
+    return "\n".join(out)
+
+
+def _report_previous_hang(data_dir: Path) -> None:
+    """The backstop of the last start wrote its thread stacks here before it
+    ended the process: into the (anonymized) log, then away with the file."""
+    path = Path(data_dir) / HANG_FILE
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return
+    if text.strip():
+        log.error("The previous start hung and was ended; its threads then:\n%s", text.strip())
+    try:
+        path.unlink()
+    except OSError:
+        pass
+
+
+def _watch_start(page_ready: threading.Event, loaded: threading.Event, data_dir: Path,
+                 lang: str, starting=None, timeout: Optional[float] = None, exit_fn=None,
+                 closed: Optional[threading.Event] = None) -> threading.Thread:
+    """Finding 6: the page must report that it started within STARTUP_TIMEOUT.
+    Otherwise: the stage and every thread's stack to the log, one message box,
+    and the process ends (unless the page made it while the box was open)."""
+    timeout = STARTUP_TIMEOUT if timeout is None else timeout
+    exit_fn = exit_fn or os._exit
+    closed = closed or threading.Event()
+    started = time.monotonic()
+
+    def watch() -> None:
+        while not page_ready.wait(0.1):
+            if closed.is_set():          # the window closed while starting
+                return
+            if time.monotonic() - started >= timeout:
+                break
+        if page_ready.is_set():
+            faulthandler.cancel_dump_traceback_later()
+            log.info("Page ready after %.1f s", time.monotonic() - started)
+            _release_mutex(starting)
+            return
+        stage = ("the page loaded, but the app in it did not finish starting" if loaded.is_set()
+                 else "the window did not load the page")
+        log.error("Start did not finish within %.0f s: %s", timeout, stage)
+        log.error("Threads at that moment:\n%s", _thread_stacks())
+        _error_box(MESSAGES[lang]["start_timeout"].format(log=logs.log_path(data_dir)),
+                   MB_OK | MB_ICONERROR, data_dir)
+        if page_ready.is_set():
+            faulthandler.cancel_dump_traceback_later()
+            log.info("Page ready after %.1f s (late); keeps running", time.monotonic() - started)
+            _release_mutex(starting)
+            return
+        log.error("Ending NoirPad after the failed start")
+        logging.shutdown()
+        exit_fn(1)
+
+    thread = threading.Thread(target=watch, name="noirpad-start-watch", daemon=True)
+    thread.start()
+    return thread
+
+
+def _arm_backstop(data_dir: Path):
+    """A hang that keeps even the watch thread from running (a thread holding
+    Python's lock): faulthandler writes all stacks to HANG_FILE and ends the
+    process; the next start puts them into the log (_report_previous_hang)."""
+    try:
+        hang = open(Path(data_dir) / HANG_FILE, "w", encoding="utf-8")
+    except OSError:
+        return None
+    faulthandler.dump_traceback_later(STARTUP_BACKSTOP, repeat=False, file=hang, exit=True)
+    return hang
+
+
+def _disarm_backstop(hang) -> None:
+    faulthandler.cancel_dump_traceback_later()
+    if hang is None:
+        return
+    hang.close()
+    try:
+        Path(hang.name).unlink()
+    except OSError:
+        pass
+
+
+def _show_window(port: int, token: str, data_dir: Path, lang: str = "en", starting=None) -> None:
     # The fragment never reaches the server or its logs; api.js reads it
     # and removes it from the address bar.
     window_url = f"http://127.0.0.1:{port}/#token={token}"
 
     import webview
+    _no_remote_debugging(webview)
 
     # links.js opens external links with window.open(); pywebview must hand
     # those to the system browser, never load them in the app window.
@@ -459,6 +659,13 @@ def _show_window(port: int, token: str, data_dir: Path) -> None:
     # One zoom only (settings.js ui_zoom): WebView2's own Ctrl+wheel zoom of
     # older versions may still be stored in its profile; back to 100 %.
     window.events.loaded += lambda: _reset_webview_zoom(window)
+    # Finding 6: never "Loading" forever (the page posts /api/session/ready).
+    loaded = threading.Event()
+    window.events.loaded += loaded.set
+    RUNTIME.page_ready.clear()
+    closed = threading.Event()
+    hang = _arm_backstop(data_dir)
+    _watch_start(RUNTIME.page_ready, loaded, data_dir, lang, starting, closed=closed)
     # Persistent WebView2 profile so localStorage (open folders, CRT
     # toggle) survives restarts; it lives next to the notes.
     storage_path = data_dir / "webview"
@@ -466,7 +673,11 @@ def _show_window(port: int, token: str, data_dir: Path) -> None:
     # gui="edgechromium" forces WebView2 on Windows, which is what we
     # ship for. On other platforms pywebview picks the system default.
     gui = "edgechromium" if sys.platform == "win32" else None
-    webview.start(gui=gui, private_mode=False, storage_path=str(storage_path), icon=_window_icon())
+    try:
+        webview.start(gui=gui, debug=False, private_mode=False, storage_path=str(storage_path), icon=_window_icon())
+    finally:
+        closed.set()
+        _disarm_backstop(hang)
 
 
 def _window_icon() -> Optional[str]:
@@ -479,31 +690,39 @@ def _window_icon() -> Optional[str]:
     return str(path) if path.is_file() else None
 
 
-def _reset_webview_zoom(window, invoke=None) -> None:
+def _reset_webview_zoom(window, post=None) -> None:
     """WebView2's own zoom factor to 1.0 (NoirPad zooms with CSS, ui_zoom).
 
     Up to 1.0.x, Ctrl+wheel zoomed WebView2 itself, which keeps that zoom in
     its profile (data folder webview\\). settings.js now takes Ctrl+wheel; this
     resets a zoom left over from before. window.native is pywebview's WinForms
-    form, .webview its WebView2 control; set on the UI thread like pywebview."""
+    form, .webview its WebView2 control.
+
+    Finding 6: this runs on pywebview's event thread. Touching the control
+    there (even hasattr) could block on the UI thread while holding Python's
+    lock, which the UI thread needs for every request of the page: "Loading"
+    forever and a window that does not close. So everything happens in a
+    callback posted to the UI thread (BeginInvoke: nobody waits for it)."""
     form = getattr(window, "native", None)
-    control = getattr(form, "webview", None)
-    if control is None or not hasattr(control, "ZoomFactor"):
+    if form is None:
         return
 
     def reset():
         try:
+            control = getattr(form, "webview", None)
+            if control is None or not hasattr(control, "ZoomFactor"):
+                return
             if abs(float(control.ZoomFactor) - 1.0) > 1e-9:
                 log.info("WebView2 zoom %.2f reset to 1.0", float(control.ZoomFactor))
                 control.ZoomFactor = 1.0
         except Exception as exc:          # never let the window fail over this
             log.warning("Could not reset the WebView2 zoom: %s", type(exc).__name__)
 
-    if invoke is None:
-        from System import Func, Type      # pythonnet, as pywebview's winforms.py
-        invoke = lambda fn: form.Invoke(Func[Type](fn))  # noqa: E731
+    if post is None:
+        from System import Action          # pythonnet
+        post = lambda fn: form.BeginInvoke(Action(fn))  # noqa: E731
     try:
-        invoke(reset)
+        post(reset)
     except Exception as exc:
         log.warning("Could not reset the WebView2 zoom: %s", type(exc).__name__)
 
@@ -633,14 +852,14 @@ def main(argv: Optional[list[str]] = None) -> int:
     try:
         return _run(data_dir, log_file, lang, smoke)
     except _StartupFailed as failed:
-        answer = _message_box(MESSAGES[lang][failed.message].format(log=log_file), failed.flags)
+        answer = _error_box(MESSAGES[lang][failed.message].format(log=log_file), failed.flags, data_dir)
         if failed.url and answer == IDYES:
             webbrowser.open(failed.url)
         return failed.code
     except Exception as exc:
         log.exception("NoirPad failed to start")
-        _message_box(MESSAGES[lang]["crash"].format(error=exc, log=log_file),
-                     MB_OK | MB_ICONERROR)
+        _error_box(MESSAGES[lang]["crash"].format(error=exc, log=log_file),
+                   MB_OK | MB_ICONERROR, data_dir)
         return 1
 
 

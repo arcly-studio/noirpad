@@ -218,6 +218,11 @@ window.NP = window.NP || {};
             return request("GET", "/api/version");
         },
 
+        /* The page has started (app.js); never fails loudly. */
+        pageReady: function () {
+            return request("POST", "/api/session/ready").catch(function () { return null; });
+        },
+
         /* → {license, notices}: LICENSE and THIRD-PARTY-NOTICES.txt (About → Licenses) */
         licenses: function () {
             return request("GET", "/api/licenses");

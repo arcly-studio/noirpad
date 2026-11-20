@@ -7,6 +7,14 @@ All notable changes to NoirPad. Versions follow [Semantic Versioning](https://se
 A Microsoft Store edition, encryption of the formatting and links of locked notes, cleaner automatic
 copies, and an easier time with a keyboard, high contrast or zoom.
 
+### Starting the app
+- Fixed: the desktop app could stay on "Loading" for good, with a window that did not close, or
+  show an empty grey window (both editions; more likely when started again right after closing).
+  A start that does not finish within about 15 s now ends with a message and the cause in the log.
+- Starting NoirPad again while the previous window is still closing now waits for it and then
+  starts normally; before, nothing happened. At most one error message is shown.
+- The release build never opens a WebView2 debugging port, whatever the environment says.
+
 ### Microsoft Store edition
 - NoirPad can now be packaged for the Microsoft Store (MSIX). The Store edition keeps its notes in
   `%USERPROFILE%\NoirPad`; the GitHub edition stays in `%LOCALAPPDATA%\NoirPad`.

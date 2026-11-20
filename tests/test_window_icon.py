@@ -133,15 +133,15 @@ class _Window:
 @pytest.mark.parametrize("zoom", [1.25, 0.5, 3.0])
 def test_left_over_webview2_zoom_is_reset(zoom):
     win, calls = _Window(zoom), []
-    desktop._reset_webview_zoom(win, invoke=lambda fn: (calls.append(1), fn()))
+    desktop._reset_webview_zoom(win, post=lambda fn: (calls.append(1), fn()))
     assert win.native.webview.ZoomFactor == 1.0 and calls == [1]       # on the UI thread
 
 
 def test_zoom_reset_without_a_native_window_is_harmless():
-    desktop._reset_webview_zoom(object(), invoke=lambda fn: fn())
+    desktop._reset_webview_zoom(object(), post=lambda fn: fn())
     w = _Window(1.0)
     w.native.webview = None
-    desktop._reset_webview_zoom(w, invoke=lambda fn: fn())
+    desktop._reset_webview_zoom(w, post=lambda fn: fn())
 
 
 def test_zoom_reset_runs_when_the_page_has_loaded():

@@ -728,7 +728,8 @@
     "noMatches": "Žádné shody"
   },
   "app": {
-    "startFailed": "Nepodařilo se spojit se serverem: {error}"
+    "startFailed": "Nepodařilo se spojit se serverem: {error}",
+    "startSlow": "Spouštění NoirPadu trvá nezvykle dlouho. Pokud se nic nezmění, zavřete ho a spusťte znovu."
   },
   "tags": {
     "remove": "Odebrat štítek",

@@ -56,6 +56,14 @@ def licenses():
     return out
 
 
+@router.post("/api/session/ready")
+def session_ready():
+    """The page has started (app.js). The desktop window waits for this
+    (desktop.py _watch_start); the web version just ignores it."""
+    RUNTIME.page_ready.set()
+    return {"ok": True}
+
+
 @router.post("/api/session/dismiss-notice")
 def dismiss_notice():
     from .. import store_import

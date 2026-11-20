@@ -696,7 +696,8 @@
     "noMatches": "No matches"
   },
   "app": {
-    "startFailed": "Failed to reach server: {error}"
+    "startFailed": "Failed to reach server: {error}",
+    "startSlow": "NoirPad is taking unusually long to start. If nothing changes, close it and start it again."
   },
   "tags": {
     "remove": "Remove tag",

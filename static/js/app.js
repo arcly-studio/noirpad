@@ -4,8 +4,18 @@ window.NP = window.NP || {};
 (function (NP) {
     "use strict";
 
+    /* N1.11 test, finding 6: never "Loading..." without a word. After
+       NP.app.slowStartMs the splash says that the start takes unusually
+       long (the desktop window also ends a start that never finishes,
+       desktop.py). */
     NP.app = {
+        slowStartMs: 15000,
+
         init: function () {
+            var slow = setTimeout(function () {
+                var sub = document.getElementById("splash-subtitle");
+                if (sub && document.getElementById("splash-overlay")) sub.textContent = NP.t("app.startSlow");
+            }, NP.app.slowStartMs);
             /* Version + project URL for About / welcome (one source:
                noirpad/__version__.py). Not critical: start without it. */
             var info = NP.api.version().catch(function () { return {}; });
@@ -55,7 +65,11 @@ window.NP = window.NP || {};
                 if (NP.editor && NP.editor.showWelcome) {
                     NP.editor.showWelcome({ focus: true });
                 }
+                clearTimeout(slow);
+                /* The desktop window waits for this (desktop.py _watch_start). */
+                if (NP.api.pageReady) NP.api.pageReady();
             }).catch(function (err) {
+                clearTimeout(slow);
                 console.error("NoirPad init failed:", err);
                 /* Hide splash and surface the error so the user isn't stuck on "Loading..." */
                 var splash = document.getElementById("splash-overlay");

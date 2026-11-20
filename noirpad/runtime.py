@@ -1,6 +1,7 @@
 """Process-wide mutable state (never written to disk)."""
 
 import os
+import threading
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -33,6 +34,9 @@ class _Runtime:
     save_dialog: Optional[Callable[[str], Optional[str]]] = None
     toggle_fullscreen: Optional[Callable[[], None]] = None   # desktop window (D13)
     saved_files: dict[str, Path] = {}
+    # Set by POST /api/session/ready once the page has started; desktop.py
+    # watches it so a start never hangs on "Loading" (N1.11 test, finding 6).
+    page_ready: threading.Event = threading.Event()
 
 
 RUNTIME = _Runtime()

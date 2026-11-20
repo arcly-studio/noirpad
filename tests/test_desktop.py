@@ -61,7 +61,7 @@ def test_crash_at_start_is_logged_and_shown(desk, np_backend, monkeypatch):
 
 def test_second_instance_focuses_the_first(desk, np_backend, monkeypatch):
     focused = []
-    monkeypatch.setattr(desktop, "_focus_running_instance", focused.append)
+    monkeypatch.setattr(desktop, "_focus_running_instance", lambda lang, data_dir: focused.append(lang))
     held = np_backend.acquire_instance_lock()
     try:
         assert desktop.main() == 0
@@ -165,20 +165,23 @@ def test_server_crash_fails_fast_with_one_message(desk, np_backend, monkeypatch)
     held.close()
 
 
-def test_second_instance_stays_quiet_when_first_gives_up(desk, np_backend, monkeypatch):
+def test_second_instance_takes_over_when_first_exits(desk, np_backend, monkeypatch):
+    """1.1.0 (finding 6): the first one closing or giving up is no reason to
+    stay quiet any more; the second starts (test_desktop_start.py)."""
     monkeypatch.setattr(desktop, "_find_app_window", lambda: 0)
     held = np_backend.acquire_instance_lock()
     threading.Timer(0.5, held.close).start()       # the first NoirPad exits
-    desktop._focus_running_instance("en")
-    assert desk == []
+    lock = desktop._focus_running_instance("en", np_backend.DATA_DIR)
+    assert lock is not None and desk == []
+    lock.close()
 
 
 def test_second_instance_explains_when_no_window_appears(desk, np_backend, monkeypatch):
     monkeypatch.setattr(desktop, "_find_app_window", lambda: 0)
-    monkeypatch.setattr(desktop, "FOCUS_WAIT_SECONDS", 0.3)
+    monkeypatch.setattr(desktop, "LOCK_WAIT_SECONDS", 0.3)
     held = np_backend.acquire_instance_lock()
     try:
-        desktop._focus_running_instance("en")
+        assert desktop._focus_running_instance("en", np_backend.DATA_DIR) is None
     finally:
         held.close()
     assert len(desk) == 1 and "already running" in desk[0]

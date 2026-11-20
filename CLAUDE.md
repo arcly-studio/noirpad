@@ -128,6 +128,17 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   started for, not the "current" one.
 - Desktop close: `flushForClose` -> "close"/"stay"; `NP.editor._closeBusy` makes `desktop.py` wait
   (`CLOSE_BUSY_LIMIT`) while a save or question is pending.
+- Desktop start (finding 6): `app.js` posts `/api/session/ready` (`RUNTIME.page_ready`); `desktop.py`
+  `_watch_start` ends a start that is not ready within `STARTUP_TIMEOUT` (log: stage + all thread
+  stacks, one box), `_arm_backstop` (faulthandler -> `startup-hang.txt`, logged next start) ends a
+  hang that blocks Python itself. Never touch the WebView2 control from pywebview's event thread
+  (deadlock with the UI thread over the GIL): post to the UI thread with `form.BeginInvoke`.
+  A second start waits for the lock (`_focus_running_instance`, `LOCK_WAIT_SECONDS`); error boxes
+  go through `_error_box` (named mutexes "Starting" / "ErrorBox" per data folder: at most one box).
+- The release build never enables WebView2 remote debugging (`_no_remote_debugging`: drops
+  `WEBVIEW2_*` env vars in the frozen exe); `tests/test_desktop_start.py` scans the release sources.
+  A debugging port only in your own dev instance: check the port is free first, then that its
+  target page has your instance's backend port; otherwise send nothing.
 - Integration harness `tests/js/flow.js`: real state/tabs/editor/tree over a fake server. Rule:
   every fix that goes through tabs gets an integration test (`flow-*.test.js`) that fails without
   the fix.
