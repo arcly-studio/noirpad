@@ -42,7 +42,7 @@ def test_old_icon_is_gone_everywhere():
 
 
 def test_m1_the_ui_svgs_are_the_brand_sources_and_n4_colours_are_gone():
-    for name in ("noirpad-icon.svg", "noirpad-icon-small.svg"):
+    for name in ("noirpad-icon.svg", "noirpad-icon-medium.svg"):
         brand = (ROOT / "docs" / "brand" / name).read_bytes()
         assert (STATIC / "img" / name).read_bytes() == brand, name
     for path in [*(ROOT / "docs" / "brand").iterdir(), *STATIC.rglob("*.svg"),
@@ -111,7 +111,7 @@ def test_ui_shows_the_svg_logo():
 
 
 def test_brand_sources_and_readme_logo():
-    for name in ("noirpad-icon.svg", "noirpad-icon-small.svg", "noirpad-1024.png"):
+    for name in ("noirpad-icon.svg", "noirpad-icon-medium.svg", "noirpad-icon-small.svg", "noirpad-1024.png"):
         assert (ROOT / "docs" / "brand" / name).is_file()
     png = (ROOT / "docs" / "logo.png").read_bytes()
     assert png[:8] == b"\x89PNG\r\n\x1a\n" and struct.unpack(">II", png[16:24]) == (256, 256)

@@ -128,8 +128,8 @@ the tests, before the build.
   `pip install playwright`, plus `ffmpeg` and `oxipng` on PATH).
 - **Logo (M1 "glass sheets", green since 1.1.0):** the only sources are `docs/brand/noirpad-icon.svg`
   (40 px and up), `noirpad-icon-medium.svg` (24 and 32 px: same drawing, stronger `>_` and edge) and
-  `noirpad-icon-small.svg` (16 and 20 px); `static/img/` holds identical copies of the first and the
-  last. Every raster is rendered from them by `tools/make_icons.py` (chrome-headless-shell from
+  `noirpad-icon-small.svg` (16 and 20 px); `static/img/` holds identical copies of the first two
+  (the browser tab shows the medium one). Every raster is rendered from them by `tools/make_icons.py` (chrome-headless-shell from
   Playwright, standard library otherwise): `docs/brand/noirpad-1024.png`, `docs/logo.png`,
   `static/img/icon-*.png`, `apple-touch-icon.png`, `noirpad.ico` (exe, window, installer),
   `static/favicon.ico`, `installer/wizard-small-*.bmp` (32-bit with alpha) and

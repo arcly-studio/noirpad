@@ -103,6 +103,24 @@ def test_favicon_has_the_same_drawing():
     assert sizes == {s: ICO[s] for s in (16, 32, 48)}
 
 
+def test_web_version_shows_the_same_drawing():
+    """The browser tab's SVG is the tuned drawing of the 24 and 32 px icons and
+    every other SVG logo of the web version the detailed one; the simplified
+    16 / 20 px drawing is not served at all."""
+    static, brand = ROOT / "static", ROOT / "docs" / "brand"
+    same = {"noirpad-icon.svg", "noirpad-icon-medium.svg"}
+    assert {p.name for p in (static / "img").glob("*.svg")} == same
+    for name in same:
+        assert (static / "img" / name).read_bytes() == (brand / name).read_bytes(), name
+    html = (static / "index.html").read_text(encoding="utf-8")
+    svg_icons = re.findall(r'<link rel="icon" href="([^"?]+\.svg)\?', html)
+    assert svg_icons == ["/static/img/noirpad-icon-medium.svg"]
+    assert make_icons.svg_for(24) == make_icons.svg_for(32) == brand / "noirpad-icon-medium.svg"
+    for path in [*static.rglob("*.js"), *static.rglob("*.html"), *static.rglob("*.css"), static / "manifest.json"]:
+        if "vendor" not in path.parts:
+            assert "noirpad-icon-small" not in path.read_text(encoding="utf-8"), path
+
+
 # ---- MSIX images ------------------------------------------------------------------
 
 def test_every_size_windows_11_asks_for_is_there():

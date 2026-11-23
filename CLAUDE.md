@@ -42,7 +42,8 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
 ## Logo (M1 "Glass sheets")
 - Sources: `docs/brand/noirpad-icon.svg` (use at >= 40 px), `noirpad-icon-medium.svg` (24 and 32 px
   icons: same drawing, stronger `>_` and edge) and `noirpad-icon-small.svg` (16 and 20 px). Copies of
-  the first and last in `static/img/` must be identical (`tests/test_brand.py` checks it).
+  the first two in `static/img/` must be identical (`tests/test_brand.py`); the browser tab's SVG is
+  the medium one.
 - One logo in both editions (`tests/test_icon_sizes.py`): MSIX target sizes = the images of
   `noirpad.ico`, missing sizes resampled from it (30 px from 40, like the exe at 125 %); tiles and
   StoreLogo show the logo without margin on `#0e0e10`; one `resources.pri` with every scale

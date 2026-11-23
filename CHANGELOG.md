@@ -31,7 +31,7 @@ copies, and an easier time with a keyboard, high contrast or zoom.
 - The icon is the same in both editions and at every size: before, the Store edition's taskbar icon
   at 125 % was a larger, brighter drawing than the one of the GitHub edition. The detailed logo is
   now used from 24 px, with a stronger `>_` and edge at 24 and 32 px, and tiles show the logo as
-  large as the app icon. The package now knows its images for every display scale.
+  large as the app icon. The web version's browser tab shows the same logo. The package now knows its images for every display scale.
 
 ### Locked notes
 - The formatting of a locked note, including its links, is now encrypted together with its text.
