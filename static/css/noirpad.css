@@ -4801,6 +4801,12 @@ body.np-locked-elsewhere #app {
     min-width: 0;
     overflow-wrap: anywhere;
 }
+/* Second line: a link's address (links.js). */
+.np-toast-detail {
+    display: block;
+    margin-top: 2px;
+    color: var(--fg-muted);
+}
 .np-toast-action,
 .np-toast-close {
     min-height: 32px;
@@ -5266,6 +5272,28 @@ body.np-no-note #note-header {
 /* The green glow only with the glow effect on (Settings → Effects). */
 body.np-glow #btn-md-toggle.np-md-flash {
     animation-name: np-md-flash-glow;
+}
+/* A link being opened (links.js): a short ring and glow, nothing moves. */
+@keyframes np-link-flash {
+    0% { box-shadow: 0 0 0 0 transparent; }
+    30% { box-shadow: 0 0 0 3px var(--accent-soft), 0 0 10px 3px color-mix(in srgb, var(--link) 70%, transparent); }
+    100% { box-shadow: 0 0 0 0 transparent; }
+}
+.np-link-flash {
+    border-radius: 3px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    animation: np-link-flash 300ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+    .np-link-flash {
+        animation: none !important;
+    }
+}
+@media (forced-colors: active) {
+    .np-link-flash {
+        animation: none !important;
+    }
 }
 @media (prefers-reduced-motion: reduce) {
     .np-md-anim-slide,

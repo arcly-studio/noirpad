@@ -503,13 +503,10 @@ window.NP = window.NP || {};
 
     function hrefOf(a) { return (a.getAttribute("href") || "").trim(); }
 
-    /* Only https, http and mailto (NP.linkKind), never in the app window. */
+    /* Same way and same feedback as Ctrl+click (links.js). */
     function openLink(a) {
         hideTip();
-        var href = hrefOf(a);
-        if (NP.linkKind(href) !== "external") return false;
-        window.open(href, "_blank", "noopener,noreferrer");
-        return true;
+        return NP.links.open(a);
     }
 
     function editLink(a) {
@@ -542,10 +539,6 @@ window.NP = window.NP || {};
     var TIP_DELAY = 400;
     var tip = null, tipLink = null, tipTimer = null;
 
-    function shortUrl(u) {
-        return u.length > 64 ? u.slice(0, 44) + "\u2026" + u.slice(-16) : u;
-    }
-
     function hideTip() {
         clearTimeout(tipTimer);
         tipTimer = null;
@@ -565,7 +558,7 @@ window.NP = window.NP || {};
         tip.setAttribute("role", "tooltip");
         var url = document.createElement("div");
         url.className = "np-link-tip-url";
-        url.textContent = shortUrl(hrefOf(a));
+        url.textContent = NP.shortUrl(hrefOf(a));
         var hint = document.createElement("div");
         hint.className = "np-link-tip-hint";
         hint.textContent = NP.t("format.link.tipHint");

@@ -137,10 +137,6 @@ window.NP = window.NP || {};
        prefers-reduced-motion or forced colours. */
     var ANIM_FALLBACK_MS = 400;
 
-    function mediaOn(q) {
-        return !!(window.matchMedia && window.matchMedia(q).matches);
-    }
-
     function play(el, cls) {
         if (!el) return;
         clearTimeout(el._npAnimTimer);
@@ -169,7 +165,7 @@ window.NP = window.NP || {};
     }
 
     function animateSwitch(toMd) {
-        if (mediaOn("(prefers-reduced-motion: reduce)") || mediaOn("(forced-colors: active)")) return;
+        if (NP.motionOff()) return;
         var els = getEls();
         if (toMd) {
             stop(els.editor);

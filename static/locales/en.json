@@ -994,6 +994,9 @@
       "tipHint": "Ctrl+click opens the link",
       "open": "Open link",
       "openKeys": "Ctrl+click",
+      "opening": "Opening link in your browser…",
+      "openingMail": "Opening your e-mail app…",
+      "blocked": "This link cannot be opened: its address is not valid or not allowed.",
       "edit": "Edit link…"
     }
   }

@@ -11,6 +11,10 @@
    with a `download` attribute). A plain click on a link inside the
    editable note only places the caret; Ctrl+click opens it.
 
+   Opening a link of a note (rich text or Markdown preview) is confirmed: the
+   link lights up briefly and a toast names the address. An address that is
+   not valid or not allowed gets an error toast and opens nothing.
+
    Dropping a file or link onto the window would also navigate it, so
    unhandled drops are cancelled too. */
 window.NP = window.NP || {};
@@ -24,6 +28,49 @@ window.NP = window.NP || {};
         return href.indexOf("blob:") === 0 || href.indexOf("/api/") === 0;
     }
 
+    var FLASH_FALLBACK_MS = 400;
+    var OPENING_MS = 2000, BLOCKED_MS = 4000;
+
+    /* In the open note; the start page (also in #editor) is not a note. */
+    function inNote(a) {
+        return !!a.closest("#editor, #md-preview") && !a.closest(".welcome-wrap");
+    }
+
+    /* A class for ~300 ms (noirpad.css, box-shadow only); it is never saved
+       and leaves nothing on the link. */
+    function flash(a) {
+        if (NP.motionOff()) return;
+        clearTimeout(a._npFlashTimer);
+        if (a.classList.contains("np-link-flash")) {
+            a.classList.remove("np-link-flash");
+            void a.offsetWidth;      /* opened again at once: start over */
+        }
+        a.classList.add("np-link-flash");
+        a._npFlashTimer = setTimeout(function () {
+            a.classList.remove("np-link-flash");
+            if (!a.className) a.removeAttribute("class");
+        }, FLASH_FALLBACK_MS);
+    }
+
+    function say(key, href, timeout) {
+        if (NP.toast) NP.toast(NP.t(key), { detail: NP.shortUrl(href), timeout: timeout });
+    }
+
+    /* Open a note's link outside the app window, with feedback.
+       -> true when it was opened. */
+    function open(a) {
+        var href = (a.getAttribute("href") || "").trim();
+        if (!NP.canOpenLink(href)) {
+            say("format.link.blocked", href, BLOCKED_MS);
+            return false;
+        }
+        window.open(href, "_blank", "noopener,noreferrer");
+        flash(a);
+        if (/^mailto:/i.test(href)) say("format.link.openingMail", href, OPENING_MS);
+        else say("format.link.opening", href, OPENING_MS);
+        return true;
+    }
+
     function onActivate(e) {
         if (e.type === "auxclick" && e.button !== 1) return;
         var a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
@@ -34,10 +81,12 @@ window.NP = window.NP || {};
         if (a.isContentEditable && e.type === "click" && !(e.ctrlKey || e.metaKey)) return;
         var href = a.getAttribute("href");
         var kind = NP.linkKind(href);
-        if (kind === "external") {
+        if (kind === "image") {
+            if (NP.images && NP.images._openViewer) NP.images._openViewer(href);
+        } else if (inNote(a)) {
+            open(a);
+        } else if (kind === "external") {
             window.open(href.trim(), "_blank", "noopener,noreferrer");
-        } else if (kind === "image" && NP.images && NP.images._openViewer) {
-            NP.images._openViewer(href);
         }
     }
 
@@ -65,6 +114,6 @@ window.NP = window.NP || {};
     window.addEventListener("dragover", onDragOver);
     window.addEventListener("drop", onDrop);
 
-    NP.links = { _onActivate: onActivate };
+    NP.links = { open: open, _onActivate: onActivate };
 
 })(window.NP);

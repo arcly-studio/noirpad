@@ -83,6 +83,9 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   "Ctrl+click opens the link"; while `Ctrl` is held the pointer turns into a hand. Right-click on a
   link offers Open link, Edit link… and Remove link. Links have their own colour in every theme (in
   the note and in the Markdown preview), so they no longer look like underlined text.
+- Opening a link from a note or the Markdown preview is now confirmed: the link lights up briefly
+  (not with "reduce motion" or high contrast) and a message shows the address. An address that is
+  not valid or not allowed opens nothing and says so.
 - Switching a note to Markdown and back (button or `Ctrl+M`) has a short transition: the preview
   slides in from the right and the Markdown icon lights up briefly; the source and the cursor do not
   move. Off with "reduce motion" in Windows and in high contrast.

@@ -122,6 +122,26 @@ window.NP = window.NP || {};
         return null;
     };
 
+    /* An external link the system can open: http(s) with a host, mailto: with
+       something after it. */
+    NP.canOpenLink = function (href) {
+        if (NP.linkKind(href) !== "external") return false;
+        href = href.trim();
+        if (/^mailto:/i.test(href)) return href.length > 7;
+        try { return !!new URL(href).hostname; } catch (e) { return false; }
+    };
+
+    /* An address for display: a long one is shortened in the middle. */
+    NP.shortUrl = function (u) {
+        return u.length > 64 ? u.slice(0, 44) + "\u2026" + u.slice(-16) : u;
+    };
+
+    /* No decorative animation: "reduce motion" or high contrast is on. */
+    NP.motionOff = function () {
+        function on(q) { return !!(window.matchMedia && window.matchMedia(q).matches); }
+        return on("(prefers-reduced-motion: reduce)") || on("(forced-colors: active)");
+    };
+
     /* Image sources allowed in rendered notes (the CSP blocks remote ones). */
     NP.isImageSrc = function (src) {
         return NP.linkKind(src) === "image" ||

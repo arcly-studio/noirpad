@@ -16,7 +16,7 @@
    Enter = OK, Escape = Cancel (alert: close). While a dialog is open, keys
    do not reach the app's shortcuts. Texts are set with textContent only.
 
-   NP.toast(message, { actionLabel, action, timeout }) - a short note at the
+   NP.toast(message, { detail, actionLabel, action, timeout }) - a short note at the
    bottom of the window (e.g. "Saved" + "Open folder"); it does not take focus. */
 window.NP = window.NP || {};
 
@@ -264,7 +264,9 @@ window.NP = window.NP || {};
 
         var box = el("div", "np-toast");
         box.setAttribute("role", "status");
-        box.appendChild(el("span", "np-toast-text", message));
+        var text = el("span", "np-toast-text", message);
+        if (opts.detail) text.appendChild(el("span", "np-toast-detail", opts.detail));
+        box.appendChild(text);
         function close() {
             clearTimeout(toastTimer);
             if (box.parentNode) box.parentNode.removeChild(box);

@@ -1034,6 +1034,9 @@
       "tipHint": "Ctrl+klik otevře odkaz",
       "open": "Otevřít odkaz",
       "openKeys": "Ctrl+klik",
+      "opening": "Otevírám odkaz v prohlížeči…",
+      "openingMail": "Otevírám e-mailovou aplikaci…",
+      "blocked": "Odkaz nejde otevřít: adresa není platná nebo není povolená.",
       "edit": "Upravit odkaz…"
     }
   }
