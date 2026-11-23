@@ -302,6 +302,7 @@ def test_tile_background_is_dark_not_transparent():
     assert ve["BackgroundColor"] == "#0e0e10"
     splash = root.find("m:Applications/m:Application/uap:VisualElements/uap:SplashScreen", NS).attrib
     assert splash["BackgroundColor"] == ve["BackgroundColor"]
+    assert make_icons.STORE_BACKGROUND == msix_manifest.TILE_BACKGROUND
 
 
 def test_every_image_the_manifest_names_exists_in_all_scales():

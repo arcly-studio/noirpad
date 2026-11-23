@@ -40,13 +40,18 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
 - `tests/test_icons.py` fails if a used icon is missing from the sprite.
 
 ## Logo (M1 "Glass sheets")
-- Sources: `docs/brand/noirpad-icon.svg` (use at >= 40 px) and `noirpad-icon-small.svg`
-  (<= 32 px). Copies in `static/img/` must be identical (`tests/test_brand.py` checks it).
+- Sources: `docs/brand/noirpad-icon.svg` (use at >= 40 px), `noirpad-icon-medium.svg` (24 and 32 px
+  icons: same drawing, stronger `>_` and edge) and `noirpad-icon-small.svg` (16 and 20 px). Copies of
+  the first and last in `static/img/` must be identical (`tests/test_brand.py` checks it).
+- One logo in both editions (`tests/test_icon_sizes.py`): MSIX target sizes = the images of
+  `noirpad.ico`, missing sizes resampled from it (30 px from 40, like the exe at 125 %); tiles and
+  StoreLogo show the logo without margin on `#0e0e10`; one `resources.pri` with every scale
+  (`tools/msix_pri.py`).
 - In the UI only as `<img class="... np-decorative">`, never inline (the SVG has `id`s).
 - Icon URLs carry `?v=__NP_VERSION__`; `noirpad/app.py` (`VERSION_MARK`) fills it in
   `index.html` and `manifest.json` (cache busting).
 - The logo is green (main tone `#00ff41`). Every raster (PNGs, `noirpad.ico`, `favicon.ico`, wizard
-  BMPs, `social-preview.png`) comes from the two SVGs via `tools/make_icons.py`; never edit a
+  BMPs, `social-preview.png`) comes from the three SVGs via `tools/make_icons.py`; never edit a
   raster by hand. After touching an SVG run it and commit the outputs and `docs/brand/icons.json`
   (`tests/test_brand.py` checks hashes and that every icon is green).
 - Windows may show the old icon from its icon cache for a while; the installer asks Explorer to

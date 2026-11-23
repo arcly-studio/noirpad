@@ -104,13 +104,17 @@ Copy-Item -Path "dist\NoirPad\*" -Destination $layout -Recurse
 Copy-Item -Path "store\Assets" -Destination (Join-Path $layout "Assets") -Recurse
 Run $py tools\msix_manifest.py (Join-Path $layout "AppxManifest.xml")
 
-# resources.pri from the images and the manifest only (not the whole app).
+# resources.pri from the images and the manifest only (not the whole app); one
+# file with every scale (tools\msix_pri.py: the split ones are not read).
 $pri = Join-Path $out "pri"
 New-Item -ItemType Directory -Path $pri | Out-Null
 Copy-Item -Path "store\Assets" -Destination (Join-Path $pri "Assets") -Recurse
 Copy-Item -LiteralPath (Join-Path $layout "AppxManifest.xml") -Destination $pri
 Run $makepri createconfig /cf (Join-Path $out "priconfig.xml") /dq en-US_cs-CZ /pv 10.0.0 /o
+Run $py tools\msix_pri.py config (Join-Path $out "priconfig.xml")
 Run $makepri new /pr $pri /cf (Join-Path $out "priconfig.xml") /mn (Join-Path $pri "AppxManifest.xml") /of (Join-Path $layout "resources.pri") /o
+Run $makepri dump /if (Join-Path $layout "resources.pri") /of (Join-Path $out "pri-dump.xml") /o
+Run $py tools\msix_pri.py check $layout (Join-Path $out "pri-dump.xml")
 Remove-Item -Recurse -Force $pri
 
 # ---- 3. read-only install folder ----------------------------------------------

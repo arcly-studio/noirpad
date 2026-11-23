@@ -152,7 +152,7 @@ def test_i5_copyright_and_uninstall_name():
 
 # ---- Green M1 (N1.9-logo): every raster comes from the green SVGs -----------------
 #
-# tools/make_icons.py renders all of them and records the SHA-256 of the two
+# tools/make_icons.py renders all of them and records the SHA-256 of the three
 # SVG sources and of each output in docs/brand/icons.json. A source changed
 # without a new run, an output edited by hand, or a new raster icon that the
 # script does not make fails here; so does a blue (old) colour.
@@ -163,13 +163,13 @@ import sys
 sys.path.insert(0, str(ROOT / "tools"))
 import make_icons  # noqa: E402
 
-GREENS = ("#00ff41", "#17ff52", "#31ff66")                    # green M1 tones
+GREENS = ("#00ff41", "#17ff52", "#31ff66", "#5cff86")                    # green M1 tones
 OLD_BLUES = ("#3d8bff", "#1c56d6", "#4a94ff", "#5aa2ff", "#9ccaff")   # blue M1 (1.0.1)
 MANIFEST = json.loads((ROOT / "docs" / "brand" / "icons.json").read_text(encoding="utf-8"))
 
 
 def test_svg_sources_are_green():
-    for path in (make_icons.BIG, make_icons.SMALL):
+    for path in (make_icons.BIG, make_icons.MEDIUM, make_icons.SMALL):
         text = path.read_text(encoding="utf-8").lower()
         assert any(c in text for c in GREENS), path.name
         assert not [c for c in OLD_BLUES if c in text], path.name

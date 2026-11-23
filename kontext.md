@@ -503,8 +503,9 @@ poznámek, názvy ani hesla. Access log uvicornu je vypnutý.
   (focus trap, návrat fokusu).
 - **Ikony:** Lucide sprite (`static/vendor/lucide/sprite.svg`, 29 ikon). Nová ikona: přidej ji do
   `ICONS` v `tools/vendor.mjs`, spusť `npm run vendor` a použij `NP.icon("name")`.
-- **Logo M1:** zdroje jsou `docs/brand/noirpad-icon.svg` (od 40 px) a `noirpad-icon-small.svg`
-  (do 32 px). Kopie ve `static/img/` musí být shodné.
+- **Logo M1:** zdroje jsou `docs/brand/noirpad-icon.svg` (od 40 px), `noirpad-icon-medium.svg`
+  (24 a 32 px) a `noirpad-icon-small.svg` (16 a 20 px). Kopie první a poslední ve `static/img/` musí
+  být shodné.
   - V UI se logo vkládá jen jako `<img class="… np-decorative">`, nikdy inline.
   - URL ikon mají `?v=__NP_VERSION__`, které doplní server.
 

@@ -3,8 +3,13 @@
     .venv\\Scripts\\python.exe tools\\make_icons.py
 
 Sources (the only hand-edited logo files):
-  docs/brand/noirpad-icon.svg        >= 40 px
-  docs/brand/noirpad-icon-small.svg  <= 32 px
+  docs/brand/noirpad-icon.svg         from 40 px
+  docs/brand/noirpad-icon-medium.svg  24 and 32 px: the same drawing with a
+                                      stronger prompt and tile rim
+  docs/brand/noirpad-icon-small.svg   16 and 20 px: simplified
+
+One logo everywhere (N1.11 test): the MSIX target sizes are noirpad.ico's own
+images, or resampled from them; tiles show the logo as large as the exe icon.
 
 Outputs (commit them with docs/brand/icons.json):
   docs/brand/noirpad-1024.png, docs/logo.png (256), static/img/icon-192.png,
@@ -27,6 +32,7 @@ or an output was replaced by hand.
 
 import hashlib
 import json
+import math
 import os
 import shutil
 import struct
@@ -39,9 +45,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 BRAND = ROOT / "docs" / "brand"
 BIG = BRAND / "noirpad-icon.svg"
+MEDIUM = BRAND / "noirpad-icon-medium.svg"
 SMALL = BRAND / "noirpad-icon-small.svg"
 MANIFEST = BRAND / "icons.json"
-SMALL_MAX = 32          # the small SVG up to this size, the big one above
+SMALL_MAX = 20          # the small SVG up to this size,
+MEDIUM_MAX = 32         # the medium one up to this, the big one above
 
 PNGS = {
     "docs/brand/noirpad-1024.png": 1024,
@@ -58,23 +66,36 @@ ICOS = {
 BMPS = {f"installer/wizard-small-{s}.bmp": s for s in (55, 64, 69, 83, 92, 110, 138)}
 SOCIAL = ("docs/brand/social-preview.png", BRAND / "social-preview.html", (1280, 640))
 # MSIX (Store edition, N1.9): store/Assets/<name>.scale-<n>.png and the
-# Square44x44Logo target sizes (taskbar, Start list) in three variants. The
-# logo's own dark rounded square is drawn on a transparent canvas, so plated
-# and unplated look the same. Tiles: the logo centred at ICON_SHARE of the
-# shorter side (Windows asks for padding on tiles and the splash screen).
+# Square44x44Logo target sizes (taskbar, Start list) in three variants, all the
+# sizes Windows 11 asks for at 100 to 400 %: a missing one is scaled down from
+# the next larger, which need not be what the exe shows. Tiles and StoreLogo:
+# the logo as large as in the exe icon (the whole shorter side) on the opaque
+# tile background; the splash screen keeps its padding and transparency.
 STORE_DIR = "store/Assets"
 STORE_SCALES = (100, 125, 150, 200, 400)
 STORE_TILES = {                     # name: (width, height, share of the shorter side)
     "Square44x44Logo": (44, 44, 1.0),
     "StoreLogo": (50, 50, 1.0),
-    "Square71x71Logo": (71, 71, 0.75),
-    "Square150x150Logo": (150, 150, 0.6),
-    "Wide310x150Logo": (310, 150, 0.6),
-    "Square310x310Logo": (310, 310, 0.55),
+    "Square71x71Logo": (71, 71, 1.0),
+    "Square150x150Logo": (150, 150, 1.0),
+    "Wide310x150Logo": (310, 150, 1.0),
+    "Square310x310Logo": (310, 310, 1.0),
     "SplashScreen": (620, 300, 200 / 300),
 }
-STORE_TARGET_SIZES = (16, 24, 32, 48, 256)
+STORE_FROM_ICO = "Square44x44Logo"          # resampled from noirpad.ico, transparent
+STORE_TRANSPARENT = ("SplashScreen",)
+STORE_BACKGROUND = "#0e0e10"                # = msix_manifest.TILE_BACKGROUND (tested)
+STORE_TARGET_SIZES = (16, 20, 24, 30, 32, 36, 40, 48, 60, 64, 72, 80, 96, 256)
 STORE_VARIANTS = ("", "_altform-unplated", "_altform-lightunplated")
+
+
+def ico_source(size: int) -> int:
+    """The noirpad.ico image a size is made from: itself, else the next larger.
+    30 from 40, like the exe on the taskbar at 125 % (never the tuned 32)."""
+    sizes = ICOS["noirpad.ico"]
+    if size in sizes:
+        return size
+    return min(s for s in sizes if s > size and s != MEDIUM_MAX)
 
 
 def store_assets() -> dict:
@@ -91,7 +112,7 @@ def store_assets() -> dict:
 
 
 # Files the outputs depend on (hashes in icons.json).
-SOURCES = (BIG, SMALL, BRAND / "social-preview.html")
+SOURCES = (BIG, MEDIUM, SMALL, BRAND / "social-preview.html")
 
 
 # ---- Chromium -------------------------------------------------------------------
@@ -127,14 +148,17 @@ def screenshot(url: str, width: int, height: int, tmp: Path) -> bytes:
     return data
 
 
-def render_tile(width: int, height: int, logo: int, tmp: Path) -> bytes:
-    """The logo (small SVG up to SMALL_MAX px) centred on a transparent canvas."""
-    if (width, height) == (logo, logo):
-        return render_svg(logo, tmp)
-    svg = SMALL if logo <= SMALL_MAX else BIG
+def svg_for(size: int) -> Path:
+    return SMALL if size <= SMALL_MAX else MEDIUM if size <= MEDIUM_MAX else BIG
+
+
+def render_tile(width: int, height: int, logo: int, tmp: Path, background: str = "transparent") -> bytes:
+    """The logo centred on *background*."""
+    svg = svg_for(logo)
     page = tmp / f"tile-{width}x{height}-{logo}.html"
     page.write_text(
-        "<!doctype html><html><head><style>html,body{margin:0;background:transparent;"
+        "<!doctype html><html><head><style>"
+        f"html,body{{margin:0;background:{background};"
         f"overflow:hidden;width:{width}px;height:{height}px}}body{{display:flex;align-items:center;"
         f"justify-content:center}}img{{display:block;width:{logo}px;height:{logo}px}}</style></head>"
         f'<body><img src="{svg.as_uri()}"></body></html>', encoding="utf-8")
@@ -142,7 +166,7 @@ def render_tile(width: int, height: int, logo: int, tmp: Path) -> bytes:
 
 
 def render_svg(size: int, tmp: Path) -> bytes:
-    svg = SMALL if size <= SMALL_MAX else BIG
+    svg = svg_for(size)
     page = tmp / f"icon-{size}.html"
     page.write_text(
         "<!doctype html><html><head><style>html,body{margin:0;background:transparent;"
@@ -199,6 +223,55 @@ def png_rgba(data: bytes):
     return w, h, out
 
 
+def png(w: int, h: int, px) -> bytes:
+    """8-bit RGBA PNG of top-down rows."""
+    def chunk(kind, data):
+        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+    raw = b"".join(b"\0" + bytes(px[y * w * 4:(y + 1) * w * 4]) for y in range(h))
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+
+
+def _lanczos(src: int, dst: int) -> list:
+    """For each target pixel its [(source pixel, weight)] (Lanczos 3)."""
+    ratio, out = src / dst, []
+    for i in range(dst):
+        centre, row = (i + 0.5) * ratio - 0.5, {}
+        for j in range(math.floor(centre - 3 * ratio), math.ceil(centre + 3 * ratio) + 1):
+            x = (j - centre) / ratio
+            if abs(x) < 3:
+                v = 1.0 if x == 0 else 3 * math.sin(math.pi * x) * math.sin(math.pi * x / 3) / (math.pi * x) ** 2
+                k = min(max(j, 0), src - 1)
+                row[k] = row.get(k, 0.0) + v
+        total = sum(row.values())
+        out.append([(k, v / total) for k, v in row.items()])
+    return out
+
+
+def resample(data: bytes, size: int) -> bytes:
+    """A square PNG scaled down to *size* (premultiplied alpha, Lanczos 3)."""
+    w, h, px = png_rgba(data)
+    if w == size:
+        return data
+    weights = _lanczos(w, size)
+    planes = []
+    for c in range(4):
+        rows = []
+        for y in range(h):
+            row = px[y * w * 4:(y + 1) * w * 4]
+            values = list(row[3::4]) if c == 3 else [v * a / 255 for v, a in zip(row[c::4], row[3::4])]
+            rows.append([sum(values[k] * v for k, v in ws) for ws in weights])
+        planes.append([[sum(rows[k][x] * v for k, v in ws) for x in range(size)] for ws in weights])
+    out = bytearray()
+    for y in range(size):
+        for x in range(size):
+            a = min(255.0, max(0.0, planes[3][y][x]))
+            for c in range(3):
+                out.append(min(255, max(0, round(planes[c][y][x] * 255 / a))) if a >= 0.5 else 0)
+            out.append(round(a))
+    return png(size, size, out)
+
+
 def bmp32(png: bytes) -> bytes:
     """32-bit BI_RGB bottom-up BMP with straight alpha (Inno: WizardImageAlphaFormat=defined)."""
     w, h, px = png_rgba(png)
@@ -251,8 +324,20 @@ def main() -> int:
         for rel, size in BMPS.items():
             written[rel] = bmp32(icon(size))
         (ROOT / STORE_DIR).mkdir(parents=True, exist_ok=True)
+        shrunk = {}
+
+        def from_ico(size):
+            if size not in shrunk:
+                shrunk[size] = resample(icon(ico_source(size)), size)
+            return shrunk[size]
+
         for rel, (w, h, logo) in store_assets().items():
-            written[rel] = icon(w) if w == h == logo else render_tile(w, h, logo, tmp)
+            name = Path(rel).name.split(".")[0]
+            if name == STORE_FROM_ICO:
+                written[rel] = from_ico(w)
+            else:
+                background = "transparent" if name in STORE_TRANSPARENT else STORE_BACKGROUND
+                written[rel] = render_tile(w, h, logo, tmp, background)
         for rel, data in written.items():
             (ROOT / rel).write_bytes(data)
             print(rel)

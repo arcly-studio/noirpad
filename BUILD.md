@@ -57,7 +57,7 @@ powershell -ExecutionPolicy Bypass -File build-msix.ps1
 Needs the Windows SDK (`makeappx.exe`, `makepri.exe`); the script installs nothing and says what
 is missing. It runs `build.ps1 -SkipInstaller` (clean tree, tests, PyInstaller, smoke test), builds
 the layout `dist\msix\layout` (copy of `dist\NoirPad`, `store\Assets`, `AppxManifest.xml` from
-`tools\msix_manifest.py` with version X.Y.Z.0, `resources.pri`), smoke-tests it as the Store
+`tools\msix_manifest.py` with version X.Y.Z.0, one `resources.pri` with every scale, checked by `tools\msix_pri.py`), smoke-tests it as the Store
 edition twice (writable: no file may change; write-protected with icacls: must still pass) and
 packs `dist\msix\NoirPad-<version>.msix` + `.sha256`. Unsigned: the Store signs it.
 
@@ -127,8 +127,9 @@ the tests, before the build.
   `docs/screenshots/` (and `docs/demo.gif`) over the WebView2 DevTools protocol (needs
   `pip install playwright`, plus `ffmpeg` and `oxipng` on PATH).
 - **Logo (M1 "glass sheets", green since 1.1.0):** the only sources are `docs/brand/noirpad-icon.svg`
-  (40 px and up) and `noirpad-icon-small.svg` (32 px and less); `static/img/` holds identical
-  copies. Every raster is rendered from them by `tools/make_icons.py` (chrome-headless-shell from
+  (40 px and up), `noirpad-icon-medium.svg` (24 and 32 px: same drawing, stronger `>_` and edge) and
+  `noirpad-icon-small.svg` (16 and 20 px); `static/img/` holds identical copies of the first and the
+  last. Every raster is rendered from them by `tools/make_icons.py` (chrome-headless-shell from
   Playwright, standard library otherwise): `docs/brand/noirpad-1024.png`, `docs/logo.png`,
   `static/img/icon-*.png`, `apple-touch-icon.png`, `noirpad.ico` (exe, window, installer),
   `static/favicon.ico`, `installer/wizard-small-*.bmp` (32-bit with alpha) and
