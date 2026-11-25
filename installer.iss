@@ -9,8 +9,8 @@
 ;     ISCC /DAppVersion=x.y.z /DAppURL=https://github.com/... installer.iss
 ;
 ;  Notes live in %LOCALAPPDATA%\NoirPad (separate from the install dir).
-;  Uninstalling removes the whole install dir and asks whether to delete the
-;  notes too; the default is NO.
+;  Uninstalling removes the whole install dir. Before that it asks whether to
+;  delete the notes too; preselected (and silent): they stay.
 ; ============================================================================
 
 #ifndef AppVersion
@@ -98,6 +98,11 @@ UninstallDisplayName={#AppName}
 Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "czech";   MessagesFile: "compiler:Languages\Czech.isl"
 
+[Messages]
+; Not "... and all of its components": the notes have their own question.
+english.ConfirmUninstall=Uninstall the program %1 from this computer?
+czech.ConfirmUninstall=Odinstalovat program %1 z tohoto počítače?
+
 [CustomMessages]
 english.WebView2Missing=NoirPad needs the Microsoft Edge WebView2 Runtime, which is not installed on this computer.%n%nDownload and install it from Microsoft now?%n(If you choose No, NoirPad will remind you when it starts.)
 czech.WebView2Missing=NoirPad potřebuje Microsoft Edge WebView2 Runtime, který na tomto počítači není nainstalovaný.%n%nStáhnout ho teď od Microsoftu a nainstalovat?%n(Když zvolíte Ne, NoirPad vám to připomene při spuštění.)
@@ -107,8 +112,26 @@ english.DirNotEmpty=The folder %1 already contains other files.%n%nUninstalling 
 czech.DirNotEmpty=Složka %1 už obsahuje jiné soubory.%n%nOdinstalace NoirPadu maže celou jeho složku, proto do ní instalátor nic nenainstaluje. Přesuňte ty soubory jinam (nebo je smažte) a spusťte instalaci znovu.
 english.AppStillRunning=NoirPad is still running and cannot be removed while it is open.%n%nClose it now? Unsaved changes in an open note may be lost.
 czech.AppStillRunning=NoirPad pořád běží a nejde odebrat, dokud je otevřený.%n%nZavřít ho teď? Neuložené změny v otevřené poznámce se mohou ztratit.
-english.DeleteData=Also delete your notes, backups and settings?%n%n%1%n%nThis cannot be undone. Choose No to keep them (recommended if you plan to reinstall).
-czech.DeleteData=Smazat i vaše poznámky, zálohy a nastavení?%n%n%1%n%nTo nejde vrátit. Zvolte Ne, pokud si je chcete nechat (doporučeno, pokud budete NoirPad instalovat znovu).
+english.NotesQuestionTitle=What should happen to your notes?
+czech.NotesQuestionTitle=Co se má stát s vašimi poznámkami?
+english.NotesQuestion=Your notes, backups and settings are in this folder:%n%n%1%n%nDeleting them cannot be undone. Keep them if you plan to install NoirPad again.
+czech.NotesQuestion=Vaše poznámky, zálohy a nastavení jsou v této složce:%n%n%1%n%nSmazání nejde vrátit. Ponechte je, pokud budete NoirPad instalovat znovu.
+english.KeepNotes=Keep my notes
+czech.KeepNotes=Ponechat poznámky
+english.DeleteNotes=Delete my notes too
+czech.DeleteNotes=Smazat i poznámky
+english.DataLeftTitle=Some of your data could not be deleted
+czech.DataLeftTitle=Část vašich dat se nepodařilo smazat
+english.DataLeft=The program is removed, but this is still in %1:%n%n%2%n%nAnother program is probably using it. Close that program and delete the folder yourself.
+czech.DataLeft=Program je odebraný, ale ve složce %1 zůstalo:%n%n%2%n%nNejspíš to používá jiný program. Zavřete ho a složku smažte ručně.
+english.DataLeftFolder=(the empty folder itself)
+czech.DataLeftFolder=(samotná prázdná složka)
+english.DataLeftMore=… and %1 more
+czech.DataLeftMore=… a další: %1
+english.OpenFolder=Open the folder
+czech.OpenFolder=Otevřít složku
+english.CloseWindow=Close
+czech.CloseWindow=Zavřít
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -388,9 +411,37 @@ begin
     InstallWebView2Silently();
 end;
 
+var
+  DeleteNotes: Boolean;
+
+{ The one question about the notes, before anything is removed. The first
+  button is preselected (TaskDialogMsgBox knows no MB_DEFBUTTON2), so Keep is
+  "Yes"; only a click on Delete ("No") deletes. Silent: no question, kept. }
+function AskAboutNotes(): Boolean;
+begin
+  Result := False;
+  if not DirExists(DataDir()) then
+    exit;
+  if UninstallSilent() then
+  begin
+    Log('Silent uninstall: the data folder is kept: ' + DataDir());
+    exit;
+  end;
+  Result := TaskDialogMsgBox(CustomMessage('NotesQuestionTitle'),
+    FmtMessage(CustomMessage('NotesQuestion'), [DataDir()]), mbConfirmation,
+    MB_YESNO, [CustomMessage('KeepNotes'), CustomMessage('DeleteNotes')], 0) = IDNO;
+  if Result then
+    Log('The data folder will be deleted: ' + DataDir())
+  else
+    Log('The data folder is kept: ' + DataDir());
+end;
+
 function InitializeUninstall(): Boolean;
 begin
+  DeleteNotes := False;
   Result := CloseAppProcesses(UninstallSilent());
+  if Result then
+    DeleteNotes := AskAboutNotes();
 end;
 
 { The wizard's language is NoirPad's language while Settings → Language is
@@ -410,24 +461,76 @@ begin
     Log('Could not write {#InstallLangFile}');
 end;
 
-{ Ask (default: No) whether the notes in %LOCALAPPDATA%\NoirPad go too. }
-procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+// True when the whole data folder is gone; tried again for a few seconds
+// while something still holds a file in it.
+function DeleteDataFolder(): Boolean;
 var
   I: Integer;
 begin
-  if (CurUninstallStep <> usPostUninstall) or UninstallSilent() then
-    exit;
-  if not DirExists(DataDir()) then
-    exit;
-  if MsgBox(FmtMessage(CustomMessage('DeleteData'), [DataDir()]), mbConfirmation,
-            MB_YESNO or MB_DEFBUTTON2) = IDYES then
+  // WebView2 may still be closing NoirPad's profile; never kill it, wait.
+  for I := 1 to 40 do
+    if MatchingProcessIds(True) = '' then
+      break
+    else
+      Sleep(250);
+  for I := 1 to 20 do
   begin
-    // WebView2 may still be closing NoirPad's profile; never kill it, wait.
-    for I := 1 to 20 do
-      if MatchingProcessIds(True) = '' then
-        break
-      else
-        Sleep(250);
     DelTree(DataDir(), True, True, True);
+    Result := not DirExists(DataDir());
+    if Result then
+      exit;
+    Sleep(500);
   end;
+end;
+
+{ Files left under Dir: the first five into List, all of them into Count. }
+procedure ListFiles(const Dir, Prefix: String; var List: String; var Count: Integer);
+var
+  Rec: TFindRec;
+begin
+  if not FindFirst(AddBackslash(Dir) + '*', Rec) then
+    exit;
+  try
+    repeat
+      if (Rec.Name = '.') or (Rec.Name = '..') then
+        continue;
+      if (Rec.Attributes and FILE_ATTRIBUTE_DIRECTORY) <> 0 then
+        ListFiles(AddBackslash(Dir) + Rec.Name, Prefix + Rec.Name + '\', List, Count)
+      else
+      begin
+        Count := Count + 1;
+        if Count <= 5 then
+          List := List + Prefix + Rec.Name + #13#10;
+      end;
+    until not FindNext(Rec);
+  finally
+    FindClose(Rec);
+  end;
+end;
+
+procedure ReportLeftData();
+var
+  List: String;
+  Count, Code: Integer;
+begin
+  List := '';
+  Count := 0;
+  ListFiles(DataDir(), '', List, Count);
+  if Count = 0 then
+    List := CustomMessage('DataLeftFolder')
+  else if Count > 5 then
+    List := List + FmtMessage(CustomMessage('DataLeftMore'), [IntToStr(Count - 5)]);
+  Log(Format('Could not delete the data folder %s, files left: %d', [DataDir(), Count]));
+  if TaskDialogMsgBox(CustomMessage('DataLeftTitle'),
+       FmtMessage(CustomMessage('DataLeft'), [DataDir(), Trim(List)]), mbError,
+       MB_YESNO, [CustomMessage('OpenFolder'), CustomMessage('CloseWindow')], 0) = IDYES then
+    ShellExec('open', DataDir(), '', '', SW_SHOWNORMAL, ewNoWait, Code);
+end;
+
+{ The answer given at the start, after the program is gone. }
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if (CurUninstallStep = usPostUninstall) and DeleteNotes then
+    if not DeleteDataFolder() then
+      ReportLeftData();
 end;

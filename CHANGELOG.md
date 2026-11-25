@@ -15,6 +15,14 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   starts normally; before, nothing happened. At most one error message is shown.
 - The release build never opens a WebView2 debugging port, whatever the environment says.
 
+### Uninstalling (installer version)
+- The question about your notes now comes first, before anything is removed, with buttons that say
+  what they do: "Keep my notes" (preselected) and "Delete my notes too". Before, it was a Yes / No
+  question after the program was gone, easily confused with "... and all of its components?".
+- Deleting the notes is retried while another program still uses the folder. What cannot be deleted
+  is reported with its path and a button that opens the folder; before, it stayed silently.
+- A silent uninstall keeps the notes, as before.
+
 ### Microsoft Store edition
 - NoirPad can now be packaged for the Microsoft Store (MSIX). The Store edition keeps its notes in
   `%USERPROFILE%\NoirPad`; the GitHub edition stays in `%LOCALAPPDATA%\NoirPad`.

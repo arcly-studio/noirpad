@@ -281,9 +281,8 @@ def test_installer_closes_noirpad_processes_first():
     assert "StartsWithText(VarText(Item.ExecutablePath), AppDir)" in code
     assert "KillProcesses(AppProcessIds()" in code
     assert "KillProcesses(MatchingProcessIds(True)" not in code
-    # The data folder is deleted only after the user said Yes.
-    yes = code.index("MB_YESNO or MB_DEFBUTTON2) = IDYES then")
-    assert code.index("DelTree(DataDir()") > yes
+    # The data folder is deleted only on the user's answer (test_uninstall_data.py).
+    assert code.count("DelTree(") == 1
 
 
 def test_installer_refuses_a_foreign_non_empty_folder():
