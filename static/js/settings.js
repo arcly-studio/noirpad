@@ -358,6 +358,8 @@ window.NP = window.NP || {};
         var root = document.documentElement;
         root.style.zoom = String(z);
         root.style.setProperty("--np-zoom", String(z));
+        /* An open menu closes, the Markdown underlay and the rain follow. */
+        window.dispatchEvent(new Event("resize"));
     }
 
     function changeZoom(next) {
@@ -893,6 +895,7 @@ window.NP = window.NP || {};
     }
 
     NP.settings = {
+        _applyZoom: applyZoom,      /* tests */
         _inited: false,
 
         init: function () {

@@ -31,6 +31,36 @@ window.NP = window.NP || {};
         };
     };
 
+    /* ---- Desktop zoom ----
+       Ctrl+= is CSS zoom of the page (settings.js). Rects, the pointer's
+       clientX/Y and the window's inner size contain it; style lengths do not.
+       Everything that places or sizes something by them goes through here. */
+
+    /* 1 = 100 %. An engine without currentCSSZoom has unzoomed rects. */
+    NP.pageZoom = function () {
+        return (document.body && document.body.currentCSSZoom) || 1;
+    };
+
+    /* An element's rect, or a point {x, y} / rect, in style pixels. */
+    NP.cssRect = function (what) {
+        var r = what.getBoundingClientRect ? what.getBoundingClientRect() : what;
+        var z = NP.pageZoom();
+        var left = r.left !== undefined ? r.left : (r.x || 0);
+        var top = r.top !== undefined ? r.top : (r.y || 0);
+        return {
+            left: left / z, top: top / z,
+            right: (r.right !== undefined ? r.right : left) / z,
+            bottom: (r.bottom !== undefined ? r.bottom : top) / z,
+            width: (r.width || 0) / z, height: (r.height || 0) / z
+        };
+    };
+
+    /* The window's size in style pixels. */
+    NP.viewport = function () {
+        var z = NP.pageZoom();
+        return { width: window.innerWidth / z, height: window.innerHeight / z };
+    };
+
     /* ---- DOM shortcuts ---- */
     NP.$ = function (sel) {
         return document.querySelector(sel);

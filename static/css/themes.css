@@ -16,6 +16,11 @@
    ============================================================ */
 
 :root {
+    /* 1 % of the window's width / height at any desktop zoom (settings.js):
+       vw and vh are scaled by it. Use calc(90 * var(--np-vw)), never 90vw. */
+    --np-vw: calc(1vw / var(--np-zoom, 1));
+    --np-vh: calc(1vh / var(--np-zoom, 1));
+
     /* ---- Fonts ---------------------------------------------------- */
     /* Hybrid typography: --font-ui drives the whole UI (set on body),
        --font-mono stays on the editor, code-like inputs and ASCII art. */

@@ -87,7 +87,8 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   browser's zoom.
 - Ctrl+mouse wheel zooms the desktop window the same way as Ctrl+= and Ctrl+-.
 - The Markdown source wraps the same at every zoom: the cursor and the selection match the text, and
-  nothing runs into the preview.
+  nothing runs into the preview. Menus, context menus, the link tooltip and windows stay where they
+  belong and inside the window at every zoom.
 - With Windows high contrast on, rain, glow, CRT and glitch stay off (your settings are kept), and
   toggles show their state without relying on colour.
 - Text fields that had no visible label now have one for screen readers.

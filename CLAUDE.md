@@ -87,6 +87,9 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   never the text colour, `test_contrast.py`). Use tokens, not hard-coded colours.
 - Markdown source colouring: `static/js/md-source.js` renders the underlay `#md-highlight` beneath
   the textarea `#editor-md` (drawn transparent while in sync); keep font metrics and scrolling identical.
+- Desktop zoom (70-200 %) is CSS zoom of the page: rects, clientX/Y and innerWidth contain it, style
+  lengths do not. Place and size things only through `NP.cssRect` / `NP.viewport` (`utils.js`), and in
+  CSS use `calc(90 * var(--np-vw))`, never `90vw` / `80vh` (`tests/js/flow-zoom.test.js`).
 - `tests/test_contrast.py` checks all 17 themes: text incl. `--fg-muted` and `--danger` >= 4.5:1 (muted is text), icons / toggle outline >= 3:1. Run it after
   touching any theme colour.
 - The shared window style (dialogs, menus, popups) is the block "G7" at the end of `noirpad.css`.

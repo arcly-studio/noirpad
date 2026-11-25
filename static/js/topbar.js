@@ -178,26 +178,19 @@ window.NP = window.NP || {};
             document.body.appendChild(el);
 
             /* Position: under the anchor, or at the pointer. */
-            var x, y;
-            if (anchor && anchor.getBoundingClientRect) {
-                var r = anchor.getBoundingClientRect();
-                x = r.left;
-                y = r.bottom + 4;
-                anchor.setAttribute("aria-expanded", "true");
-            } else {
-                x = (anchor && anchor.x) || 0;
-                y = (anchor && anchor.y) || 0;
-            }
-            el.style.left = x + "px";
-            el.style.top = y + "px";
-            var box = el.getBoundingClientRect();
-            if (box.right > window.innerWidth - 4) {
-                var right = anchor && anchor.getBoundingClientRect
-                    ? anchor.getBoundingClientRect().right : window.innerWidth - 4;
+            var view = NP.viewport();
+            var at = NP.cssRect(anchor || {});
+            var isElement = !!(anchor && anchor.getBoundingClientRect);
+            if (isElement) anchor.setAttribute("aria-expanded", "true");
+            el.style.left = at.left + "px";
+            el.style.top = (isElement ? at.bottom + 4 : at.top) + "px";
+            var box = NP.cssRect(el);
+            if (box.right > view.width - 4) {
+                var right = isElement ? Math.min(at.right, view.width - 4) : view.width - 4;
                 el.style.left = Math.max(4, right - box.width) + "px";
             }
-            if (box.bottom > window.innerHeight - 4) {
-                el.style.top = Math.max(4, window.innerHeight - box.height - 4) + "px";
+            if (box.bottom > view.height - 4) {
+                el.style.top = Math.max(4, view.height - box.height - 4) + "px";
             }
 
             var state = {

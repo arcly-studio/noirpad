@@ -6,7 +6,7 @@ import { dangers, loadApp } from "./harness.js";
 let win;
 
 beforeEach(() => {
-    win = loadApp(["js/md-source.js"], {
+    win = loadApp(["js/utils.js", "js/md-source.js"], {
         body: '<div id="md-source"><div id="md-highlight"></div><textarea id="editor-md"></textarea></div>' });
 });
 
@@ -104,7 +104,7 @@ describe("md-source rendering", () => {
 describe("the underlay is as wide as the textarea at every zoom", () => {
     function sizes(zoom, cssWidth, scrollbar) {
         const ta = win.document.getElementById("editor-md");
-        Object.defineProperty(ta, "currentCSSZoom", { configurable: true, value: zoom });
+        Object.defineProperty(win.document.body, "currentCSSZoom", { configurable: true, value: zoom });
         Object.defineProperty(ta, "offsetWidth", { configurable: true, value: Math.round(cssWidth) });
         Object.defineProperty(ta, "clientWidth", { configurable: true, value: Math.round(cssWidth) - scrollbar });
         ta.getBoundingClientRect = () => ({ width: cssWidth * (zoom || 1), left: 0, top: 0, right: 0, bottom: 0, height: 0 });

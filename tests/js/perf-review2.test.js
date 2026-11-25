@@ -166,7 +166,7 @@ describe("find-all while typing (R5)", () => {
 
 describe("the coloured Markdown source of a long note (R5)", () => {
     function setup() {
-        const win = loadApp(["js/md-source.js"], { body:
+        const win = loadApp(["js/utils.js", "js/md-source.js"], { body:
             '<div id="md-source"><div id="md-highlight"></div><textarea id="editor-md"></textarea></div>' });
         win.document.dispatchEvent(new win.Event("DOMContentLoaded"));
         return { win, ta: win.document.getElementById("editor-md"),

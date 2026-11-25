@@ -197,8 +197,8 @@ describe("zoom keys (N12)", () => {
     });
 
     it("the page keeps fitting the window at any zoom", () => {
-        expect(CSS).toContain("height: calc(100vh / var(--np-zoom, 1));");
-        expect(CSS).toContain("min-width: min(640px, calc(100vw / var(--np-zoom, 1)));");
+        expect(CSS).toContain("height: calc(100 * var(--np-vh));");
+        expect(CSS).toContain("min-width: min(640px, calc(100 * var(--np-vw)));");
         expect(CSS).toMatch(/@media print \{\s*html \{\s*zoom: 1 !important/);
     });
 

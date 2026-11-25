@@ -144,7 +144,7 @@ window.NP = window.NP || {};
             var modal = document.createElement("div");
             modal.id = "font-picker";
             modal.style.cssText =
-                "width:520px;max-width:90vw;max-height:85vh;" +
+                "width:520px;max-width:calc(90 * var(--np-vw));max-height:calc(85 * var(--np-vh));" +
                 "display:flex;flex-direction:column;overflow:hidden;";
 
             /* Header */

@@ -565,11 +565,12 @@ window.NP = window.NP || {};
         tip.appendChild(url);
         tip.appendChild(hint);
         document.body.appendChild(tip);
-        var r = a.getBoundingClientRect();
-        var box = tip.getBoundingClientRect();
-        var x = Math.max(4, Math.min(r.left, window.innerWidth - box.width - 4));
+        var view = NP.viewport();
+        var r = NP.cssRect(a);
+        var box = NP.cssRect(tip);
+        var x = Math.max(4, Math.min(r.left, view.width - box.width - 4));
         var y = r.bottom + 6;
-        if (y + box.height > window.innerHeight - 4) y = Math.max(4, r.top - box.height - 6);
+        if (y + box.height > view.height - 4) y = Math.max(4, r.top - box.height - 6);
         tip.style.left = x + "px";
         tip.style.top = y + "px";
     }
@@ -621,6 +622,7 @@ window.NP = window.NP || {};
         document.addEventListener("keydown", onCtrl, true);
         document.addEventListener("keyup", onCtrl, true);
         window.addEventListener("blur", function (e) { hideTip(); onCtrl(e); });
+        window.addEventListener("resize", hideTip);
         document.addEventListener("keydown", function (e) {
             if (e.key === "Escape" && tip) hideTip();
         }, true);

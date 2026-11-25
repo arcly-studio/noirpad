@@ -111,7 +111,7 @@ window.NP = window.NP || {};
                 var span = document.createElement("span");
                 span.textContent = "​";
                 collapsed.insertNode(span);
-                rect = span.getBoundingClientRect();
+                rect = span.getClientRects()[0];
                 var parent = span.parentNode;
                 if (parent) {
                     parent.removeChild(span);
@@ -121,7 +121,8 @@ window.NP = window.NP || {};
 
             if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0)) return;
 
-            var wrapRect = this.wrapper.getBoundingClientRect();
+            rect = NP.cssRect(rect);
+            var wrapRect = NP.cssRect(this.wrapper);
             var caretY = rect.top - wrapRect.top + (rect.height || ROW_HEIGHT) / 2 - ROW_HEIGHT / 2;
             var caretX = rect.left - wrapRect.left;
 
