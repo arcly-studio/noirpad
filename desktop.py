@@ -112,6 +112,9 @@ MESSAGES = {
         "crash": "NoirPad could not start: {error}\n\nDetails are in the log:\n{log}",
         "start_timeout": "NoirPad did not finish starting and will close now.\n\n"
                          "Please start it again. Details are in the log:\n{log}",
+        "view_failed": "NoirPad's display has stopped responding.\n\nRestore it?",
+        "view_gave_up": "NoirPad's display keeps failing. Please close NoirPad and start it again.\n\n"
+                        "Details are in the log:\n{log}",
     },
     "cs": {
         "running": "NoirPad už běží (možná jako webová verze v terminálu).\n\n"
@@ -125,6 +128,9 @@ MESSAGES = {
         "crash": "NoirPad se nepodařilo spustit: {error}\n\nPodrobnosti jsou v logu:\n{log}",
         "start_timeout": "NoirPad se nepodařilo dokončit spuštění a teď se zavře.\n\n"
                          "Spusťte ho prosím znovu. Podrobnosti jsou v logu:\n{log}",
+        "view_failed": "Zobrazení NoirPadu přestalo reagovat.\n\nObnovit?",
+        "view_gave_up": "Zobrazení NoirPadu opakovaně selhává. Zavřete prosím NoirPad a spusťte ho znovu.\n\n"
+                        "Podrobnosti jsou v logu:\n{log}",
     },
 }
 
@@ -670,6 +676,147 @@ def _disarm_backstop(hang) -> None:
         pass
 
 
+# ---- WebView2 processes that die ------------------------------------------
+# WebView2 reports it (ProcessFailed) and leaves the recovery to the app:
+# without one the window stays empty for good (browser process) or shows an
+# error page (renderer). pywebview does nothing.
+VIEW_LOST = ("BrowserProcessExited", "RenderProcessExited")
+VIEW_HUNG = "RenderProcessUnresponsive"     # reported again every few seconds
+VIEW_HUNG_WINDOW = 60.0                     # two reports within this: it really hangs
+VIEW_MAX_FAILURES = 3                       # the third within VIEW_FAILURE_WINDOW
+VIEW_FAILURE_WINDOW = 300.0                 # is not restored any more
+
+
+class _ViewRecovery:
+    """Decides what happens when one of the window's processes failed. failed()
+    is called on the UI thread and returns at once (no message loop inside the
+    event, as Microsoft asks); the question and the recovery run elsewhere.
+
+    ask() -> True: restore. restore() -> True: the page is ready again.
+    give_up(): tell the user it keeps failing. dead: the page is gone and was
+    not restored (closing must not wait for it)."""
+
+    def __init__(self, ask, restore, give_up, clock=time.monotonic, run=None):
+        self.ask, self.restore, self.give_up, self.clock = ask, restore, give_up, clock
+        self.run = run or (lambda fn: threading.Thread(target=fn, name="noirpad-view", daemon=True).start())
+        self.dead = False
+        self._busy = False
+        self._lost_meanwhile = False
+        self._failures: list = []
+        self._hung: Optional[float] = None
+
+    def failed(self, kind: str, reason: str = "", code: int = 0) -> None:
+        log.error("WebView2: %s (reason %s, exit code %s)", kind, reason or "?", code)
+        now = self.clock()
+        if kind == VIEW_HUNG:
+            first, self._hung = self._hung, now
+            if first is None or now - first > VIEW_HUNG_WINDOW:
+                return                       # maybe just a long moment
+        elif kind in VIEW_LOST:
+            self.dead = True
+        else:
+            return                           # GPU, utility, frames: WebView2 recovers itself
+        if self._busy:                       # one question at a time
+            self._lost_meanwhile = self._lost_meanwhile or kind in VIEW_LOST
+            return
+        self._busy, self._lost_meanwhile = True, False
+        self._hung = None
+        self._failures = [t for t in self._failures if now - t < VIEW_FAILURE_WINDOW] + [now]
+        again = len(self._failures) >= VIEW_MAX_FAILURES
+        self.run(lambda: self._handle(again))
+
+    def _handle(self, again: bool) -> None:
+        try:
+            if again:
+                log.error("The display failed %d times within %.0f s; not restored", len(self._failures),
+                          VIEW_FAILURE_WINDOW)
+                self.give_up()
+            elif not (self.ask() or (self._lost_meanwhile and self.ask())):
+                # (Asked again when the page died while the question was about
+                # one that only did not respond.)
+                log.info("Restoring the display was declined")
+            elif self.restore():
+                self.dead = False
+                log.info("The display was restored")
+            else:
+                log.error("The display could not be restored")
+                self.give_up()
+        except Exception:
+            log.exception("Restoring the display failed")
+        finally:
+            self._busy = False
+
+
+def _watch_view(window, url: str, data_dir: Path, storage_path: Path, lang: str, post=None) -> _ViewRecovery:
+    """Restore the content of *window* in place when its WebView2 dies."""
+    from noirpad.runtime import RUNTIME
+
+    def on_ui(fn) -> None:
+        if post is not None:
+            post(fn)
+            return
+        from System import Action          # pythonnet
+        window.native.BeginInvoke(Action(fn))
+
+    def new_control() -> None:
+        """On the UI thread: a new WebView2 control in the same window."""
+        from webview.platforms.edgechromium import EdgeChrome
+        form = window.native
+        old = form.browser
+        try:
+            form.Controls.Remove(old.webview)
+            old.webview.Dispose()
+        except Exception as exc:           # it may be half gone already
+            log.warning("Removing the failed display: %s", type(exc).__name__)
+        form.browser = EdgeChrome(form, window, str(storage_path))
+        form.webview = form.browser.webview
+        form.browser.load_url(url)         # with the token: the page has lost it
+
+    def restore() -> bool:
+        # What the lost page had unlocked is locked again, as when it is left.
+        RUNTIME.unlocked.clear()
+        RUNTIME.app_lock_tokens.clear()
+        if RUNTIME.data_notice is None:
+            RUNTIME.data_notice = {"code": "view_restored", "params": {}}
+        RUNTIME.page_ready.clear()
+        on_ui(new_control)
+        return RUNTIME.page_ready.wait(STARTUP_TIMEOUT)
+
+    recovery = _ViewRecovery(
+        ask=lambda: _error_box(MESSAGES[lang]["view_failed"], MB_YESNO | MB_ICONWARNING, data_dir) == IDYES,
+        restore=restore,
+        give_up=lambda: _error_box(MESSAGES[lang]["view_gave_up"].format(log=logs.log_path(data_dir)),
+                                   MB_OK | MB_ICONERROR, data_dir))
+    hooked: list = []
+
+    def on_failed(_sender, args) -> None:
+        kind = str(args.ProcessFailedKind.ToString())
+        try:
+            reason, code = str(args.Reason.ToString()), int(args.ExitCode)
+        except Exception:                  # an older WebView2 SDK
+            reason, code = "", 0
+        recovery.failed(kind, reason, code)
+
+    def hook() -> None:
+        try:
+            browser = window.native.browser
+            if hooked and hooked[-1] is browser:
+                return
+            browser.webview.CoreWebView2.ProcessFailed += on_failed
+            hooked[:] = [browser]
+        except Exception as exc:           # never let the window fail over this
+            log.warning("WebView2 failures are not watched: %s", type(exc).__name__)
+
+    def on_loaded() -> None:
+        try:
+            on_ui(hook)
+        except Exception as exc:
+            log.warning("WebView2 failures are not watched: %s", type(exc).__name__)
+
+    window.events.loaded += on_loaded
+    return recovery
+
+
 DEFAULT_BACKGROUND = "#0e0e10"
 
 
@@ -721,7 +868,12 @@ def _show_window(port: int, token: str, data_dir: Path, lang: str = "en", starti
     from noirpad.runtime import RUNTIME
     RUNTIME.save_dialog = lambda name: _ask_save_path(window, name)
     RUNTIME.toggle_fullscreen = window.toggle_fullscreen
-    _save_before_close(window)
+    # Persistent WebView2 profile so localStorage (open folders, CRT
+    # toggle) survives restarts; it lives next to the notes.
+    storage_path = data_dir / "webview"
+    storage_path.mkdir(parents=True, exist_ok=True)
+    recovery = _watch_view(window, window_url, data_dir, storage_path, lang)
+    _save_before_close(window, lambda: recovery.dead)
     # One zoom only (settings.js ui_zoom): WebView2's own Ctrl+wheel zoom of
     # older versions may still be stored in its profile; back to 100 %.
     window.events.loaded += lambda: _reset_webview_zoom(window)
@@ -732,10 +884,6 @@ def _show_window(port: int, token: str, data_dir: Path, lang: str = "en", starti
     closed = threading.Event()
     hang = _arm_backstop(data_dir)
     _watch_start(RUNTIME.page_ready, loaded, data_dir, lang, starting, closed=closed)
-    # Persistent WebView2 profile so localStorage (open folders, CRT
-    # toggle) survives restarts; it lives next to the notes.
-    storage_path = data_dir / "webview"
-    storage_path.mkdir(parents=True, exist_ok=True)
     # gui="edgechromium" forces WebView2 on Windows, which is what we
     # ship for. On other platforms pywebview picks the system default.
     gui = "edgechromium" if sys.platform == "win32" else None
@@ -814,7 +962,7 @@ def _page_close_state(window, timeout: float = 2.0) -> Optional[str]:
     return value if value in ("saving", "asking") else None
 
 
-def _save_before_close(window) -> None:
+def _save_before_close(window, page_is_dead=lambda: False) -> None:
     """K5: the page's own unload flush is a keepalive request, which may
     carry at most 64 kB, so a long note typed into just before closing was
     lost. The first close request is cancelled, the page saves the open
@@ -823,7 +971,10 @@ def _save_before_close(window) -> None:
     blocks closing.
 
     R2: if the save fails, the page asks whether to close anyway; "stay"
-    keeps the window (and the unsaved text) open."""
+    keeps the window (and the unsaved text) open.
+
+    A page whose WebView2 process is gone has nothing left to save: the window
+    closes at once."""
     state = {"started": False, "closing": False}
 
     def flush_then_close() -> None:
@@ -847,6 +998,8 @@ def _save_before_close(window) -> None:
         threading.Thread(target=ask_page, name="noirpad-close-save", daemon=True).start()
         started = time.monotonic()
         while not done.wait(CLOSE_SAVE_TIMEOUT):
+            if page_is_dead():
+                break
             busy = _page_close_state(window)
             if busy == "asking" or (busy == "saving"
                                     and time.monotonic() - started < CLOSE_BUSY_LIMIT):
@@ -861,7 +1014,7 @@ def _save_before_close(window) -> None:
         window.destroy()
 
     def on_closing():
-        if state["closing"]:
+        if state["closing"] or page_is_dead():
             return True
         if not state["started"]:
             state["started"] = True

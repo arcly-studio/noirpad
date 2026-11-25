@@ -164,7 +164,14 @@ window.NP = window.NP || {};
     }
 
     /* Notices shown as a toast (information), the others as a dialog. */
-    var TOAST_NOTICES = ["github_imported", "github_import_blocked", "github_import_skipped"];
+    var TOAST_NOTICES = ["github_imported", "github_import_blocked", "github_import_skipped", "view_restored"];
+
+    /* The window's content died and was made anew (desktop.py): the note
+       opened last, as it was saved. A locked one asks for its password. */
+    function reopenLastNote() {
+        var last = NP.welcome && NP.welcome.recent ? NP.welcome.recent()[0] : null;
+        if (last && NP.tabs) NP.tabs.add(last.id, last.name);
+    }
 
     /* The backend recovered from a corrupt notes file (or found none),
        or the Store edition imported the GitHub edition's notes. */
@@ -172,6 +179,7 @@ window.NP = window.NP || {};
         if (!session || !session.data_notice) return;
         var notice = session.data_notice;
         session.data_notice = null;
+        if (notice.code === "view_restored") reopenLastNote();
         setTimeout(function () {
             var text = NP.t("notice." + notice.code, notice.params);
             /* Store edition import (N1.9): information only, not a dialog. */

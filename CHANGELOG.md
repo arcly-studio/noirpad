@@ -16,6 +16,10 @@ copies, and an easier time with a keyboard, high contrast or zoom.
 - With both editions open, starting one of them again now always brings its own window to the front
   (before, it could be the other edition's), and a maximised window stays maximised.
 - While the window is opening it has the theme's background instead of white.
+- When the window's display process dies or stops responding, NoirPad says so and offers to restore
+  it in the same window, without a restart: the last note opens as it was saved. Before, the window
+  stayed empty until it was closed. Unlocked notes ask for their password again.
+- Typing without a pause is saved at the latest every 2 seconds (it waited for a pause, or 30 s).
 - The release build never opens a WebView2 debugging port, whatever the environment says.
 
 ### Uninstalling (installer version)

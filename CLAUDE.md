@@ -143,6 +143,11 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   the window marked with its data folder (`_mark_window` once the page is ready, `_find_app_window`;
   never by title alone: both editions have the same); error boxes
   go through `_error_box` (named mutexes "Starting" / "ErrorBox" per data folder: at most one box).
+- WebView2 failures (`_watch_view`, `_ViewRecovery`): `ProcessFailed` -> log, one question, a new
+  control in the same window (`EdgeChrome`), notice `view_restored` (auth.js opens the last note).
+  Third failure in 5 minutes: not restored. Nothing unsaved is kept in the backend; instead the
+  editors save at the latest `AUTOSAVE_MAX_WAIT` after the first unsaved key (`NP.debounce` maxMs).
+  Real crash test (opens windows): `NOIRPAD_GUI_TESTS=1` + `tests/test_view_recovery.py`.
 - The release build never enables WebView2 remote debugging (`_no_remote_debugging`: drops
   `WEBVIEW2_*` env vars in the frozen exe); `tests/test_desktop_start.py` scans the release sources.
   A debugging port only in your own dev instance: check the port is free first, then that its

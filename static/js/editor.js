@@ -4,6 +4,8 @@ window.NP = window.NP || {};
 (function (NP) {
     "use strict";
 
+    var AUTOSAVE_MAX_WAIT = 2000;    /* ms, see init() */
+
     /* Marker grammar:
          <<IMG:filename>>              — plain image
          <<IMG:filename|w=NNN>>        — image with persisted zoom width
@@ -86,10 +88,12 @@ window.NP = window.NP || {};
 
             /* Save shortly after typing stops, like the Markdown textarea
                below. The unload flush (keepalive) cannot carry more than
-               64 kB, so a long note must not wait for it (K5). */
+               64 kB, so a long note must not wait for it (K5). Typing
+               without a pause is saved every AUTOSAVE_MAX_WAIT too: a window
+               that dies (WebView2, desktop.py) costs about a second. */
             NP.editor.el.addEventListener("input", NP.debounce(function () {
                 NP.editor.save(true);
-            }, 1000));
+            }, 1000, AUTOSAVE_MAX_WAIT));
 
             /* Glitch typing — fires CSS RGB-shift on rapid input */
             NP.editor.el.addEventListener("input", function () {
@@ -112,7 +116,7 @@ window.NP = window.NP || {};
                         NP.markdown.isActive()) {
                         NP.editor.save(true);
                     }
-                }, 800));
+                }, 800, AUTOSAVE_MAX_WAIT));
                 ta.addEventListener("input", NP.debounce(function () {
                     NP.editor.updateCharCount();
                 }, 300));

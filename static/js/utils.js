@@ -14,15 +14,20 @@ window.NP = window.NP || {};
     };
 
     /* ---- Debounce ---- */
-    NP.debounce = function (fn, ms) {
-        var timer = null;
+    /* Runs *fn* after a pause of *ms*; with *maxMs* at the latest that long
+       after the first call, even when the calls never pause. */
+    NP.debounce = function (fn, ms, maxMs) {
+        var timer = null, first = 0;
         return function () {
             var ctx = this;
             var args = arguments;
+            var now = Date.now();
+            if (timer === null) first = now;
             clearTimeout(timer);
             timer = setTimeout(function () {
+                timer = null;
                 fn.apply(ctx, args);
-            }, ms);
+            }, maxMs ? Math.max(0, Math.min(ms, first + maxMs - now)) : ms);
         };
     };
 

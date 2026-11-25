@@ -365,7 +365,7 @@ def test_nothing_is_written_next_to_the_exe():
 def test_import_notice_is_a_toast_not_a_dialog():
     """Information only (N1.9): NP.toast, never alert/confirm."""
     js = (ROOT / "static" / "js" / "auth.js").read_text(encoding="utf-8")
-    assert 'TOAST_NOTICES = ["github_imported", "github_import_blocked", "github_import_skipped"]' in js
+    assert 'TOAST_NOTICES = ["github_imported", "github_import_blocked", "github_import_skipped", "view_restored"]' in js
     assert "NP.toast(text" in js
     # The browser's own alert/confirm (NP.dialog.alert is the app's window for other notices).
     assert not re.search(r"(?<![.\w])(alert|confirm)\(|window\.(alert|confirm)\(", js)
