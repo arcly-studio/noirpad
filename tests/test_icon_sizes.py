@@ -169,6 +169,13 @@ def test_tiles_show_the_logo_like_the_exe_on_the_dark_background(name, scale):
     assert diff < 5, f"mean difference {diff:.1f}"
 
 
+def test_every_msix_image_is_below_the_wack_limit():
+    """WACK: "Square310x310Logo.scale-400.png must be smaller than 204800 bytes"."""
+    assert make_icons.STORE_MAX_BYTES == 204800
+    large = {p.name: p.stat().st_size for p in ASSETS.glob("*.png") if p.stat().st_size >= 204800}
+    assert large == {}
+
+
 # ---- resources.pri ------------------------------------------------------------------
 
 def test_build_makes_one_resources_pri_and_checks_it():

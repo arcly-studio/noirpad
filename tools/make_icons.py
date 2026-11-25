@@ -85,6 +85,7 @@ STORE_TILES = {                     # name: (width, height, share of the shorter
 STORE_FROM_ICO = "Square44x44Logo"          # resampled from noirpad.ico, transparent
 STORE_TRANSPARENT = ("SplashScreen",)
 STORE_BACKGROUND = "#0e0e10"                # = msix_manifest.TILE_BACKGROUND (tested)
+STORE_MAX_BYTES = 204800                    # WACK: an image must be smaller
 STORE_TARGET_SIZES = (16, 20, 24, 30, 32, 36, 40, 48, 60, 64, 72, 80, 96, 256)
 STORE_VARIANTS = ("", "_altform-unplated", "_altform-lightunplated")
 
@@ -223,13 +224,17 @@ def png_rgba(data: bytes):
     return w, h, out
 
 
-def png(w: int, h: int, px) -> bytes:
-    """8-bit RGBA PNG of top-down rows."""
+def _png(w: int, h: int, idat: bytes, colour_type: int) -> bytes:
     def chunk(kind, data):
         return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data))
+    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, colour_type, 0, 0, 0))
+            + chunk(b"IDAT", idat) + chunk(b"IEND", b""))
+
+
+def png(w: int, h: int, px) -> bytes:
+    """8-bit RGBA PNG of top-down rows."""
     raw = b"".join(b"\0" + bytes(px[y * w * 4:(y + 1) * w * 4]) for y in range(h))
-    return (b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
-            + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+    return _png(w, h, zlib.compress(raw, 9), 6)
 
 
 def _lanczos(src: int, dst: int) -> list:
@@ -270,6 +275,55 @@ def resample(data: bytes, size: int) -> bytes:
                 out.append(min(255, max(0, round(planes[c][y][x] * 255 / a))) if a >= 0.5 else 0)
             out.append(round(a))
     return png(size, size, out)
+
+
+def _filtered(w: int, h: int, px, bpp: int) -> bytes:
+    """PNG scan lines, each with the filter that gives the smallest values."""
+    stride, prev, out = w * bpp, bytes(w * bpp), bytearray()
+    for y in range(h):
+        row = bytes(px[y * stride:(y + 1) * stride])
+        left, up_left = bytes(bpp) + row[:-bpp], bytes(bpp) + prev[:-bpp]
+        paeth = bytearray()
+        for v, a, b, c in zip(row, left, prev, up_left):
+            p = a + b - c
+            pa, pb, pc = abs(p - a), abs(p - b), abs(p - c)
+            paeth.append((v - (a if pa <= pb and pa <= pc else b if pb <= pc else c)) & 255)
+        lines = (row, bytes((v - a) & 255 for v, a in zip(row, left)),
+                 bytes((v - b) & 255 for v, b in zip(row, prev)),
+                 bytes((v - ((a + b) >> 1)) & 255 for v, a, b in zip(row, left, prev)), bytes(paeth))
+        best = min(range(5), key=lambda k: sum(min(v, 256 - v) for v in lines[k]))
+        out.append(best)
+        out += lines[best]
+        prev = row
+    return bytes(out)
+
+
+def below_limit(data: bytes, limit: int = STORE_MAX_BYTES) -> bytes:
+    """*data*, or the same picture in fewer bytes when it reaches *limit*:
+    better PNG filters, then colours rounded to as small a step as needed
+    (the tile background stays exact)."""
+    if len(data) < limit:
+        return data
+    w, h, px = png_rgba(data)
+    bpp = 3 if set(px[3::4]) == {255} else 4
+    exact = bytes.fromhex(STORE_BACKGROUND[1:]) + b"\xff"
+    keep = [i for i in range(0, len(px), 4) if px[i:i + 4] == exact]
+    for step in (1, 2, 3, 4, 6, 8):
+        table = bytes(min(255, round(v / step) * step) for v in range(256))
+        small = bytearray(px)
+        for c in range(3):
+            small[c::4] = px[c::4].translate(table)
+        for i in keep:
+            small[i:i + 4] = exact
+        if bpp == 3:
+            rgb = bytearray(len(small) // 4 * 3)
+            for c in range(3):
+                rgb[c::3] = small[c::4]
+            small = rgb
+        out = _png(w, h, zlib.compress(_filtered(w, h, small, bpp), 9), 2 if bpp == 3 else 6)
+        if len(out) < limit:
+            return out
+    raise SystemExit(f"{w}x{h}: {len(out)} bytes, the limit is {limit}")
 
 
 def bmp32(png: bytes) -> bytes:
@@ -337,7 +391,7 @@ def main() -> int:
                 written[rel] = from_ico(w)
             else:
                 background = "transparent" if name in STORE_TRANSPARENT else STORE_BACKGROUND
-                written[rel] = render_tile(w, h, logo, tmp, background)
+                written[rel] = below_limit(render_tile(w, h, logo, tmp, background))
         for rel, data in written.items():
             (ROOT / rel).write_bytes(data)
             print(rel)
