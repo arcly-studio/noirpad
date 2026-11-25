@@ -90,7 +90,7 @@ window.NP = window.NP || {};
                below. The unload flush (keepalive) cannot carry more than
                64 kB, so a long note must not wait for it (K5). Typing
                without a pause is saved every AUTOSAVE_MAX_WAIT too: a window
-               that dies (WebView2, desktop.py) costs about a second. */
+               that dies (WebView2, desktop.py) costs about two seconds at most. */
             NP.editor.el.addEventListener("input", NP.debounce(function () {
                 NP.editor.save(true);
             }, 1000, AUTOSAVE_MAX_WAIT));

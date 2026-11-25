@@ -130,7 +130,7 @@ describe("after the window was restored (notice view_restored)", () => {
     it("the last note opens with its saved text and a toast says what may be missing", async () => {
         const { win, NP } = await start(NOTICE, [{ id: "r", at: Date.now() }]);
         expect(NP.toast).toHaveBeenCalledWith(
-            "The display was restored. The last second of typing may be missing.", expect.anything());
+            "The view was restored. The last couple of seconds of typing may be missing.", expect.anything());
         expect(NP.dialog.alert).not.toHaveBeenCalled();
         expect(NP.state.activeTabId).toBe("r");
         expect(win.document.getElementById("editor").textContent).toBe("saved text");
@@ -149,7 +149,7 @@ describe("after the window was restored (notice view_restored)", () => {
     });
 
     it("text in both languages", () => {
-        expect(locale("en").notice.view_restored).toBe("The display was restored. The last second of typing may be missing.");
-        expect(locale("cs").notice.view_restored).toBe("Zobrazení bylo obnoveno. Mohla chybět poslední sekunda psaní.");
+        expect(locale("en").notice.view_restored).toBe("The view was restored. The last couple of seconds of typing may be missing.");
+        expect(locale("cs").notice.view_restored).toBe("Zobrazení bylo obnoveno. Mohly chybět poslední zhruba 2 sekundy psaní.");
     });
 });
