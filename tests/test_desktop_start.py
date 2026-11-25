@@ -100,7 +100,7 @@ def test_restart_while_the_previous_is_closing_waits_and_starts(desk, np_backend
     still holds the folder. It must start once the old one is gone, not end
     quietly (before: nothing happened at all)."""
     served = []
-    monkeypatch.setattr(desktop, "_find_app_window", lambda: 0)
+    monkeypatch.setattr(desktop, "_find_app_window", lambda data_dir: 0)
     monkeypatch.setattr(desktop, "_serve", lambda lang, smoke, starting=None: served.append(lang) or 0)
     old = _hold_lock_elsewhere(np_backend.DATA_DIR, 1.5)
     try:
@@ -117,7 +117,7 @@ def test_restart_while_the_previous_is_closing_waits_and_starts(desk, np_backend
 
 def test_a_running_window_is_brought_to_front_and_nothing_starts(desk, np_backend, monkeypatch):
     served, fronted = [], []
-    monkeypatch.setattr(desktop, "_find_app_window", lambda: 4242)
+    monkeypatch.setattr(desktop, "_find_app_window", lambda data_dir: 4242)
     monkeypatch.setattr(desktop, "_bring_to_front", fronted.append)
     monkeypatch.setattr(desktop, "FOCUS_GRACE_SECONDS", 0.2)
     monkeypatch.setattr(desktop, "_serve", lambda *a, **k: served.append(1) or 0)
@@ -131,7 +131,7 @@ def test_a_running_window_is_brought_to_front_and_nothing_starts(desk, np_backen
 
 @WIN
 def test_no_second_box_while_the_first_is_still_starting(desk, np_backend, monkeypatch):
-    monkeypatch.setattr(desktop, "_find_app_window", lambda: 0)
+    monkeypatch.setattr(desktop, "_find_app_window", lambda data_dir: 0)
     monkeypatch.setattr(desktop, "LOCK_WAIT_SECONDS", 0.4)
     held = np_backend.acquire_instance_lock()
     starting = desktop._hold_mutex("Starting", np_backend.DATA_DIR)
@@ -146,7 +146,7 @@ def test_no_second_box_while_the_first_is_still_starting(desk, np_backend, monke
 
 @WIN
 def test_no_second_box_while_the_first_shows_one(desk, np_backend, monkeypatch):
-    monkeypatch.setattr(desktop, "_find_app_window", lambda: 0)
+    monkeypatch.setattr(desktop, "_find_app_window", lambda data_dir: 0)
     monkeypatch.setattr(desktop, "LOCK_WAIT_SECONDS", 0.4)
     held = np_backend.acquire_instance_lock()
     box = desktop._hold_mutex("ErrorBox", np_backend.DATA_DIR)
@@ -160,7 +160,7 @@ def test_no_second_box_while_the_first_shows_one(desk, np_backend, monkeypatch):
 
 def test_folder_held_without_a_window_says_already_running_once(desk, np_backend, monkeypatch):
     """E.g. the web version in a terminal: one box after the wait."""
-    monkeypatch.setattr(desktop, "_find_app_window", lambda: 0)
+    monkeypatch.setattr(desktop, "_find_app_window", lambda data_dir: 0)
     monkeypatch.setattr(desktop, "LOCK_WAIT_SECONDS", 0.4)
     held = np_backend.acquire_instance_lock()
     try:

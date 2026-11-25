@@ -139,7 +139,9 @@ Local notes app: FastAPI backend (`noirpad/`), vanilla-JS frontend (`static/`), 
   stacks, one box), `_arm_backstop` (faulthandler -> `startup-hang.txt`, logged next start) ends a
   hang that blocks Python itself. Never touch the WebView2 control from pywebview's event thread
   (deadlock with the UI thread over the GIL): post to the UI thread with `form.BeginInvoke`.
-  A second start waits for the lock (`_focus_running_instance`, `LOCK_WAIT_SECONDS`); error boxes
+  A second start waits for the lock (`_focus_running_instance`, `LOCK_WAIT_SECONDS`) and raises only
+  the window marked with its data folder (`_mark_window` once the page is ready, `_find_app_window`;
+  never by title alone: both editions have the same); error boxes
   go through `_error_box` (named mutexes "Starting" / "ErrorBox" per data folder: at most one box).
 - The release build never enables WebView2 remote debugging (`_no_remote_debugging`: drops
   `WEBVIEW2_*` env vars in the frozen exe); `tests/test_desktop_start.py` scans the release sources.

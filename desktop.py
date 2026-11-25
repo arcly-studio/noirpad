@@ -28,6 +28,7 @@ The release build never opens a WebView2 debugging port.
 from __future__ import annotations
 
 import os
+import re
 import sys
 
 # PyInstaller windowed builds have no console: give print() somewhere to go.
@@ -250,9 +251,10 @@ def _hold_app_mutex() -> None:
     _app_mutex = ctypes.windll.kernel32.CreateMutexW(None, False, APP_MUTEX)
 
 
-def _find_app_window() -> int:
-    """The running NoirPad window: title "NoirPad" and a WinForms class
-    (pywebview), so an Explorer folder called NoirPad never matches."""
+def _app_windows(wanted) -> list:
+    """Visible top-level NoirPad windows (title "NoirPad", a WinForms class as
+    pywebview's) for which wanted(hwnd) is true. InternalGetWindowText sends no
+    message, so a window that does not answer cannot block this."""
     import ctypes
     from ctypes import wintypes
 
@@ -263,21 +265,56 @@ def _find_app_window() -> int:
     def _visit(hwnd, _lparam):
         title = ctypes.create_unicode_buffer(64)
         cls = ctypes.create_unicode_buffer(128)
-        user32.GetWindowTextW(hwnd, title, 64)
+        user32.InternalGetWindowText(hwnd, title, 64)
         user32.GetClassNameW(hwnd, cls, 128)
-        if title.value == WINDOW_TITLE and cls.value.startswith("WindowsForms10."):
+        if (title.value == WINDOW_TITLE and cls.value.startswith("WindowsForms10.")
+                and user32.IsWindowVisible(hwnd) and wanted(hwnd)):
             found.append(hwnd)
-            return False
         return True
 
     user32.EnumWindows(_visit, 0)
+    return found
+
+
+def _window_mark(hwnd: int, data_dir: Path) -> bool:
+    import ctypes
+    from ctypes import wintypes
+    get = ctypes.WINFUNCTYPE(wintypes.HANDLE, wintypes.HWND, wintypes.LPCWSTR)(("GetPropW", ctypes.windll.user32))
+    return bool(get(hwnd, _mutex_name("Window", data_dir)))
+
+
+def _mark_window(data_dir: Path) -> bool:
+    """Mark this process's window as the one of *data_dir* (a window property;
+    it goes with the window). The title alone is the same in both editions."""
+    if sys.platform != "win32":
+        return False
+    import ctypes
+    from ctypes import wintypes
+
+    user32 = ctypes.windll.user32
+    put = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPCWSTR, wintypes.HANDLE)(("SetPropW", user32))
+
+    def own(hwnd) -> bool:
+        pid = wintypes.DWORD()
+        user32.GetWindowThreadProcessId(wintypes.HWND(hwnd), ctypes.byref(pid))
+        return pid.value == os.getpid()
+
+    marked = [hwnd for hwnd in _app_windows(own) if put(hwnd, _mutex_name("Window", data_dir), 1)]
+    return bool(marked)
+
+
+def _find_app_window(data_dir: Path) -> int:
+    """The window of the NoirPad that runs on *data_dir*, whichever edition;
+    0 while it has none, is still starting, or only another NoirPad is open."""
+    found = _app_windows(lambda hwnd: _window_mark(hwnd, data_dir))
     return found[0] if found else 0
 
 
 def _bring_to_front(hwnd: int) -> None:
     import ctypes
     user32 = ctypes.windll.user32
-    user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+    if user32.IsIconic(hwnd):       # a maximised window stays maximised
+        user32.ShowWindow(hwnd, 9)  # SW_RESTORE
     user32.SetForegroundWindow(hwnd)
 
 
@@ -301,7 +338,7 @@ def _focus_running_instance(lang: str, data_dir: Path):
         if lock is not None:
             log.info("The other NoirPad has closed; starting")
             return lock
-        hwnd = _find_app_window() if sys.platform == "win32" else 0
+        hwnd = _find_app_window(data_dir) if sys.platform == "win32" else 0
         now = time.monotonic()
         if hwnd:
             if first_seen is None:
@@ -574,6 +611,15 @@ def _watch_start(page_ready: threading.Event, loaded: threading.Event, data_dir:
     closed = closed or threading.Event()
     started = time.monotonic()
 
+    def started_up(late: str) -> None:
+        faulthandler.cancel_dump_traceback_later()
+        log.info("Page ready after %.1f s%s", time.monotonic() - started, late)
+        # First the mark, then "Starting" ends: a second start waiting
+        # meanwhile finds a finished window.
+        if sys.platform == "win32" and not _mark_window(data_dir):
+            log.warning("The window could not be marked for a second start")
+        _release_mutex(starting)
+
     def watch() -> None:
         while not page_ready.wait(0.1):
             if closed.is_set():          # the window closed while starting
@@ -581,9 +627,7 @@ def _watch_start(page_ready: threading.Event, loaded: threading.Event, data_dir:
             if time.monotonic() - started >= timeout:
                 break
         if page_ready.is_set():
-            faulthandler.cancel_dump_traceback_later()
-            log.info("Page ready after %.1f s", time.monotonic() - started)
-            _release_mutex(starting)
+            started_up("")
             return
         stage = ("the page loaded, but the app in it did not finish starting" if loaded.is_set()
                  else "the window did not load the page")
@@ -592,9 +636,7 @@ def _watch_start(page_ready: threading.Event, loaded: threading.Event, data_dir:
         _error_box(MESSAGES[lang]["start_timeout"].format(log=logs.log_path(data_dir)),
                    MB_OK | MB_ICONERROR, data_dir)
         if page_ready.is_set():
-            faulthandler.cancel_dump_traceback_later()
-            log.info("Page ready after %.1f s (late); keeps running", time.monotonic() - started)
-            _release_mutex(starting)
+            started_up(" (late); keeps running")
             return
         log.error("Ending NoirPad after the failed start")
         logging.shutdown()
@@ -628,6 +670,29 @@ def _disarm_backstop(hang) -> None:
         pass
 
 
+DEFAULT_BACKGROUND = "#0e0e10"
+
+
+def _theme_background(theme) -> str:
+    """--bg of *theme* in themes.css; the default dark one for a theme that
+    has none of its own or is unknown."""
+    if not isinstance(theme, str) or not re.fullmatch(r"[a-z-]+", theme):
+        return DEFAULT_BACKGROUND
+    css = (config.STATIC_DIR / "css" / "themes.css").read_text(encoding="utf-8")
+    m = re.search(r'^\[data-theme="%s"\] \{[^}]*?--bg:\s*(#[0-9a-fA-F]{6})' % theme, css, re.M)
+    return m.group(1) if m else DEFAULT_BACKGROUND
+
+
+def _window_background() -> str:
+    """Background of the window until the page shows (pywebview: white)."""
+    from noirpad import storage
+    try:
+        return _theme_background(storage.read_data().get("theme"))
+    except Exception as exc:          # never let the window fail over this
+        log.warning("Could not read the theme for the window: %s", type(exc).__name__)
+        return DEFAULT_BACKGROUND
+
+
 def _show_window(port: int, token: str, data_dir: Path, lang: str = "en", starting=None) -> None:
     # The fragment never reaches the server or its logs; api.js reads it
     # and removes it from the address bar.
@@ -651,6 +716,7 @@ def _show_window(port: int, token: str, data_dir: Path, lang: str = "en", starti
         min_size=(WINDOW_MIN_WIDTH, WINDOW_MIN_HEIGHT),
         resizable=True,
         confirm_close=False,
+        background_color=_window_background(),
     )
     from noirpad.runtime import RUNTIME
     RUNTIME.save_dialog = lambda name: _ask_save_path(window, name)

@@ -13,6 +13,9 @@ copies, and an easier time with a keyboard, high contrast or zoom.
   A start that does not finish within about 15 s now ends with a message and the cause in the log.
 - Starting NoirPad again while the previous window is still closing now waits for it and then
   starts normally; before, nothing happened. At most one error message is shown.
+- With both editions open, starting one of them again now always brings its own window to the front
+  (before, it could be the other edition's), and a maximised window stays maximised.
+- While the window is opening it has the theme's background instead of white.
 - The release build never opens a WebView2 debugging port, whatever the environment says.
 
 ### Uninstalling (installer version)

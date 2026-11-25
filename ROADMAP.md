@@ -66,6 +66,10 @@ Data ve Store edici jsou v `%USERPROFILE%\NoirPad`. Jednorázový import z GitHu
 - Ctrl+F hledat i ve zdroji Markdownu, nejen v rich-text editoru.
 - CI: job `build` ať čeká na `test` a testy neběží dvakrát.
 
+## 1.2
+
+- WACK varování `DPIAwarenessValidation`: `NoirPad.exe` nemá v manifestu `PerMonitorV2` (pywebview zapíná jen `SetProcessDPIAware`), na druhém monitoru s jiným měřítkem je okno rozmazané. Přidat `dpiAwareness` do manifestu exe a kontrolu do buildu; nejdřív na vlastní instanci změřit, co udělá WinForms okno při přesunu mezi monitory. Odloženo z 1.1.0, jen varování.
+
 ## Později
 
 - Plné šifrování obrázků zamčených poznámek (přesunuto z 1.1.0).

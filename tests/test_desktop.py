@@ -168,7 +168,7 @@ def test_server_crash_fails_fast_with_one_message(desk, np_backend, monkeypatch)
 def test_second_instance_takes_over_when_first_exits(desk, np_backend, monkeypatch):
     """1.1.0 (finding 6): the first one closing or giving up is no reason to
     stay quiet any more; the second starts (test_desktop_start.py)."""
-    monkeypatch.setattr(desktop, "_find_app_window", lambda: 0)
+    monkeypatch.setattr(desktop, "_find_app_window", lambda data_dir: 0)
     held = np_backend.acquire_instance_lock()
     threading.Timer(0.5, held.close).start()       # the first NoirPad exits
     lock = desktop._focus_running_instance("en", np_backend.DATA_DIR)
@@ -177,7 +177,7 @@ def test_second_instance_takes_over_when_first_exits(desk, np_backend, monkeypat
 
 
 def test_second_instance_explains_when_no_window_appears(desk, np_backend, monkeypatch):
-    monkeypatch.setattr(desktop, "_find_app_window", lambda: 0)
+    monkeypatch.setattr(desktop, "_find_app_window", lambda data_dir: 0)
     monkeypatch.setattr(desktop, "LOCK_WAIT_SECONDS", 0.3)
     held = np_backend.acquire_instance_lock()
     try:
