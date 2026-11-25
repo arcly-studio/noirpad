@@ -123,9 +123,11 @@ window.NP = window.NP || {};
         s.top = e.ta.offsetTop + "px";
         s.left = e.ta.offsetLeft + "px";
         /* Fractional width (flex pane): a rounded one could wrap a line
-           differently. Minus the textarea's scrollbar, if any. */
+           differently. The rect contains the page's zoom (desktop Ctrl+=),
+           a style width does not. Minus the textarea's scrollbar, if any. */
         var scrollbar = e.ta.offsetWidth - e.ta.clientWidth;
-        s.width = (e.ta.getBoundingClientRect().width - scrollbar) + "px";
+        var zoom = e.ta.currentCSSZoom || 1;
+        s.width = (e.ta.getBoundingClientRect().width / zoom - scrollbar) + "px";
         s.height = e.ta.clientHeight + "px";
         var cs = getComputedStyle(e.ta);
         COPY.forEach(function (p) { s[p] = cs[p]; });

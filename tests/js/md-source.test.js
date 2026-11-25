@@ -97,3 +97,29 @@ describe("md-source rendering", () => {
         expect(win.document.getElementById("md-highlight").childNodes).toHaveLength(0);
     });
 });
+
+// Desktop zoom (Ctrl+= / Ctrl+-, 70-200 %): getBoundingClientRect already contains
+// the zoom, a style width does not. Undivided, the visible text wrapped elsewhere
+// than the textarea's: the caret and the selection were off.
+describe("the underlay is as wide as the textarea at every zoom", () => {
+    function sizes(zoom, cssWidth, scrollbar) {
+        const ta = win.document.getElementById("editor-md");
+        Object.defineProperty(ta, "currentCSSZoom", { configurable: true, value: zoom });
+        Object.defineProperty(ta, "offsetWidth", { configurable: true, value: Math.round(cssWidth) });
+        Object.defineProperty(ta, "clientWidth", { configurable: true, value: Math.round(cssWidth) - scrollbar });
+        ta.getBoundingClientRect = () => ({ width: cssWidth * (zoom || 1), left: 0, top: 0, right: 0, bottom: 0, height: 0 });
+        win.dispatchEvent(new win.Event("resize"));
+        return parseFloat(win.document.getElementById("md-highlight").style.width);
+    }
+
+    beforeEach(() => win.document.dispatchEvent(new win.Event("DOMContentLoaded")));
+
+    it.each([0.7, 1, 1.25, 1.5, 2])("zoom %s: the CSS width, to a fraction of a pixel, minus the scrollbar", (zoom) => {
+        expect(sizes(zoom, 502.4, 0)).toBeCloseTo(502.4, 3);
+        expect(sizes(zoom, 502.4, 10)).toBeCloseTo(492.4, 3);
+    });
+
+    it("an engine without currentCSSZoom (its rects are unzoomed): as before", () => {
+        expect(sizes(undefined, 502.4, 10)).toBeCloseTo(492.4, 3);
+    });
+});
