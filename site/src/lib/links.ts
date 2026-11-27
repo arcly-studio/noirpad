@@ -16,11 +16,16 @@ export const links = {
   email: "arclystudio.dev@gmail.com",
   // The host of this website (GitHub Pages) – its own privacy statement.
   githubPrivacy: "https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement",
+  // Microsoft Privacy Statement (WebView2, Microsoft Store) – the same addresses as PRIVACY.md / PRIVACY.cs.md of the app.
+  msPrivacy: { en: "https://privacy.microsoft.com/privacystatement", cs: "https://privacy.microsoft.com/cs-cz/privacystatement" },
   // Studio website (org Pages) – absolute, so the link keeps working with a custom domain later.
   studio: "https://arcly-studio.github.io/",
+  // The other app of the studio, a project site on the same host.
+  dirwise: "https://arcly-studio.github.io/dirwise/",
 };
 
 export const studioLink = (lang: string) => (lang === "cs" ? `${links.studio}cs/` : links.studio);
+export const dirwiseLink = (lang: string) => (lang === "cs" ? `${links.dirwise}cs/` : links.dirwise);
 
 // Pages of the site: "" = home, otherwise "privacy/" or "support/". Base path from configure-pages (/noirpad/).
 export type PagePath = "" | "privacy/" | "support/";

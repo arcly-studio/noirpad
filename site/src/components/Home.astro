@@ -13,13 +13,12 @@ import demoPoster from "../assets/demo-poster.png";
 import { texts, type Lang, type FeatureKey } from "../i18n/texts";
 import { icon, keycaps } from "../lib/icons";
 import { links, BASE, pageHref } from "../lib/links";
-import { STORE, storeUrl } from "../lib/store";
+import { storeLabel } from "../lib/store";
 import Layout from "./Layout.astro";
 
 interface Props { lang: Lang }
 const { lang } = Astro.props;
 const t = texts[lang];
-const store = STORE.status === "live" ? storeUrl(lang) : null;
 const asset = (p: string) => `${BASE}${p}`;
 const poster = await getImage({ src: demoPoster, width: 960, format: "webp", quality: 80 });
 
@@ -71,9 +70,7 @@ const POINT_ICONS = ["HardDrive", "UserX", "WifiOff"] as const;
       </div>
       <p class="hero-sub">{t.hero.sub}</p>
       <div class="hero-cta">
-        {store
-          ? <a class="store-badge" href={store}><img src={asset(`media/store-badge-${lang}.svg`)} width="190" height="52" alt={t.hero.storeAlt} /></a>
-          : <span class="store-soon">{t.hero.storeSoon}</span>}
+        <span class="store-soon">{storeLabel[lang]}</span>
         {/* Secondary action: the release on GitHub. The source code link stays in the footer and the navigation,
             the full SmartScreen instructions in the Install section – the line below points there. */}
         <a class="btn-secondary" href={links.latest}>{t.install.latest}<Fragment set:html={icon("ArrowRight", 15)} /></a>
@@ -187,9 +184,7 @@ const POINT_ICONS = ["HardDrive", "UserX", "WifiOff"] as const;
       </header>
       <div class="install card" data-reveal>
         <div class="install-main">
-          {store
-            ? <a class="store-badge" href={store}><img src={asset(`media/store-badge-${lang}.svg`)} width="190" height="52" alt={t.hero.storeAlt} loading="lazy" /></a>
-            : <span class="store-soon">{t.hero.storeSoon}</span>}
+          <span class="store-soon">{storeLabel[lang]}</span>
           <a class="btn-secondary" href={links.latest}>{t.install.latest}<Fragment set:html={icon("ArrowRight", 15)} /></a>
           <p class="small">{t.install.smartscreen}</p>
         </div>

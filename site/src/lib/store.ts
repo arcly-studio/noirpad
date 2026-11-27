@@ -1,12 +1,9 @@
-// Microsoft Store button – the one switch for the main call to action.
-//   status "soon": label "Coming soon to Microsoft Store" (no link) – until the Store approves NoirPad.
-//   status "live": the official Store badge linking to the product page (set productId, e.g. "9XXXXXXXXXXX").
-export const STORE: { status: "soon" | "live"; productId: string } = {
-  status: "soon",
-  productId: "",
-};
+// Microsoft Store – the one place for the Store call to action. Until NoirPad is published there it is only this
+// plain label: on purpose no official badge, no product id, no link to the Store and no release date anywhere on
+// the site (or in the repository). Adding them later is one approved change here plus the JSON-LD downloadUrl.
+import type { Lang } from "../i18n/texts";
 
-export const storeUrl = (lang: string) =>
-  STORE.productId
-    ? `https://apps.microsoft.com/detail/${STORE.productId}?${lang === "cs" ? "hl=cs-cz&gl=CZ&" : ""}mode=direct`
-    : null;
+export const storeLabel: Record<Lang, string> = {
+  en: "Coming soon to Microsoft Store",
+  cs: "Brzy v Microsoft Store",
+};

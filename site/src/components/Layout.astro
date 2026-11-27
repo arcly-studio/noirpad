@@ -11,7 +11,7 @@ import monoLatinExt from "@fontsource-variable/jetbrains-mono/files/jetbrains-mo
 import orbitron from "@fontsource-variable/orbitron/files/orbitron-latin-wght-normal.woff2?url";
 import { texts, type Lang } from "../i18n/texts";
 import { jsonLd } from "../lib/jsonld";
-import { links, pageHref, studioLink, BASE, type PagePath } from "../lib/links";
+import { links, pageHref, studioLink, dirwiseLink, BASE, type PagePath } from "../lib/links";
 import { socials, NETWORKS, socialIcon } from "../lib/socials";
 import Nav from "./Nav.astro";
 import "../styles/site.css";
@@ -125,7 +125,7 @@ const fontCss = [
         ))}
       </ul>
       {/* Link to the studio website: the small "A" of the Arcly logo in the site's colours, same window. */}
-      <p class="foot-by"><a href={studioLink(lang)}><svg viewBox="0 0 200 200" width="14" height="14" aria-hidden="true"><path d="M58 150 L100 56 L142 150" fill="none" stroke="currentColor" stroke-width="20" stroke-linejoin="miter" stroke-miterlimit="10" /><path d="M76 128 Q100 106 124 128" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" /></svg>{t.footer.by}</a></p>
+      <p class="foot-by"><a href={studioLink(lang)}><svg viewBox="0 0 200 200" width="14" height="14" aria-hidden="true"><path d="M58 150 L100 56 L142 150" fill="none" stroke="currentColor" stroke-width="20" stroke-linejoin="miter" stroke-miterlimit="10" /><path d="M76 128 Q100 106 124 128" fill="none" stroke="currentColor" stroke-width="11" stroke-linecap="round" /></svg>{t.footer.by}</a> · {t.footer.more} <a class="foot-app" href={dirwiseLink(lang)}>Dirwise</a></p>
       <p>© {new Date().getFullYear()} Arcly Studio · <a href={links.license}>{t.footer.note}</a></p>
     </footer>
 

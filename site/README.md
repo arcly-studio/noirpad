@@ -29,6 +29,17 @@ the studio site: `npm run sim:local-noirpad` in `arcly-studio/web` (builds this 
 - Do **not** name folders `images/` or `build/` anywhere in `site/` – the repository's root `.gitignore`
   ignores them (they would silently be missing on GitHub). Website images go to `src/assets/`.
 - Everything the build generates must be git-ignored (`build.ps1` of the app needs a clean `git status`).
-- No `krystof2-ops` in `.github/workflows/*.yml` or the root README (`tests/test_version.py`).
+- No old owner name and no upper-case repository name in any tracked file, including `site/` (`tests/test_version.py`
+  scans every file in git once the site is on `main`).
 - Do not touch `docs/brand/` originals (`tests/test_brand.py`); cleaned copies for the web go to `site/`.
-- The main call to action is the Microsoft Store button – one switch in `src/lib/store.ts`.
+- Microsoft Store: only the plain label “Coming soon to Microsoft Store” / “Brzy v Microsoft Store” (`src/lib/store.ts`).
+  No official badge, no Store product id, no link to the Store and no release date anywhere in the site or the repository
+  until NoirPad is published there.
+
+## Deployment
+
+`.github/workflows/pages.yml` builds `site/` and deploys it to GitHub Pages on a push to `main` (paths `site/**`,
+`docs/screenshots/**`, `docs/brand/**`) when the repository variable `PAGES_ENABLED` is `true`, or manually
+(Actions → Pages → Run workflow). Settings → Pages → Source must be **GitHub Actions**. The `github-pages` environment
+only deploys from the default branch, so the site has to be merged into `main`. The images come from `docs/` of the
+branch that is deployed.

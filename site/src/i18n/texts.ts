@@ -1,6 +1,6 @@
 // All website copy, English and Czech (Czech uses the formal "vy", like the app).
 // Only claims verified in the app's code and README (sources are listed next to each block).
-// Encryption: only the TEXT of a locked note is encrypted – never say "encrypted notes" in general.
+// Encryption (1.1.0): only the text and formatting (incl. links) of a locked note – never say "encrypted notes" in general.
 // No names of third-party products (scripts/check-words.mjs enforces it on the built HTML).
 // Privacy and Support: titles here, the page text in src/pages/{,cs/}{privacy,support}.astro.
 
@@ -23,9 +23,7 @@ export const texts = {
     hero: {
       tagline: "Markdown notes you can lock with a password.",
       sub: "Notes stay in a folder on your PC. No account, no cloud, no telemetry.",
-      storeSoon: "Coming soon to Microsoft Store",
       smartscreen: { before: "Windows may show a SmartScreen warning – see ", link: "how to install" },
-      storeAlt: "Get it from Microsoft",
       meta: ["Windows 10/11", "x64", "Free", "MIT license"],
       // Decorative typing line (aria-hidden): a real command bar command (static/js/command-bar.js) and the title of
       // the dialog it opens, word for word (static/locales/en.json → encryption.lockTitle, static/js/encryption.js).
@@ -45,7 +43,7 @@ export const texts = {
         },
         lock: {
           title: "Lock a note with a password",
-          text: "Ctrl+Shift+L locks a note with its own password and encrypts its text. A forgotten password cannot be recovered.",
+          text: "Ctrl+Shift+L locks a note with its own password and encrypts its text and formatting. A forgotten password cannot be recovered.",
           alt: "The dialog for locking a note: the password twice and a warning that a forgotten password cannot be recovered",
         },
         themes: {
@@ -78,16 +76,16 @@ export const texts = {
       title: "Your notes stay on your PC",
       // README → Install ("Your data"), Security & privacy; kontext §8; server_auth.py (connect-src 'self').
       points: [
-        { title: "Stored locally", text: "Notes, images and backups are in one folder: %LOCALAPPDATA%\\NoirPad." },
+        { title: "Stored locally", text: "Notes, images and backups are in one folder on your PC: %LOCALAPPDATA%\\NoirPad (version from the Microsoft Store: %USERPROFILE%\\NoirPad)." },
         { title: "No account, no cloud", text: "Nothing to sign up for and nothing to sync. No telemetry, no ads." },
         { title: "No network requests", text: "Fonts, the Markdown renderer and the code highlighter are bundled; there is no update check. Only links you click leave the app." },
       ],
       lockTitle: "What a locked note protects",
-      lockLead: "Locking encrypts the text of that one note with Fernet (AES) and a key derived from your password via PBKDF2 (480,000 iterations, a random salt per note).",
+      lockLead: "Locking encrypts the text and formatting (including links) of that one note with Fernet (AES) and a key derived from your password via PBKDF2 (480,000 iterations, a random salt per note).",
       encrypted: "Encrypted",
       notEncrypted: "Not encrypted",
-      encryptedItems: ["the note's text"],
-      notEncryptedItems: ["the note's name, tags and folder", "images in the note", "formatting, favorites and settings"],
+      encryptedItems: ["the note's text", "its formatting and links"],
+      notEncryptedItems: ["the note's name, tags and folder", "images in the note", "favorites and settings"],
       warning: "A forgotten note password cannot be recovered – there is no reset and no back door.",
       more: "Read the privacy policy",
     },
@@ -123,7 +121,8 @@ export const texts = {
         { keys: "Ctrl+F / F3 / Shift+F3", action: "Find in the note, next / previous match" },
         { keys: "Ctrl+D", action: "Add to / remove from favorites" },
         { keys: "F2 / Delete", action: "Rename / move to trash" },
-        { keys: "Ctrl+B", action: "Side panel (in the Markdown editor: bold)" },
+        { keys: "Ctrl+B / Ctrl+I / Ctrl+K", action: "Bold / italic / link (rich text and Markdown)" },
+        { keys: "Ctrl+Shift+B", action: "Focus mode (hides the side panel)" },
         { keys: "Ctrl+Shift+V / Ctrl+Space", action: "Paste as plain text / clear formatting of the selection" },
         { keys: "Ctrl+Tab / Ctrl+W", action: "Next tab / close tab" },
         { keys: "Ctrl+, / F1", action: "Settings / help" },
@@ -140,11 +139,11 @@ export const texts = {
         },
         {
           q: "What exactly is encrypted?",
-          a: "Only the text of a locked note. Its name, tags and folder, the images in it, formatting, favorites and settings are not encrypted. Notes you don't lock are stored as plain text. The optional app lock asks for a password when NoirPad starts and after a period of inactivity – it does not encrypt anything.",
+          a: "The text and formatting (including links) of a locked note. Its name, tags and folder, the images in it, favorites and settings are not encrypted. Notes you don't lock are stored as plain text. The optional app lock asks for a password when NoirPad starts and after a period of inactivity – it does not encrypt anything.",
         },
         {
           q: "Where are my notes stored?",
-          a: "In %LOCALAPPDATA%\\NoirPad on your computer: notes_data.json with notes and settings, the images folder, automatic backups and logs (never with note content). When you uninstall the version from GitHub, your notes stay unless you choose to delete them too.",
+          a: "On your computer, in %LOCALAPPDATA%\\NoirPad (version from the Microsoft Store: %USERPROFILE%\\NoirPad): notes_data.json with notes and settings, the images folder, automatic backups and logs (never with note content). Uninstalling keeps your notes unless you choose to delete them too.",
         },
         {
           q: "How do I back up my notes or move them to another PC?",
@@ -177,6 +176,7 @@ export const texts = {
       support: "Support",
       note: "NoirPad is free software under the MIT license.",
       by: "by Arcly Studio",
+      more: "also from the studio:",
       socials: "NoirPad on social networks",
     },
   },
@@ -193,9 +193,7 @@ export const texts = {
     hero: {
       tagline: "Poznámky v Markdownu, které můžete zamknout heslem.",
       sub: "Poznámky zůstávají ve složce v počítači. Bez účtu, bez cloudu, bez telemetrie.",
-      storeSoon: "Brzy v Microsoft Store",
       smartscreen: { before: "Windows může zobrazit upozornění SmartScreen – viz ", link: "Instalace" },
-      storeAlt: "Získat od Microsoftu",
       meta: ["Windows 10/11", "x64", "Zdarma", "Licence MIT"],
       typed: [":encrypt", "Zamknout poznámku heslem"],
       shotAlt: "NoirPad s formátovanou poznámkou: velký nadpis, obrázek a krátký seznam věcí na cestu; vlevo složky a štítky",
@@ -212,7 +210,7 @@ export const texts = {
         },
         lock: {
           title: "Zámek heslem",
-          text: "Ctrl+Shift+L zamkne poznámku vlastním heslem a zašifruje její text. Zapomenuté heslo nejde obnovit.",
+          text: "Ctrl+Shift+L zamkne poznámku vlastním heslem a zašifruje její text i formátování. Zapomenuté heslo nejde obnovit.",
           alt: "Okno pro zamčení poznámky: heslo dvakrát a upozornění, že zapomenuté heslo nejde obnovit",
         },
         themes: {
@@ -244,16 +242,16 @@ export const texts = {
       eyebrow: "soukromí",
       title: "Poznámky zůstávají ve vašem počítači",
       points: [
-        { title: "Uloženo v počítači", text: "Poznámky, obrázky i zálohy jsou v jedné složce: %LOCALAPPDATA%\\NoirPad." },
+        { title: "Uloženo v počítači", text: "Poznámky, obrázky i zálohy jsou v jedné složce v počítači: %LOCALAPPDATA%\\NoirPad (verze z Microsoft Storu: %USERPROFILE%\\NoirPad)." },
         { title: "Bez účtu a cloudu", text: "Nic se nezakládá a nic se nesynchronizuje. Žádná telemetrie, žádné reklamy." },
         { title: "Žádné síťové požadavky", text: "Písma, vykreslování Markdownu i zvýrazňování kódu jsou součástí aplikace; aktualizace se nekontrolují. Ven vedou jen odkazy, na které kliknete." },
       ],
       lockTitle: "Co zámek poznámky chrání",
-      lockLead: "Zamčení zašifruje text té jedné poznámky algoritmem Fernet (AES) a klíčem odvozeným z vašeho hesla přes PBKDF2 (480 000 iterací, náhodná sůl pro každou poznámku).",
+      lockLead: "Zamčení zašifruje text a formátování (včetně odkazů) té jedné poznámky algoritmem Fernet (AES) a klíčem odvozeným z vašeho hesla přes PBKDF2 (480 000 iterací, náhodná sůl pro každou poznámku).",
       encrypted: "Šifrované",
       notEncrypted: "Nešifrované",
-      encryptedItems: ["text poznámky"],
-      notEncryptedItems: ["název, štítky a složka poznámky", "obrázky v poznámce", "formátování, oblíbené a nastavení"],
+      encryptedItems: ["text poznámky", "její formátování a odkazy"],
+      notEncryptedItems: ["název, štítky a složka poznámky", "obrázky v poznámce", "oblíbené a nastavení"],
       warning: "Zapomenuté heslo poznámky nejde obnovit – neexistuje žádný reset ani zadní vrátka.",
       more: "Zásady ochrany soukromí",
     },
@@ -287,7 +285,8 @@ export const texts = {
         { keys: "Ctrl+F / F3 / Shift+F3", action: "Hledat v poznámce, další / předchozí výskyt" },
         { keys: "Ctrl+D", action: "Přidat do oblíbených / odebrat" },
         { keys: "F2 / Delete", action: "Přejmenovat / přesunout do koše" },
-        { keys: "Ctrl+B", action: "Postranní panel (v editoru Markdownu: tučné písmo)" },
+        { keys: "Ctrl+B / Ctrl+I / Ctrl+K", action: "Tučně / kurzíva / odkaz (formátovaný text i Markdown)" },
+        { keys: "Ctrl+Shift+B", action: "Režim soustředění (skryje postranní panel)" },
         { keys: "Ctrl+Shift+V / Ctrl+Mezerník", action: "Vložit jako prostý text / vymazat formátování označeného textu" },
         { keys: "Ctrl+Tab / Ctrl+W", action: "Další karta / zavřít kartu" },
         { keys: "Ctrl+, / F1", action: "Nastavení / nápověda" },
@@ -303,11 +302,11 @@ export const texts = {
         },
         {
           q: "Co přesně se šifruje?",
-          a: "Jen text zamčené poznámky. Její název, štítky a složka, obrázky v ní, formátování, oblíbené a nastavení šifrované nejsou. Poznámky, které nezamknete, se ukládají jako běžný text. Volitelný zámek aplikace chce heslo při spuštění NoirPadu a po delší nečinnosti – nic nešifruje.",
+          a: "Text a formátování (včetně odkazů) zamčené poznámky. Její název, štítky a složka, obrázky v ní, oblíbené a nastavení šifrované nejsou. Poznámky, které nezamknete, se ukládají jako běžný text. Volitelný zámek aplikace chce heslo při spuštění NoirPadu a po delší nečinnosti – nic nešifruje.",
         },
         {
           q: "Kde jsou moje poznámky uložené?",
-          a: "V počítači ve složce %LOCALAPPDATA%\\NoirPad: notes_data.json s poznámkami a nastavením, složka s obrázky, automatické zálohy a logy (nikdy s obsahem poznámek). Odinstalace verze z GitHubu poznámky nesmaže, pokud to sami nezvolíte.",
+          a: "V počítači ve složce %LOCALAPPDATA%\\NoirPad (verze z Microsoft Storu: %USERPROFILE%\\NoirPad): notes_data.json s poznámkami a nastavením, složka s obrázky, automatické zálohy a logy (nikdy s obsahem poznámek). Odinstalace poznámky nesmaže, pokud to sami nezvolíte.",
         },
         {
           q: "Jak poznámky zálohovat nebo přenést do jiného počítače?",
@@ -340,6 +339,7 @@ export const texts = {
       support: "Podpora",
       note: "NoirPad je svobodný software pod licencí MIT.",
       by: "od Arcly Studio",
+      more: "také od studia:",
       socials: "NoirPad na sociálních sítích",
     },
   },

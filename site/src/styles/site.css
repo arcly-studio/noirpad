@@ -182,9 +182,7 @@ h1, h2, h3, h4 { font-family: var(--font-mono); font-weight: 700; letter-spacing
 /* A state, not a button: dot + text, no box and no glow – it cannot be clicked, so it must not look like it can. */
 .store-soon { display: inline-flex; align-items: center; gap: 10px; font: 600 14px/1.4 var(--font-mono); color: var(--accent); }
 .store-soon::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); flex-shrink: 0; }
-.store-badge { display: inline-block; border-radius: 10px; }
-.store-badge img { height: 52px; width: auto; }
-/* Secondary action: the release on GitHub. The main action is the Store (STORE in src/lib/store.ts). */
+/* Secondary action: the release on GitHub. Next to it the plain “Coming soon to Microsoft Store” label (src/lib/store.ts). */
 .btn-secondary {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 52px; padding: 0 20px; border-radius: 12px;
   font: 600 14px/1 var(--font-mono); color: var(--text);
@@ -437,6 +435,7 @@ details[open] .faq-plus::after { transform: rotate(0deg); }
 /* Link to the studio website – unobtrusive, as on the Dirwise site */
 .foot p.foot-by { margin: 0 0 8px; }
 .foot .foot-by a { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; padding: 6px 0; transition: color var(--dur-hover) ease; }
+.foot .foot-by a.foot-app { display: inline; text-decoration: underline; }
 .foot .foot-by a svg { transition: color var(--dur-hover) ease; }
 @media (hover: hover) and (pointer: fine) {
   .foot .foot-by a:hover { color: var(--text); }

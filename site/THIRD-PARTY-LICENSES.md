@@ -8,4 +8,3 @@
 | JetBrains Mono (variable) | @fontsource-variable/jetbrains-mono | SIL Open Font License 1.1 | self-hosted fonts |
 | Orbitron (variable) | @fontsource-variable/orbitron | SIL Open Font License 1.1 | self-hosted font (wordmark) |
 | Lucide icons | lucide (build time only) | ISC | inline SVG icons |
-| Microsoft Store badge | – | Microsoft Store badge guidelines | `public/media/store-badge-*.svg` (shown only after the Store release) |
