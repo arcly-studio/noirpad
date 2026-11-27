@@ -1,0 +1,107 @@
+---
+// Support page (Partner Center → Properties → Support contact). Checked on 2026-11-27 against NoirPad 1.1.0
+// (branch release/1.1.0): installer.iss (install folder, uninstall question), noirpad/edition.py (data folders),
+// noirpad/store_import.py + store_merge.py, desktop.py (WebView2 message), static/js/shortcuts.js (keys),
+// static/js/format.js + locales (Formatting menu), topbar.js (⋯ → Download backup), routes/backup.py, CHANGELOG 1.1.0.
+// Keep in sync with src/pages/cs/support.astro.
+import DocPage from "../components/DocPage.astro";
+import { icon } from "../lib/icons";
+import { links, pageHref } from "../lib/links";
+---
+<DocPage lang="en" page="support">
+  <div class="doc-actions">
+    <a class="doc-action" href={`mailto:${links.email}`}>
+      <span class="doc-action-icon" set:html={icon("Mail", 18)} />
+      <span><strong>Write an e-mail</strong><span>{links.email} – for questions, in English or Czech.</span></span>
+    </a>
+    <a class="doc-action" href={links.bugReport}>
+      <span class="doc-action-icon" set:html={icon("Bug", 18)} />
+      <span><strong>Report a bug</strong><span>A GitHub issue with a short form: version, Windows and the steps to reproduce.</span></span>
+    </a>
+    <a class="doc-action" href={links.featureRequest}>
+      <span class="doc-action-icon" set:html={icon("Lightbulb", 18)} />
+      <span><strong>Suggest a feature</strong><span>A GitHub issue for ideas – what you would like NoirPad to do and why.</span></span>
+    </a>
+  </div>
+
+  <section aria-labelledby="before">
+    <h2 id="before">Before you write</h2>
+    <ul>
+      <li>Look at the <a href={`${pageHref("en")}#faq`}>questions on the home page</a> and the common questions below.</li>
+      <li>Search the <a href={links.issues}>existing issues</a> – someone may have reported the same thing.</li>
+      <li>Opening an issue needs a free GitHub account and issues are public. E-mail works without an account.</li>
+      <li>Never send your notes, passwords or backups. If you attach the log from the <code>logs</code> folder in your data folder (see “Where are my notes?” below), it contains no note content.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="version">
+    <h2 id="version">Which version do I have?</h2>
+    <p>In NoirPad open <strong>Settings</strong> (<kbd>Ctrl</kbd>+<kbd>,</kbd>) and scroll to <strong>About</strong> – it shows the version, for example <em>v1.1.0</em>. You can also find it in Windows <strong>Settings → Apps → Installed apps</strong>. Please also say whether you have the version from GitHub or from the Microsoft Store.</p>
+    <p>Please also mention your Windows version (press <kbd>Win</kbd>+<kbd>R</kbd> and type <code>winver</code>).</p>
+  </section>
+
+  <section aria-labelledby="req">
+    <h2 id="req">System requirements</h2>
+    <ul>
+      <li>Windows 10 or Windows 11, 64-bit (x64).</li>
+      <li>Microsoft Edge WebView2 Runtime – Windows 11 has it; on Windows 10 the installer of the version from GitHub offers to download it.</li>
+      <li>No admin rights: the version from GitHub installs for your user only, into <code>%LOCALAPPDATA%\Programs\NoirPad</code>.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="common">
+    <h2 id="common">Common questions</h2>
+    <div class="faq-list">
+      <details name="support">
+        <summary>What does locking a note encrypt?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Locking (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) encrypts the note's text and its formatting, including links. The note's name, tags and folder, its images, favorites and settings are not encrypted – NoirPad warns you when a locked note contains images. A note locked with a version before 1.1.0 gets its formatting encrypted too the first time you open it with its password. Details are in the <a href={pageHref("en", "privacy/")}>Privacy Policy</a>.</p>
+      </details>
+      <details name="support">
+        <summary>I forgot the password of a locked note<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>It cannot be recovered. The password is not stored anywhere and there is no reset or back door – without it, the text of that note cannot be decrypted, not even by us.</p>
+      </details>
+      <details name="support">
+        <summary>I forgot the app-lock password<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>The app lock does not encrypt anything, so your notes are safe. Close NoirPad, open <code>notes_data.json</code> in your data folder (see below) in a text editor, delete the <code>"app_lock": &#123; … &#125;</code> entry (and the comma next to it) and start NoirPad again.</p>
+      </details>
+      <details name="support">
+        <summary>How do I format text?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>The same keys work in rich-text and Markdown notes: <kbd>Ctrl</kbd>+<kbd>B</kbd> bold, <kbd>Ctrl</kbd>+<kbd>I</kbd> italic, <kbd>Ctrl</kbd>+<kbd>U</kbd> underline (rich text), <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd> strikethrough, <kbd>Ctrl</kbd>+<kbd>K</kbd> link, <kbd>Ctrl</kbd>+<kbd>Space</kbd> clears all formatting of the selection. Without shortcuts, use the <strong>Formatting</strong> menu in the top bar (next to the Markdown button) or right-click selected text. Focus mode is now <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>. Every key can be changed in Settings.</p>
+      </details>
+      <details name="support">
+        <summary>Where are my notes?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Version from GitHub: <code>%LOCALAPPDATA%\NoirPad</code>. Version from the Microsoft Store: <code>%USERPROFILE%\NoirPad</code>. Paste the path into the address bar of any folder window. <code>notes_data.json</code> holds the notes and settings, <code>images\</code> the images and <code>backups\</code> the automatic copies (the newest 7). If the data file is ever damaged, NoirPad sets it aside and restores the newest good copy.</p>
+      </details>
+      <details name="support">
+        <summary>How do I back up my notes or move them to another PC?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Choose <strong>Download backup (.zip)</strong> in the ⋯ menu (or type <code>:backup</code> in the command bar) and pick where to save it – one ZIP with all notes and images. On the other PC choose <strong>Import backup</strong> in Settings (or <code>:import</code>). Importing replaces the notes there; NoirPad first saves a safety copy of them. Locked notes stay locked and still need their password.</p>
+      </details>
+      <details name="support">
+        <summary>I'm moving from the version from GitHub to the Microsoft Store<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>On its first start, the Store version copies your notes and images from the version from GitHub (close that one first – while it runs, nothing is copied and NoirPad asks you to start again). The original folder stays as it is. If the Store version already has notes, use <strong>Settings → Data → Add notes from the installer version</strong>: the other notes are added into a new folder. When everything is there, you can uninstall the version from GitHub in Windows Settings → Apps.</p>
+      </details>
+      <details name="support">
+        <summary>“Windows protected your PC” (SmartScreen)<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>The installer from GitHub is not code-signed, so SmartScreen warns before the first run. Choose <strong>More info → Run anyway</strong>. To check the file, compare its SHA-256 with the <code>.sha256</code> file next to it on the <a href={links.releases}>Releases</a> page: <code>Get-FileHash .\NoirPad-Setup.exe -Algorithm SHA256</code> in PowerShell.</p>
+      </details>
+      <details name="support">
+        <summary>NoirPad says WebView2 is missing<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>NoirPad draws its window with Microsoft Edge WebView2 Runtime. Windows 11 has it; on Windows 10 it can be missing. When it is, NoirPad offers to open Microsoft's download page – install the runtime from there and start NoirPad again. For the version from GitHub, running its installer again also offers to download it.</p>
+      </details>
+      <details name="support">
+        <summary>Does uninstalling delete my notes?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Not unless you say so. Version from GitHub (Windows Settings → Apps): uninstalling first asks what to do with your notes – “Keep my notes” is preselected, “Delete my notes too” deletes them; a silent uninstallation keeps them. Version from the Microsoft Store: uninstalling removes the app and keeps your notes in <code>%USERPROFILE%\NoirPad</code>; delete that folder yourself if you no longer need them.</p>
+      </details>
+    </div>
+  </section>
+
+  <section aria-labelledby="releases">
+    <h2 id="releases">Updates and changes</h2>
+    <p>NoirPad does not check for updates by itself. The Microsoft Store version is updated by the Microsoft Store. For the version from GitHub, new versions with their installers are on the <a href={links.releases}>Releases</a> page – run the new installer, your notes stay where they are. What changed is in the <a href={links.changelog}>Changelog</a>.</p>
+  </section>
+
+  <section aria-labelledby="security">
+    <h2 id="security">Security and privacy</h2>
+    <p>Please report security vulnerabilities privately – see the <a href={links.security}>security policy</a> – not in a public issue. How NoirPad handles your data is described in the <a href={pageHref("en", "privacy/")}>Privacy Policy</a>.</p>
+  </section>
+</DocPage>

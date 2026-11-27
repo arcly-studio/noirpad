@@ -1,0 +1,103 @@
+---
+// Podpora – česká verze src/pages/support.astro (zdroje odpovědí jsou v komentáři tam; ověřeno 27. 11. 2026 proti 1.1.0).
+import DocPage from "../../components/DocPage.astro";
+import { icon } from "../../lib/icons";
+import { links, pageHref } from "../../lib/links";
+---
+<DocPage lang="cs" page="support">
+  <div class="doc-actions">
+    <a class="doc-action" href={`mailto:${links.email}`}>
+      <span class="doc-action-icon" set:html={icon("Mail", 18)} />
+      <span><strong>Napsat e-mail</strong><span>{links.email} – s otázkami, česky i anglicky.</span></span>
+    </a>
+    <a class="doc-action" href={links.bugReport}>
+      <span class="doc-action-icon" set:html={icon("Bug", 18)} />
+      <span><strong>Nahlásit chybu</strong><span>Issue na GitHubu s krátkým formulářem: verze, Windows a postup, jak chybu vyvolat.</span></span>
+    </a>
+    <a class="doc-action" href={links.featureRequest}>
+      <span class="doc-action-icon" set:html={icon("Lightbulb", 18)} />
+      <span><strong>Navrhnout funkci</strong><span>Issue na GitHubu pro nápady – co by NoirPad měl umět a proč.</span></span>
+    </a>
+  </div>
+
+  <section aria-labelledby="before">
+    <h2 id="before">Než napíšete</h2>
+    <ul>
+      <li>Podívejte se na <a href={`${pageHref("cs")}#faq`}>otázky na úvodní stránce</a> a na časté otázky níže.</li>
+      <li>Projděte <a href={links.issues}>existující issues</a> – možná už stejnou věc někdo nahlásil.</li>
+      <li>Na založení issue potřebujete bezplatný účet na GitHubu a issues jsou veřejné. E-mail funguje bez účtu. Formuláře na GitHubu jsou anglicky, psát můžete i česky.</li>
+      <li>Nikdy neposílejte poznámky, hesla ani zálohy. Log ze složky <code>logs</code> ve vaší složce s daty (viz „Kde jsou moje poznámky?“ níže) můžete přiložit – obsah poznámek v něm není.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="version">
+    <h2 id="version">Jakou verzi mám?</h2>
+    <p>V NoirPadu otevřete <strong>Nastavení</strong> (<kbd>Ctrl</kbd>+<kbd>,</kbd>) a sjeďte na <strong>O aplikaci</strong> – je tam verze, například <em>v1.1.0</em>. Najdete ji i v <strong>Nastavení Windows → Aplikace → Nainstalované aplikace</strong>. Napište prosím i to, jestli máte verzi z GitHubu, nebo z Microsoft Storu.</p>
+    <p>Uveďte prosím i verzi Windows (stiskněte <kbd>Win</kbd>+<kbd>R</kbd> a napište <code>winver</code>).</p>
+  </section>
+
+  <section aria-labelledby="req">
+    <h2 id="req">Systémové požadavky</h2>
+    <ul>
+      <li>Windows 10 nebo Windows 11, 64bitové (x64).</li>
+      <li>Microsoft Edge WebView2 Runtime – Windows 11 ho mají, na Windows 10 ho nabídne stáhnout instalátor verze z GitHubu.</li>
+      <li>Bez práv správce: verze z GitHubu se instaluje jen pro vašeho uživatele, do <code>%LOCALAPPDATA%\Programs\NoirPad</code>.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="common">
+    <h2 id="common">Časté otázky</h2>
+    <div class="faq-list">
+      <details name="support">
+        <summary>Co zamčení poznámky šifruje?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Zamčení (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd>) zašifruje text poznámky a její formátování včetně odkazů. Název, štítky a složka poznámky, její obrázky, oblíbené a nastavení šifrované nejsou – když zamčená poznámka obsahuje obrázky, NoirPad vás upozorní. U poznámky zamčené ve verzi před 1.1.0 se formátování zašifruje, až ji poprvé otevřete heslem. Podrobnosti najdete v <a href={pageHref("cs", "privacy/")}>Zásadách ochrany soukromí</a>.</p>
+      </details>
+      <details name="support">
+        <summary>Zapomněl(a) jsem heslo zamčené poznámky<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Obnovit nejde. Heslo se nikam neukládá a neexistuje žádný reset ani zadní vrátka – bez něj text té poznámky rozšifrovat nejde, ani my to nedokážeme.</p>
+      </details>
+      <details name="support">
+        <summary>Zapomněl(a) jsem heslo zámku aplikace<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Zámek aplikace nic nešifruje, poznámky jsou tedy v pořádku. Zavřete NoirPad, otevřete <code>notes_data.json</code> ve své složce s daty (viz níže) v textovém editoru, smažte položku <code>"app_lock": &#123; … &#125;</code> (i s čárkou vedle ní) a NoirPad znovu spusťte.</p>
+      </details>
+      <details name="support">
+        <summary>Jak formátovat text?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Ve formátovaném textu i v Markdownu fungují stejné klávesy: <kbd>Ctrl</kbd>+<kbd>B</kbd> tučně, <kbd>Ctrl</kbd>+<kbd>I</kbd> kurzíva, <kbd>Ctrl</kbd>+<kbd>U</kbd> podtržení (formátovaný text), <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd> přeškrtnutí, <kbd>Ctrl</kbd>+<kbd>K</kbd> odkaz, <kbd>Ctrl</kbd>+<kbd>Mezerník</kbd> vymaže veškeré formátování označeného textu. Bez zkratek použijte nabídku <strong>Formátování</strong> v horní liště (vedle tlačítka Markdown) nebo klikněte pravým tlačítkem na označený text. Režim soustředění je nově <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>. Každou klávesu můžete změnit v Nastavení.</p>
+      </details>
+      <details name="support">
+        <summary>Kde jsou moje poznámky?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Verze z GitHubu: <code>%LOCALAPPDATA%\NoirPad</code>. Verze z Microsoft Storu: <code>%USERPROFILE%\NoirPad</code>. Cestu vložte do adresního řádku libovolného okna se složkou. <code>notes_data.json</code> obsahuje poznámky a nastavení, <code>images\</code> obrázky a <code>backups\</code> automatické kopie (posledních 7). Kdyby se datový soubor poškodil, NoirPad ho odloží stranou a obnoví nejnovější dobrou kopii.</p>
+      </details>
+      <details name="support">
+        <summary>Jak poznámky zálohovat nebo přenést do jiného počítače?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>V nabídce ⋯ zvolte <strong>Stáhnout zálohu (.zip)</strong> (nebo v příkazové liště napište <code>:backup</code>) a vyberte, kam ji uložit – jeden ZIP se všemi poznámkami a obrázky. V druhém počítači zvolte v Nastavení <strong>Importovat zálohu</strong> (nebo <code>:import</code>). Import nahradí tamní poznámky; NoirPad je předtím uloží do bezpečnostní kopie. Zamčené poznámky zůstanou zamčené a dál potřebují své heslo.</p>
+      </details>
+      <details name="support">
+        <summary>Přecházím z verze z GitHubu na Microsoft Store<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Verze ze Storu při prvním spuštění zkopíruje poznámky a obrázky z verze z GitHubu (tu nejdřív zavřete – dokud běží, nic se nekopíruje a NoirPad vás požádá o nové spuštění). Původní složka zůstane, jak je. Když už má verze ze Storu vlastní poznámky, použijte <strong>Nastavení → Data → Přidat poznámky z verze z instalátoru</strong>: ostatní poznámky se přidají do nové složky. Až bude všechno na místě, můžete verzi z GitHubu odinstalovat v Nastavení Windows → Aplikace.</p>
+      </details>
+      <details name="support">
+        <summary>„Systém Windows ochránil váš počítač“ (SmartScreen)<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Instalátor z GitHubu není podepsaný, takže SmartScreen před prvním spuštěním varuje. Zvolte <strong>Další informace → Přesto spustit</strong>. Soubor můžete ověřit: porovnejte jeho SHA-256 se souborem <code>.sha256</code>, který je vedle něj na stránce <a href={links.releases}>Releases</a> – v PowerShellu <code>Get-FileHash .\NoirPad-Setup.exe -Algorithm SHA256</code>.</p>
+      </details>
+      <details name="support">
+        <summary>NoirPad hlásí, že chybí WebView2<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>NoirPad vykresluje okno pomocí Microsoft Edge WebView2 Runtime. Windows 11 ho mají, na Windows 10 může chybět. Pak NoirPad nabídne otevřít stránku Microsoftu ke stažení – runtime odtud nainstalujte a NoirPad spusťte znovu. U verze z GitHubu stažení nabídne i nové spuštění jejího instalátoru.</p>
+      </details>
+      <details name="support">
+        <summary>Smaže odinstalace moje poznámky?<span class="faq-plus" aria-hidden="true"></span></summary>
+        <p>Jen když to sami zvolíte. Verze z GitHubu (Nastavení Windows → Aplikace): odinstalace se nejdřív zeptá, co s poznámkami – předvolené je „Ponechat poznámky“, „Smazat i poznámky“ je smaže; tichá odinstalace je ponechá. Verze z Microsoft Storu: odinstalace odstraní aplikaci a poznámky ponechá ve složce <code>%USERPROFILE%\NoirPad</code>; když už je nepotřebujete, smažte ji sami.</p>
+      </details>
+    </div>
+  </section>
+
+  <section aria-labelledby="releases">
+    <h2 id="releases">Aktualizace a změny</h2>
+    <p>NoirPad sám aktualizace nekontroluje. Verzi z Microsoft Storu aktualizuje Microsoft Store. U verze z GitHubu jsou nové verze s instalátory na stránce <a href={links.releases}>Releases</a> – spusťte nový instalátor, poznámky zůstanou, kde jsou. Co se změnilo, najdete v <a href={links.changelog}>seznamu změn</a> (anglicky).</p>
+  </section>
+
+  <section aria-labelledby="security">
+    <h2 id="security">Bezpečnost a soukromí</h2>
+    <p>Bezpečnostní chyby prosím hlaste neveřejně – viz <a href={links.security}>bezpečnostní zásady</a> (anglicky) – ne ve veřejném issue. Jak NoirPad zachází s daty, popisují <a href={pageHref("cs", "privacy/")}>Zásady ochrany soukromí</a>.</p>
+  </section>
+</DocPage>

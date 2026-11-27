@@ -1,0 +1,24 @@
+---
+// Text page shell (Privacy, Support): heading, lead, optional "Last updated" line, then the page's sections
+// from the slot. Every direct child of .doc is revealed on scroll by motion.ts (h1 and .lead never hidden).
+import { texts, type Lang } from "../i18n/texts";
+import type { PagePath } from "../lib/links";
+import Layout from "./Layout.astro";
+
+interface Props { lang: Lang; page: "privacy" | "support"; updated?: string }
+const { lang, page, updated } = Astro.props;
+const t = texts[lang];
+const p = page === "privacy" ? t.privacyPage : t.supportPage;
+const path: PagePath = page === "privacy" ? "privacy/" : "support/";
+const date = updated
+  ? new Date(`${updated}T12:00:00Z`).toLocaleDateString(lang === "cs" ? "cs-CZ" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })
+  : "";
+---
+<Layout lang={lang} path={path} title={p.title} description={p.description}>
+  <main id="main" class="doc">
+    <h1 class="mono">{p.heading}</h1>
+    <p class="lead">{p.lead}</p>
+    {updated && <p class="doc-meta">{t.updated} <time datetime={updated}>{date}</time></p>}
+    <slot />
+  </main>
+</Layout>

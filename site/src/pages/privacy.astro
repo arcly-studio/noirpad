@@ -1,0 +1,114 @@
+---
+// Privacy Policy (Microsoft Store policy 10.5.1 – the URL goes to Partner Center → Properties).
+// Checked on 2026-11-27 against NoirPad 1.1.0 (branch release/1.1.0) and its approved PRIVACY.md; sources in the
+// comments. Keep in sync with src/pages/cs/privacy.astro.
+import DocPage from "../components/DocPage.astro";
+import { links, pageHref } from "../lib/links";
+---
+<DocPage lang="en" page="privacy" updated="2026-11-27">
+  <section aria-labelledby="short">
+    <h2 id="short">In short</h2>
+    <ul>
+      <li><strong>No account, no cloud, no telemetry, no analytics, no ads.</strong> There is nothing to sign up for.</li>
+      <li><strong>NoirPad itself makes no network requests.</strong> It does not even check for updates.</li>
+      <li><strong>Your notes stay on your computer.</strong> Nothing is sent to us or to anyone else.</li>
+      <li><strong>This website</strong> uses no cookies, no analytics and loads nothing from other servers.</li>
+    </ul>
+    <p>This policy applies to NoirPad 1.1.0 and later, in both editions: the version from GitHub (with an installer) and the version from the Microsoft Store.</p>
+  </section>
+
+  <section aria-labelledby="app">
+    <h2 id="app"><span class="doc-part" aria-hidden="true">A</span> The NoirPad app</h2>
+
+    {/* noirpad/edition.py (github_data_dir = platformdirs user_data_dir "NoirPad", store_data_dir = home/"NoirPad");
+        noirpad/config.py get_data_dir; storage.py (BACKUP_KEEP 7, BACKUP_MIN_INTERVAL 10 min); scrub.py (MAX_AGE
+        30 days); logs.py (MAX_BYTES 1 MB, 3 files, PrivateFormatter "~"); desktop.py (storage_path = data_dir/"webview"). */}
+    <h3>What is stored on your computer</h3>
+    <p>Everything NoirPad saves stays on your computer, in one folder:</p>
+    <ul>
+      <li>version from GitHub: <code>%LOCALAPPDATA%\NoirPad</code></li>
+      <li>version from the Microsoft Store: <code>%USERPROFILE%\NoirPad</code></li>
+    </ul>
+    <p>In that folder:</p>
+    <ul>
+      <li><code>notes_data.json</code> – your notes, folders, tags, favorites and settings;</li>
+      <li><code>images\</code> – images you add to notes;</li>
+      <li><code>backups\</code> – automatic copies of your notes (the newest 7, at most one per 10 minutes) and a safety copy made before each import (deleted after 30 days);</li>
+      <li><code>notes_data.corrupt-….json</code> – only if the data file was ever damaged: NoirPad sets it aside and restores the newest good copy (at most 3 are kept, each for at most 30 days);</li>
+      <li><code>logs\</code> – a local log (at most 1 MB × 3 files) with start-up information, versions, ports and errors. It never contains the content of your notes, their names or passwords, and your user folder is written as <code>~</code>;</li>
+      <li><code>webview\</code> – data of the window component (its cache and settings).</li>
+    </ul>
+    {/* noirpad/desktop_save.py: exports and "Download backup" go through a native "Save as" dialog. */}
+    <p>None of this is sent anywhere. Exports and backups that you create yourself are saved only where you choose in the “Save as” window.</p>
+
+    {/* noirpad/store_import.py (copy2, never written into the source; backups/ and corrupt-* not copied);
+        noirpad/store_merge.py (Settings → Data → "Add notes from the installer version"). */}
+    <p>On its first start, the Microsoft Store version copies the notes and images of the version from GitHub from <code>%LOCALAPPDATA%\NoirPad</code> into its own folder, if there are any. It is a copy on your computer: the original folder stays as it is, and automatic copies (backups) are not copied. If the Store version already has notes of its own, nothing is copied over them; you can add the other notes yourself in Settings → Data.</p>
+
+    {/* noirpad/*.py and desktop.py: no outgoing requests; server_auth.py CSP connect-src 'self';
+        desktop.py binds 127.0.0.1; links.js + OPEN_EXTERNAL_LINKS_IN_BROWSER; installer.iss (WebView2Missing,
+        silent install); desktop.py WEBVIEW2_DOWNLOAD (missing-component message). */}
+    <h3>Network</h3>
+    <p><strong>NoirPad itself makes no network requests.</strong> Fonts, the Markdown renderer and the code highlighter are part of the app, and there is no update check. Inside, NoirPad runs a small server only for its own window, at the address <code>127.0.0.1</code> – your own computer, not reachable from other devices. Only links that you click open in your web browser.</p>
+    <p>The NoirPad window is displayed through Microsoft Edge WebView2, a Windows component that Microsoft provides and updates under the <a href={links.msPrivacy.en}>Microsoft Privacy Statement</a>. Windows 11 already has it. If it is missing (this can happen on Windows 10), the installer of the version from GitHub asks whether to download it from Microsoft (a silent, unattended installation downloads it without asking), and NoirPad itself only offers to open Microsoft's download page.</p>
+
+    {/* noirpad/crypto.py (Fernet, PBKDF2_ITERATIONS 480_000, salt per note, N2 "formats" in the envelope);
+        routes/encryption.py (password sent once, only the key in memory; UNLOCK_IDLE_TTL 30 min, UNLOCK_MAX_TTL 12 h;
+        lock / lock-all / exit forget keys); routes/app_lock.py (locking the app forgets every key); app_lock.py
+        (scrypt hash only); scrub.py (readable text removed from automatic copies); CHANGELOG 1.1.0 "Locked notes". */}
+    <h3>What a locked note protects</h3>
+    <p>You can lock any note with its own password. Locking encrypts the note's text and formatting, including its links, with Fernet (AES-128-CBC with HMAC-SHA256); the key is derived from your password with PBKDF2-SHA256 (480,000 iterations and a random salt for each note).</p>
+    <table class="enc-table">
+      <thead><tr><th scope="col">Encrypted</th><th scope="col">Not encrypted</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="4" class="enc-yes">the text and formatting (including links) of a locked note</td><td>the note's name, tags and folder</td></tr>
+        <tr><td>images, also in locked notes (separate files in <code>images\</code>)</td></tr>
+        <tr><td>favorites and settings</td></tr>
+        <tr><td>notes you have not locked</td></tr>
+      </tbody>
+    </table>
+    <p>What is not encrypted can be read by anyone with access to your Windows account.</p>
+    <ul>
+      <li>Your note password is never saved – not on disk, not in the log. While a note is unlocked, only the key derived from it is kept in memory. It is forgotten when you lock the note, lock NoirPad or close it, after 30 minutes without use, and after 12 hours at the latest.</li>
+      <li><strong>A forgotten note password cannot be recovered.</strong> There is no reset and no back door – not even for us.</li>
+      <li>Notes locked with a version before 1.1.0 keep their formatting and links readable until you unlock them once with the password.</li>
+      <li>When you lock a note or delete it for good, NoirPad also removes its readable text from its own automatic copies. Windows or the disk may still keep an older version of a file for a while.</li>
+      <li>The optional app lock asks for a password when NoirPad starts. It stores only a hash of that password (scrypt) and does <strong>not</strong> encrypt your notes.</li>
+    </ul>
+
+    {/* installer.iss: [UninstallDelete] {app}; AskAboutNotes ("Keep my notes" preselected / "Delete my notes too"),
+        UninstallSilent keeps the notes; edition.py store_data_dir ("outside AppData, so it survives uninstalling"). */}
+    <h3>Uninstalling and deleting your data</h3>
+    <ul>
+      <li><strong>Version from GitHub:</strong> uninstalling first asks what to do with your notes. “Keep my notes” is preselected; “Delete my notes too” also deletes <code>%LOCALAPPDATA%\NoirPad</code>. A silent uninstallation keeps the notes. The program folder is always removed.</li>
+      <li><strong>Version from the Microsoft Store:</strong> uninstalling removes the app. Your notes are kept in <code>%USERPROFILE%\NoirPad</code>, outside the app package, so that they are not lost with it.</li>
+      <li>To delete your data later, close NoirPad and delete that folder. Backups and exports you saved yourself stay where you saved them.</li>
+    </ul>
+
+    {/* PRIVACY.md → "Microsoft Store edition" (approved wording). */}
+    <h3>Microsoft Store</h3>
+    <p>The download, installation and updates of the Microsoft Store version are provided by the Microsoft Store under Microsoft's terms and the <a href={links.msPrivacy.en}>Microsoft Privacy Statement</a>. Depending on your Windows diagnostic data settings, Microsoft may share download statistics and crash reports (Windows Error Reporting) with us in Partner Center. NoirPad itself sends nothing.</p>
+
+    {/* NoirPad-web.py; PRIVACY.md → "Self-hosting". */}
+    <h3>Running NoirPad on your own server</h3>
+    <p>If you run NoirPad as a web server, the data stays on that server and you are responsible for it.</p>
+  </section>
+
+  <section aria-labelledby="site">
+    <h2 id="site"><span class="doc-part" aria-hidden="true">B</span> This website</h2>
+    {/* The site: static Astro build, self-hosted fonts and images, no cookies/storage, no external scripts. */}
+    <p>This website is a set of static pages. It uses no cookies, no analytics and no trackers, and it loads nothing from other servers – fonts and images come from the site itself.</p>
+    <p>The website is hosted on GitHub Pages. Like any web server, GitHub may process technical data such as your IP address to deliver the pages and keep it in its server logs. This is covered by the <a href={links.githubPrivacy}>GitHub General Privacy Statement</a>. Links to GitHub on this site (source code, releases, issues) lead to GitHub's own pages.</p>
+  </section>
+
+  <section aria-labelledby="contact">
+    <h2 id="contact">Who we are and how to reach us</h2>
+    <p>NoirPad and this website are made by <strong>Arcly Studio</strong>, which is responsible for this policy. Questions about privacy: <a href={`mailto:${links.email}`}>{links.email}</a>. If you write to us, we use your e-mail address and message only to reply to you.</p>
+    <p>Please report security vulnerabilities privately – see the <a href={links.security}>security policy</a>. More ways to get help are on the <a href={pageHref("en", "support/")}>Support</a> page.</p>
+  </section>
+
+  <section aria-labelledby="changes">
+    <h2 id="changes">Changes</h2>
+    <p>If NoirPad or this website starts handling data differently, we will update this page and the date at the top.</p>
+  </section>
+</DocPage>

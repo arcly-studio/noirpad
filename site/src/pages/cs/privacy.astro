@@ -1,0 +1,94 @@
+---
+// Zásady ochrany soukromí – česká verze src/pages/privacy.astro (zdroje tvrzení jsou v komentářích tam).
+// Ověřeno 27. 11. 2026 proti NoirPadu 1.1.0 (větev release/1.1.0) a jeho schválenému PRIVACY.cs.md.
+import DocPage from "../../components/DocPage.astro";
+import { links, pageHref } from "../../lib/links";
+---
+<DocPage lang="cs" page="privacy" updated="2026-11-27">
+  <section aria-labelledby="short">
+    <h2 id="short">Ve zkratce</h2>
+    <ul>
+      <li><strong>Žádný účet, cloud, telemetrie, analytika ani reklamy.</strong> Nic se nezakládá.</li>
+      <li><strong>NoirPad sám nedělá žádné síťové požadavky.</strong> Nekontroluje ani aktualizace.</li>
+      <li><strong>Poznámky zůstávají ve vašem počítači.</strong> Nic se neposílá nám ani nikomu jinému.</li>
+      <li><strong>Tento web</strong> nepoužívá cookies ani analytiku a nenačítá nic z cizích serverů.</li>
+    </ul>
+    <p>Tyto zásady platí pro NoirPad 1.1.0 a novější v obou edicích: pro verzi z GitHubu (s instalátorem) i pro verzi z Microsoft Storu.</p>
+  </section>
+
+  <section aria-labelledby="app">
+    <h2 id="app"><span class="doc-part" aria-hidden="true">A</span> Aplikace NoirPad</h2>
+
+    <h3>Co se ukládá ve vašem počítači</h3>
+    <p>Všechno, co NoirPad ukládá, zůstává ve vašem počítači v jedné složce:</p>
+    <ul>
+      <li>verze z GitHubu: <code>%LOCALAPPDATA%\NoirPad</code></li>
+      <li>verze z Microsoft Storu: <code>%USERPROFILE%\NoirPad</code></li>
+    </ul>
+    <p>V té složce:</p>
+    <ul>
+      <li><code>notes_data.json</code> – poznámky, složky, štítky, oblíbené a nastavení;</li>
+      <li><code>images\</code> – obrázky, které do poznámek vložíte;</li>
+      <li><code>backups\</code> – automatické kopie poznámek (posledních 7, nejvýš jedna za 10 minut) a bezpečnostní kopie před každým importem (mažou se po 30 dnech);</li>
+      <li><code>notes_data.corrupt-….json</code> – jen pokud se datový soubor někdy poškodil: NoirPad ho odloží stranou a obnoví nejnovější dobrou kopii (drží nejvýš 3, každou nejvýš 30 dní);</li>
+      <li><code>logs\</code> – místní log (nejvýš 1 MB × 3 soubory) s údaji o spuštění, verzích, portech a chybách. Nikdy v něm není obsah poznámek, jejich názvy ani hesla a vaše uživatelská složka se zapisuje jako <code>~</code>;</li>
+      <li><code>webview\</code> – data komponenty okna (její mezipaměť a nastavení).</li>
+    </ul>
+    <p>Nic z toho se nikam neodesílá. Exporty a zálohy, které si sami vytvoříte, se uloží jen tam, kam zvolíte v okně „Uložit jako“.</p>
+    <p>Verze z Microsoft Storu při prvním spuštění zkopíruje poznámky a obrázky verze z GitHubu ze složky <code>%LOCALAPPDATA%\NoirPad</code> do své složky, pokud tam nějaké jsou. Je to kopie ve vašem počítači: původní složka zůstane, jak je, a automatické kopie (zálohy) se nekopírují. Když už má verze ze Storu vlastní poznámky, nic se přes ně nekopíruje; ostatní poznámky si můžete přidat sami v Nastavení → Data.</p>
+
+    <h3>Síť</h3>
+    <p><strong>NoirPad sám nedělá žádné síťové požadavky.</strong> Písma, vykreslování Markdownu i zvýrazňování kódu jsou součástí aplikace a aktualizace se nekontrolují. Uvnitř NoirPad spouští malý server jen pro vlastní okno, na adrese <code>127.0.0.1</code> – tedy ve vašem počítači, z jiných zařízení nedostupný. Ven vedou jen odkazy, na které kliknete; otevřou se ve webovém prohlížeči.</p>
+    <p>Okno NoirPadu se zobrazuje přes Microsoft Edge WebView2 – součást Windows, kterou dodává a aktualizuje Microsoft podle svého <a href={links.msPrivacy.cs}>prohlášení o zásadách ochrany osobních údajů</a>. Windows 11 ji už mají. Pokud chybí (může se stát na Windows 10), instalátor verze z GitHubu se zeptá, jestli ji má stáhnout od Microsoftu (tichá, bezobslužná instalace ji stáhne bez ptaní), a samotný NoirPad jen nabídne otevřít stránku Microsoftu ke stažení.</p>
+
+    <h3>Co zámek poznámky chrání</h3>
+    <p>Každou poznámku můžete zamknout vlastním heslem. Zamčení zašifruje text a formátování poznámky včetně odkazů algoritmem Fernet (AES-128-CBC s HMAC-SHA256); klíč se z hesla odvozuje přes PBKDF2-SHA256 (480 000 iterací a náhodná sůl pro každou poznámku).</p>
+    <table class="enc-table">
+      <thead><tr><th scope="col">Šifrované</th><th scope="col">Nešifrované</th></tr></thead>
+      <tbody>
+        <tr><td rowspan="4" class="enc-yes">text a formátování (včetně odkazů) zamčené poznámky</td><td>název, štítky a složka poznámky</td></tr>
+        <tr><td>obrázky, i v zamčených poznámkách (samostatné soubory v <code>images\</code>)</td></tr>
+        <tr><td>oblíbené a nastavení</td></tr>
+        <tr><td>poznámky, které nezamknete</td></tr>
+      </tbody>
+    </table>
+    <p>Co šifrované není, může přečíst každý, kdo má přístup k vašemu účtu ve Windows.</p>
+    <ul>
+      <li>Heslo poznámky se nikam neukládá – ani na disk, ani do logu. Dokud je poznámka odemčená, drží se v paměti jen klíč z něj odvozený. Zapomene se, když poznámku zamknete, NoirPad zamknete nebo zavřete, po 30 minutách nepoužívání a nejpozději po 12 hodinách.</li>
+      <li><strong>Zapomenuté heslo poznámky nejde obnovit.</strong> Neexistuje žádný reset ani zadní vrátka – ani pro nás.</li>
+      <li>U poznámek zamčených ve verzi před 1.1.0 zůstává formátování a odkazy čitelné, dokud je jednou neodemknete heslem.</li>
+      <li>Když poznámku zamknete nebo trvale smažete, NoirPad smaže její čitelný text i ze svých automatických kopií. Windows nebo disk si můžou starší verzi souboru ještě nějakou dobu držet.</li>
+      <li>Volitelný zámek aplikace chce heslo při spuštění NoirPadu. Ukládá jen jeho otisk (hash scrypt) a poznámky <strong>nešifruje</strong>.</li>
+    </ul>
+
+    <h3>Odinstalace a smazání dat</h3>
+    <ul>
+      <li><strong>Verze z GitHubu:</strong> odinstalace se nejdřív zeptá, co s poznámkami. Předvolené je „Ponechat poznámky“; „Smazat i poznámky“ smaže i složku <code>%LOCALAPPDATA%\NoirPad</code>. Tichá odinstalace poznámky ponechá. Složka programu se odstraní vždy.</li>
+      <li><strong>Verze z Microsoft Storu:</strong> odinstalace odstraní aplikaci. Poznámky zůstanou ve složce <code>%USERPROFILE%\NoirPad</code> mimo balíček aplikace, aby se s ním neztratily.</li>
+      <li>Když budete chtít data smazat později, zavřete NoirPad a smažte tu složku. Zálohy a exporty, které jste si sami uložili, zůstanou tam, kam jste je uložili.</li>
+    </ul>
+
+    <h3>Microsoft Store</h3>
+    <p>Stažení, instalaci a aktualizace verze z Microsoft Storu zajišťuje Microsoft Store podle pravidel Microsoftu a jeho <a href={links.msPrivacy.cs}>prohlášení o zásadách ochrany osobních údajů</a>. Podle nastavení diagnostických dat ve Windows nám Microsoft může v Partner Center ukázat statistiky stažení a hlášení o pádech (Windows Error Reporting). NoirPad sám nic neposílá.</p>
+
+    <h3>NoirPad na vlastním serveru</h3>
+    <p>Když NoirPad provozujete jako webový server, data zůstávají na tom serveru a odpovídáte za ně vy.</p>
+  </section>
+
+  <section aria-labelledby="site">
+    <h2 id="site"><span class="doc-part" aria-hidden="true">B</span> Tento web</h2>
+    <p>Tento web tvoří statické stránky. Nepoužívá cookies, analytiku ani sledovací kódy a nenačítá nic z cizích serverů – písma i obrázky jsou přímo z webu.</p>
+    <p>Web běží na GitHub Pages. Jako každý webový server může GitHub zpracovávat technické údaje, například vaši IP adresu, aby stránky doručil, a uchovávat je ve svých serverových logách. Řídí se to <a href={links.githubPrivacy}>prohlášením GitHubu o ochraně soukromí</a> (GitHub General Privacy Statement, anglicky). Odkazy na GitHub (zdrojový kód, vydání, hlášení chyb) vedou na stránky GitHubu.</p>
+  </section>
+
+  <section aria-labelledby="contact">
+    <h2 id="contact">Kdo za tím stojí a jak nás kontaktovat</h2>
+    <p>NoirPad i tento web vytváří <strong>Arcly Studio</strong>, které za tyto zásady odpovídá. Dotazy k soukromí: <a href={`mailto:${links.email}`}>{links.email}</a>. Když nám napíšete, vaši e-mailovou adresu a zprávu použijeme jen k odpovědi.</p>
+    <p>Bezpečnostní chyby prosím hlaste neveřejně – viz <a href={links.security}>bezpečnostní zásady</a> (anglicky). Další možnosti pomoci najdete na stránce <a href={pageHref("cs", "support/")}>Podpora</a>.</p>
+  </section>
+
+  <section aria-labelledby="changes">
+    <h2 id="changes">Změny</h2>
+    <p>Pokud NoirPad nebo tento web začne s daty zacházet jinak, upravíme tuto stránku i datum nahoře.</p>
+  </section>
+</DocPage>
